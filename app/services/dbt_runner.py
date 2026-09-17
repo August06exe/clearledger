@@ -8,8 +8,10 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import threading
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -90,13 +92,16 @@ def _pipeline(run_id: str, trigger: str) -> None:
     def run_cmd(cmd: list[str], cwd: Path, log) -> int:
         log.write(f"\n$ {' '.join(str(c) for c in cmd)}   (cwd={cwd})\n")
         log.flush()
+        env = {**os.environ, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
         p = subprocess.run([str(c) for c in cmd], cwd=str(cwd), stdout=log,
-                           stderr=subprocess.STDOUT, text=True)
+                           stderr=subprocess.STDOUT, text=True, encoding="utf-8", env=env)
         return p.returncode
 
     try:
         ingest_ok, ingest_report, dbt_rc = True, None, None
         results_json = None
+        dbt_fail_reason = None
+        start_epoch = time.time()
         with open(log_path, "a", encoding="utf-8") as log:
             log.write(f"===== 跑批 {run_id}（触发：{trigger}）{started} =====\n")
             # 1) 摄取：inbox 文件 → raw 层
@@ -111,12 +116,29 @@ def _pipeline(run_id: str, trigger: str) -> None:
                 dbt_rc = run_cmd([config.DBT_EXE, "build", "--profiles-dir", ".", "--no-use-colors"],
                                  config.DBT_DIR, log)
                 if config.RUN_RESULTS.exists():
-                    results_json = json.loads(config.RUN_RESULTS.read_text(encoding="utf-8"))
-                    config.RUNS_DIR.mkdir(parents=True, exist_ok=True)
-                    (config.RUNS_DIR / f"{run_id}_run_results.json").write_text(
-                        json.dumps(results_json, ensure_ascii=False), encoding="utf-8")
+                    try:
+                        # 只认本轮新生成的 run_results（防止 dbt 未写产物时拿上一轮旧结果"假绿"）
+                        fresh = config.RUN_RESULTS.stat().st_mtime >= start_epoch - 2
+                        candidate = json.loads(config.RUN_RESULTS.read_text(encoding="utf-8"))
+                        if fresh:
+                            results_json = candidate
+                            config.RUNS_DIR.mkdir(parents=True, exist_ok=True)
+                            (config.RUNS_DIR / f"{run_id}_run_results.json").write_text(
+                                json.dumps(results_json, ensure_ascii=False), encoding="utf-8")
+                    except Exception:
+                        pass
+            # 红绿灯总判定：红 = 摄取失败 或 dbt 失败 或 拿不到本轮运行结果
+            if not ingest_ok:
+                overall = "red"
+                dbt_fail_reason = "摄取失败，已跳过 dbt 转换（下游被拦截）"
+            elif dbt_rc not in (0, None) or results_json is None:
+                overall = "red"
+                dbt_fail_reason = f"dbt build 失败（返回码 {dbt_rc}）或未生成本轮运行结果，下游被拦截"
+            else:
+                nodes_out, overall = _summarize(results_json, True)
 
-        nodes_out, overall = _summarize(results_json, ingest_ok)
+        if results_json is None:
+            nodes_out = {}
         counts = {"total": len(nodes_out)}
         for n in nodes_out.values():
             counts[n["status"]] = counts.get(n["status"], 0) + 1
@@ -133,6 +155,8 @@ def _pipeline(run_id: str, trigger: str) -> None:
             "nodes": nodes_out,
             "log_file": str(log_path),
         }
+        if dbt_fail_reason:
+            record["error"] = dbt_fail_reason
     except Exception as e:  # 兜底：执行器自身异常也必须留痕并亮红灯
         record = {
             "run_id": run_id, "trigger": trigger, "started_at": started,
@@ -143,6 +167,14 @@ def _pipeline(run_id: str, trigger: str) -> None:
         }
     finally:
         _save_history([record] + history())
+        # 清理已滚出保留期的 run_results 归档
+        try:
+            kept = {r["run_id"] for r in history()}
+            for f in config.RUNS_DIR.glob("*_run_results.json"):
+                if f.name.replace("_run_results.json", "") not in kept:
+                    f.unlink(missing_ok=True)
+        except Exception:
+            pass
         with _state_lock:
             _state.update(active=False, run_id=None)
 

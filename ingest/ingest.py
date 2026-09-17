@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -41,6 +42,18 @@ def resolve_file(inbox: Path, patterns: list[str]) -> Path | None:
     return None
 
 
+def connect_with_retry(path: Path, attempts: int = 20, delay: float = 0.5) -> duckdb.DuckDBPyConnection:
+    """门户可能正在查询（读锁），短重试避免互撞误报红灯"""
+    last: Exception | None = None
+    for _ in range(attempts):
+        try:
+            return duckdb.connect(str(path))
+        except duckdb.IOException as e:
+            last = e
+            time.sleep(delay)
+    raise RuntimeError(f"数据仓库被占用（门户正在查询？）：{last}")
+
+
 def read_file(path: Path, fmt: str) -> pd.DataFrame:
     if fmt == "csv":
         try:
@@ -60,6 +73,10 @@ def ingest_source(con: duckdb.DuckDBPyConnection, inbox: Path, src: dict) -> dic
 
     df = read_file(path, src["format"])
     df.columns = [str(c).strip() for c in df.columns]
+
+    if df.empty:
+        raise ValueError(f"数据源 [{src.get('title', name)}] 文件 {path.name} 是空表（0 行）。"
+                         f"请确认导出是否完整；若确为空期数据，请咨询 AI 助手如何处理。")
 
     col_map = src.get("column_map", {})
     missing = [c for c in col_map if c not in df.columns]
@@ -113,7 +130,7 @@ def main() -> int:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     results, errors = [], []
-    con = duckdb.connect(str(WAREHOUSE))
+    con = connect_with_retry(WAREHOUSE)
     try:
         for src in cfg.get("sources", []):
             try:

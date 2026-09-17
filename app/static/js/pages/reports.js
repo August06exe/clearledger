@@ -1,7 +1,13 @@
 // 管理报表页：报表列表 + 参数筛选 + 图表 + 明细表 + Excel 导出
 window.Pages.reports = {
   async render(el, key) {
-    const data = await api('/api/reports');
+    let data;
+    try {
+      data = await api('/api/reports');
+    } catch (e) {
+      el.innerHTML = '<div class="card empty-tip">报表配置加载失败（可能正在跑批或仓库未就绪）。<br>稍等片刻后点击左侧导航重试。</div>';
+      return;
+    }
     this.options = data.options || {};
     const reports = data.reports || [];
     if (!key || !reports.find(r => r.key === key)) key = reports[0] && reports[0].key;
@@ -48,6 +54,8 @@ window.Pages.reports = {
     }).join('');
 
     main.innerHTML = `
+      <div id="rp-stale" style="display:none;background:var(--red-bg);color:var(--red);
+        border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;margin-bottom:14px"></div>
       <div class="row spread">
         <h3 style="margin:0">${meta.title}</h3>
         <div class="row">
@@ -81,6 +89,15 @@ window.Pages.reports = {
     try {
       const r = await api(`/api/reports/${this.key}/data?` + this.qs());
       this.last = r;
+      const banner = document.getElementById('rp-stale');
+      if (banner) {
+        if (r.stale) {
+          banner.textContent = '⚠ ' + (r.stale_info || '数据过期：最近跑批失败，以下为上次成功数据');
+          banner.style.display = '';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
       const cols = r.columns || [];
       if (!r.rows.length) {
         table.innerHTML = '<div class="empty-tip">没有数据（试试调大月数）</div>';

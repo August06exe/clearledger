@@ -31,7 +31,7 @@ OUT = ROOT / "data" / "inbox"
 OUT.mkdir(parents=True, exist_ok=True)
 
 START = date(2025, 4, 1)
-END = date(2026, 9, 17)
+END = date.today() - timedelta(days=1)  # 动态截止到昨天，保证"数据新鲜度"演示始终是绿的
 
 # ---------------------------------------------------------------- 维度数据
 REGIONS = [

@@ -17,6 +17,8 @@ def graph() -> dict:
     idx = artifacts.node_index()
     nodes, edges = [], []
     for uid, n in idx["nodes"].items():
+        if n["name"] == "load_log":
+            continue  # 摄取日志是孤立节点，在血缘图上只会添乱（字典页仍可查看）
         nodes.append({
             "uid": uid,
             "name": n["name"],

@@ -18,7 +18,11 @@ def _load_cached(path: Path, key: str):
     mtime = path.stat().st_mtime
     cached = _cache.get(key)
     if cached is None or cached[0] != mtime:
-        _cache[key] = (mtime, json.loads(path.read_text(encoding="utf-8")))
+        try:
+            _cache[key] = (mtime, json.loads(path.read_text(encoding="utf-8")))
+        except Exception:
+            # dbt 重写 manifest 期间可能读到半个文件：退回旧缓存，别把 500 抛给用户
+            return cached[1] if cached else None
     return _cache[key][1]
 
 

@@ -7,10 +7,11 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote
 
+import duckdb
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
@@ -33,8 +34,18 @@ async def lifespan(app: FastAPI):
         _scheduled_build, "cron",
         hour=config.SCHEDULE_HOUR, minute=config.SCHEDULE_MINUTE,
         id="daily_build", replace_existing=True,
+        misfire_grace_time=3600 * 6,  # 关机/睡眠错过 6 小时内醒来仍补跑
+        coalesce=True,
     )
     scheduler.start()
+    # 启动补跑：上一次跑批距今超过 24 小时（比如放了几天假），自动补一次，避免"静默断更"
+    try:
+        runs = dbt_runner.history()
+        stale = not runs or datetime.fromisoformat(runs[0]["finished_at"]) < datetime.now() - timedelta(hours=24)
+        if stale and not dbt_runner.status()["active"]:
+            dbt_runner.trigger_run("catchup")
+    except Exception:
+        pass
     yield
     scheduler.shutdown(wait=False)
 
@@ -43,13 +54,11 @@ app = FastAPI(title=config.APP_NAME, version=config.APP_VERSION, lifespan=lifesp
 
 
 def _guard(fn, *args, **kwargs):
-    """仓库不可用/正被占用时统一转 503，前端给出友好提示"""
+    """仓库不可用/正被占用/表结构未就绪时统一转 503，前端给出友好提示"""
     try:
         return fn(*args, **kwargs)
-    except FileNotFoundError as e:
-        raise HTTPException(503, f"数据仓库尚未就绪：{e}")
-    except RuntimeError as e:
-        raise HTTPException(503, str(e))
+    except (FileNotFoundError, RuntimeError, duckdb.Error) as e:
+        raise HTTPException(503, f"数据仓库暂不可用（可能正在跑批或尚未初始化）：{e}")
 
 
 # ---------------------------------------------------------------- 总览
@@ -110,9 +119,19 @@ def api_lineage_graph():
     g = lineage.graph()
     run = dbt_runner.latest_run()
     status_by_uid = (run or {}).get("nodes", {})
+    # 源表节点不参与 dbt 执行，用摄取结果着色（绿=成功入库 / 红=摄取失败）
+    ingest_by_source: dict[str, str] = {}
+    if run and run.get("ingest"):
+        for r in run["ingest"].get("results", []):
+            ingest_by_source[r.get("source")] = r.get("status")
     for n in g["nodes"]:
         st = status_by_uid.get(n["uid"], {})
-        n["status"] = st.get("status", "unknown")
+        if st.get("status"):
+            n["status"] = st["status"]
+        elif n["resource_type"] == "source" and ingest_by_source:
+            n["status"] = "green" if ingest_by_source.get(n["name"]) == "ok" else "red"
+        else:
+            n["status"] = "unknown"
     return g
 
 
@@ -207,6 +226,14 @@ def api_reports():
     return {"reports": reports.list_reports(), "options": reports.report_options()}
 
 
+def _stale_info() -> tuple[bool, str | None]:
+    """红灯 = 最新数据未被本轮确认，报表应明确告知"这是旧数" """
+    run = dbt_runner.latest_run()
+    if run and run.get("status") == "red":
+        return True, f"最近一次跑批失败（{run.get('finished_at', '')}），以下为最近一次成功跑批的旧数据"
+    return False, None
+
+
 @app.get("/api/reports/{key}/data")
 def api_report_data(key: str, months: int | None = None, region: str | None = None,
                     level: str | None = None, category: str | None = None, limit: int | None = None):
@@ -217,7 +244,9 @@ def api_report_data(key: str, months: int | None = None, region: str | None = No
     params = {"months": months, "region": region, "level": level,
               "category": category, "limit": limit}
     columns, rows = _guard(reports.run_report, key, params)
-    return {"key": key, "title": rep["title"], "columns": columns, "rows": rows}
+    stale, info = _stale_info()
+    return {"key": key, "title": rep["title"], "columns": columns, "rows": rows,
+            "stale": stale, "stale_info": info}
 
 
 @app.get("/api/reports/{key}/export")
@@ -230,7 +259,8 @@ def api_report_export(key: str, months: int | None = None, region: str | None = 
     params = {"months": months, "region": region, "level": level,
               "category": category, "limit": limit}
     columns, rows = _guard(reports.run_report, key, params)
-    content = export.to_xlsx(columns, rows, sheet=rep["title"])
+    stale, info = _stale_info()
+    content = export.to_xlsx(columns, rows, sheet=rep["title"], note=info)
     filename = f"{rep['title']}_{datetime.now():%Y%m%d}.xlsx"
     return Response(
         content=content,

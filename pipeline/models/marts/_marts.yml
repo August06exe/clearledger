@@ -5,7 +5,8 @@ models:
     description: >
       【报表层】公司级经营月历。指标口径唯一出处：
       收入 = Σ折后金额；毛利 = 折后 − 标准成本；净利 = 毛利 − 分摊费用。
-      环比字段基于上一日历月；当月为不完整月时环比仅供参考。
+      环比基于上一日历月（无销售月份也成行，收入记 0，绝不跳月）；
+      当月为不完整月时环比仅供参考。
     columns:
       - name: month
         description: 月份（当月为截至最新数据的部分月）
@@ -26,12 +27,16 @@ models:
       - name: net_margin
         description: 净利率 = 净利 / 收入
       - name: revenue_mom
-        description: 收入环比 = 本月 / 上月 − 1
+        description: 收入环比 = 本月 / 上一日历月 − 1
       - name: gross_profit_mom
         description: 毛利环比
+      - name: net_profit_mom
+        description: 净利环比
 
   - name: mart_region_month
-    description: 【报表层】区域经营月历：月 × 区域，含区域分摊费用与净利
+    description: >
+      【报表层】区域经营月历：月 × 区域（含分摊费用与净利）。
+      月 × 区域骨架保证零销售月也成行（收入记 0），环比基于上一日历月。
     columns:
       - name: month
         description: 月份
@@ -42,8 +47,7 @@ models:
       - name: region_name
         description: 区域名称
       - name: revenue
-        description: 区域收入（元）
-        data_tests: [not_null]
+        description: 区域收入（元，零销售月为 0）
       - name: gross_profit
         description: 区域毛利（元）
       - name: gross_margin
@@ -56,7 +60,7 @@ models:
         description: 区域收入环比
 
   - name: mart_customer_summary
-    description: 【报表层】客户经营汇总：滚动 12 个月（LTM）收入/毛利/订单数 + 客户标签
+    description: 【报表层】客户经营汇总：最近 12 个完整月（LTM）收入/毛利/订单数 + 客户标签
     columns:
       - name: customer_id
         description: 客户编号
@@ -80,7 +84,7 @@ models:
       - name: gross_margin
         description: LTM 毛利率
       - name: last_order_date
-        description: 最近一次下单日期
+        description: 最近一次下单日期（LTM 窗口内）
 
   - name: mart_product_month
     description: 【报表层】商品月度销售：月 × 品类 × 商品

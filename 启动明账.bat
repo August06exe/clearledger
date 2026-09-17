@@ -16,6 +16,7 @@ if not exist .venv (
 )
 
 echo [明账] 正在启动门户服务...
+set PYTHONUTF8=1
 start "" /b cmd /c "timeout /t 4 >nul & start http://127.0.0.1:8620"
 .venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8620
 

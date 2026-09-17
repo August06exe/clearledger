@@ -25,7 +25,7 @@ window.Pages.runs = {
           <tr>
             <td>${Light.html(r.status)}</td>
             <td style="font-family:Consolas,monospace;font-size:12px">${r.run_id}</td>
-            <td>${r.trigger === 'schedule' ? '定时' : '手动'}</td>
+            <td>${r.trigger === 'schedule' ? '定时' : r.trigger === 'catchup' ? '补跑' : '手动'}</td>
             <td>${Fmt.dt(r.started_at)}</td>
             <td>${Fmt.dt(r.finished_at)}</td>
             <td>${Fmt.runDur(r)}</td>
@@ -60,7 +60,7 @@ window.Pages.runs = {
         <div class="row spread">
           <div class="row">${Light.html(r.status)}
             <b style="font-family:Consolas,monospace">${r.run_id}</b>
-            <span class="muted">${r.trigger === 'schedule' ? '定时触发' : '手动触发'}</span>
+            <span class="muted">${r.trigger === 'schedule' ? '定时触发' : r.trigger === 'catchup' ? '断档补跑' : '手动触发'}</span>
           </div>
           <span class="muted">${Fmt.dt(r.started_at)} → ${Fmt.dt(r.finished_at)} · 耗时 ${Fmt.runDur(r)}</span>
         </div>

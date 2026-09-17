@@ -15,10 +15,10 @@ window.Pages.overview = {
     const lr = ov.last_run;
     const k = ov.kpi.latest || {};
     const p = ov.kpi.prev || {};
-    const delta = (a, b) => (a && b ? a / b - 1 : null);
-    const revD = delta(k.revenue, p.revenue);
-    const gpD = delta(k.gross_profit, p.gross_profit);
-    const npD = delta(k.net_profit, p.net_profit);
+    // 环比一律引用 marts 层字段（口径唯一出处），前端不重算
+    const revD = k.revenue_mom ?? null;
+    const gpD = k.gross_profit_mom ?? null;
+    const npD = k.net_profit_mom ?? null;
     const mgD = (k.gross_margin !== undefined && p.gross_margin !== undefined && k.gross_margin !== null)
       ? k.gross_margin - p.gross_margin : null;
     const monthLabel = k.month ? String(k.month).slice(0, 7) : '—';
@@ -37,7 +37,7 @@ window.Pages.overview = {
             ${Light.html(running ? 'running' : ov.light)}
             <div>
               <div style="font-weight:700">
-                ${running ? '跑批进行中…' : (lr ? `上次跑批 ${Fmt.dt(lr.finished_at)}（${lr.trigger === 'schedule' ? '定时' : '手动'}）` : '尚未跑批')}
+                ${running ? '跑批进行中…' : (lr ? `上次跑批 ${Fmt.dt(lr.finished_at)}（${lr.trigger === 'schedule' ? '定时' : lr.trigger === 'catchup' ? '补跑' : '手动'}）` : '尚未跑批')}
               </div>
               <div class="muted">
                 ${lr ? `节点 ${lr.counts.total || '—'} 个 · 计划任务 ${ov.schedule.label}` : `计划任务 ${ov.schedule.label} · 首次使用请先点右上角"立即跑批"`}
