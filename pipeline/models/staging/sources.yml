@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      原始数据层。由 ingest 模块从 data/inbox/ 投放区的 Excel/CSV 清洗落入，
+      保留源文件明细并附加 _source_file / _loaded_at 溯源列。快照式全量覆盖。
+    schema: raw
+    tables:
+      - name: sales_transactions
+        description: 销售流水（订单级），来自业务系统导出 CSV
+      - name: customers
+        description: 客户主数据及业务标签（行业/等级/区域/状态）
+      - name: products
+        description: 商品主数据，含标准单价与标准成本
+      - name: org_structure
+        description: 组织架构部门树
+      - name: expenses
+        description: 部门月度费用流水
+      - name: load_log
+        description: 摄取日志——每个源文件每次入库的行数与时间，数据来龙去脉的第一环
+        columns:
+          - name: source_name
+            description: 数据源标识（ingest/sources.yml 中声明）
+          - name: source_file
+            description: 来源文件名
+          - name: rows
+            description: 本次入库行数

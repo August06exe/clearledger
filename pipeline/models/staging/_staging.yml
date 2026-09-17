@@ -1,0 +1,124 @@
+version: 2
+
+models:
+  - name: stg_sales
+    description: 销售流水清洗层——口径：订单行级；金额均为含折前金额，折扣率缺失按 0 处理
+    columns:
+      - name: order_id
+        description: 订单行编号，全局唯一（SO-日期-序号）
+        data_tests: [not_null, unique]
+      - name: order_date
+        description: 订单日期
+        data_tests: [not_null]
+      - name: customer_id
+        description: 客户编号，关联 stg_customers
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: product_id
+        description: 商品编号，关联 stg_products
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: quantity
+        description: 销售数量
+      - name: unit_price
+        description: 实际成交单价（元）
+      - name: discount_rate
+        description: 折扣率（0~0.2），缺失视为 0
+      - name: amount
+        description: 订单金额 = 数量 × 单价（元，折前）
+      - name: _source_file
+        description: 溯源——本行来自的源文件名
+      - name: loaded_at
+        description: 溯源——本批数据入库时间
+
+  - name: stg_customers
+    description: 客户维度清洗层——含业务标签：行业 / 客户等级 / 区域 / 状态
+    columns:
+      - name: customer_id
+        description: 客户编号
+        data_tests: [not_null, unique]
+      - name: customer_name
+        description: 客户名称
+      - name: industry
+        description: 标签·所属行业（制造业/零售连锁/互联网/教育培训/医疗健康/金融服务）
+      - name: customer_level
+        description: 标签·客户等级（战略客户/大客户/中型客户/小微企业）
+      - name: region_code
+        description: 标签·负责区域编码（R01~R05）
+      - name: region_name
+        description: 标签·区域名称（华东/华北/华南/华中/西南）
+      - name: status
+        description: 标签·客户状态（活跃/流失/未知）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['活跃', '流失', '未知']
+
+  - name: stg_products
+    description: 商品维度清洗层——标准成本是毛利计算的口径基准
+    columns:
+      - name: product_id
+        description: 商品编号
+        data_tests: [not_null, unique]
+      - name: product_name
+        description: 商品名称
+      - name: category
+        description: 品类（智能硬件/软件订阅/耗材配件/专业服务/延保服务）
+      - name: unit
+        description: 计量单位
+      - name: std_price
+        description: 标准单价（元）
+      - name: std_cost
+        description: 标准成本（元）——毛利 = 折后金额 − 数量 × 标准成本
+
+  - name: stg_org
+    description: 组织架构清洗层——费用归集与分摊的依据
+    columns:
+      - name: dept_code
+        description: 部门编码
+        data_tests: [not_null, unique]
+      - name: dept_name
+        description: 部门名称
+      - name: parent_code
+        description: 上级部门编码（顶级为空）
+      - name: dept_level
+        description: 层级（1=集团，2=部门）
+      - name: is_sales_dept
+        description: 是否销售部门（1=是，费用直接归属区域；0=否，费用按收入占比分摊）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false
+      - name: region_code
+        description: 销售事业部负责的区域编码，职能部门为空
+
+  - name: stg_expenses
+    description: 部门费用清洗层——月度费用，净利分摊的输入
+    columns:
+      - name: expense_date
+        description: 记账日期（月度）
+        data_tests: [not_null]
+      - name: dept_code
+        description: 部门编码，关联 stg_org
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_org')
+                field: dept_code
+      - name: dept_name
+        description: 部门名称
+      - name: category
+        description: 费用类别（人力成本/市场推广/差旅费/办公租金/研发投入/其他）
+      - name: amount
+        description: 费用金额（元）
+        data_tests: [not_null]

@@ -1,0 +1,22 @@
+# 明账 ClearLedger — 后端与数据管道依赖
+# Python >= 3.11
+
+# 存储/计算引擎
+duckdb>=1.1
+
+# 转换管道
+dbt-duckdb>=1.9
+
+# 门户后端
+fastapi>=0.115
+uvicorn[standard]>=0.30
+apscheduler>=3.10,<4
+
+# 数据处理与 Excel
+pandas>=2.2
+numpy>=1.26
+openpyxl>=3.1
+xlsxwriter>=3.2
+
+# 字段级血缘 SQL 解析
+sqlglot>=25

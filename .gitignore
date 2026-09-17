@@ -1,0 +1,18 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# 数据与运行时产物（不入库：仓库只放代码与配置）
+data/
+logs/
+
+# dbt 产物
+pipeline/target/
+pipeline/logs/
+pipeline/dbt_packages/
+
+# 系统
+.DS_Store
+Thumbs.db

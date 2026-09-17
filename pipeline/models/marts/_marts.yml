@@ -1,0 +1,117 @@
+version: 2
+
+models:
+  - name: mart_kpi_monthly
+    description: >
+      【报表层】公司级经营月历。指标口径唯一出处：
+      收入 = Σ折后金额；毛利 = 折后 − 标准成本；净利 = 毛利 − 分摊费用。
+      环比字段基于上一日历月；当月为不完整月时环比仅供参考。
+    columns:
+      - name: month
+        description: 月份（当月为截至最新数据的部分月）
+        data_tests: [not_null, unique]
+      - name: revenue
+        description: 收入（元）
+        data_tests: [not_null]
+      - name: cost_amount
+        description: 成本（元）
+      - name: gross_profit
+        description: 毛利（元）
+      - name: expense
+        description: 分摊费用（元）
+      - name: net_profit
+        description: 净利 = 毛利 − 费用（元）
+      - name: gross_margin
+        description: 毛利率 = 毛利 / 收入
+      - name: net_margin
+        description: 净利率 = 净利 / 收入
+      - name: revenue_mom
+        description: 收入环比 = 本月 / 上月 − 1
+      - name: gross_profit_mom
+        description: 毛利环比
+
+  - name: mart_region_month
+    description: 【报表层】区域经营月历：月 × 区域，含区域分摊费用与净利
+    columns:
+      - name: month
+        description: 月份
+        data_tests: [not_null]
+      - name: region_code
+        description: 区域编码
+        data_tests: [not_null]
+      - name: region_name
+        description: 区域名称
+      - name: revenue
+        description: 区域收入（元）
+        data_tests: [not_null]
+      - name: gross_profit
+        description: 区域毛利（元）
+      - name: gross_margin
+        description: 区域毛利率
+      - name: allocated_expense
+        description: 区域分摊费用（事业部直接归属 + 总部按收入占比分摊）
+      - name: net_profit
+        description: 区域净利 = 毛利 − 分摊费用
+      - name: revenue_mom
+        description: 区域收入环比
+
+  - name: mart_customer_summary
+    description: 【报表层】客户经营汇总：滚动 12 个月（LTM）收入/毛利/订单数 + 客户标签
+    columns:
+      - name: customer_id
+        description: 客户编号
+        data_tests: [not_null, unique]
+      - name: customer_name
+        description: 客户名称
+      - name: industry
+        description: 标签·行业
+      - name: customer_level
+        description: 标签·客户等级
+      - name: region_name
+        description: 标签·区域
+      - name: status
+        description: 标签·状态（活跃/流失）
+      - name: order_cnt
+        description: LTM 订单行数
+      - name: ltm_revenue
+        description: LTM 收入（元）
+      - name: ltm_gross_profit
+        description: LTM 毛利（元）
+      - name: gross_margin
+        description: LTM 毛利率
+      - name: last_order_date
+        description: 最近一次下单日期
+
+  - name: mart_product_month
+    description: 【报表层】商品月度销售：月 × 品类 × 商品
+    columns:
+      - name: month
+        description: 月份
+        data_tests: [not_null]
+      - name: category
+        description: 品类
+      - name: product_id
+        description: 商品编号
+      - name: product_name
+        description: 商品名称
+      - name: quantity
+        description: 销量
+      - name: revenue
+        description: 收入（元）
+      - name: gross_profit
+        description: 毛利（元）
+
+  - name: mart_expense_dept_month
+    description: 【报表层】部门费用月历：月 × 部门 × 费用类别（分摊后口径）
+    columns:
+      - name: month
+        description: 月份
+        data_tests: [not_null]
+      - name: dept_code
+        description: 部门编码
+      - name: dept_name
+        description: 部门名称
+      - name: category
+        description: 费用类别
+      - name: allocated_amount
+        description: 分摊后费用（元）
