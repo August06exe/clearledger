@@ -11,7 +11,13 @@ window.Pages.dictionary = {
         <div id="dict-detail" class="card"><div class="empty">左侧选择一张表<br>查看它的字段与业务含义</div></div>
       </div>`;
 
-    const data = await api('/api/dictionary');
+    let data;
+    try {
+      data = await api('/api/dictionary');
+    } catch (e) {
+      el.innerHTML = '<div class="card empty-tip">字典加载失败（可能正在跑批），稍后点击左侧导航重试。</div>';
+      return;
+    }
     this.tables = data.tables;
     this.renderList('');
 

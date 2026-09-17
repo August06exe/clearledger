@@ -4,6 +4,10 @@
 --   环比基于"上一日历月"：月骨架保证无销售月份也成行（收入记 0），
 --   因此环比永远不会"跳月"拿上上个月当分母。
 with month_spine as (
+    -- 月骨架 = 费用月份 ∪ 销售月份（费用是完整月度台账，可兜住整月零销售的极端情况）
+    select distinct date_trunc('month', expense_date) as month
+    from {{ ref('stg_expenses') }}
+    union
     select distinct date_trunc('month', order_date) as month
     from {{ ref('int_sales_enriched') }}
 ),

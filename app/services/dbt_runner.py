@@ -101,6 +101,8 @@ def _pipeline(run_id: str, trigger: str) -> None:
         ingest_ok, ingest_report, dbt_rc = True, None, None
         results_json = None
         dbt_fail_reason = None
+        nodes_out = {}
+        overall = "green"
         start_epoch = time.time()
         with open(log_path, "a", encoding="utf-8") as log:
             log.write(f"===== 跑批 {run_id}（触发：{trigger}）{started} =====\n")
@@ -134,11 +136,10 @@ def _pipeline(run_id: str, trigger: str) -> None:
             elif dbt_rc not in (0, None) or results_json is None:
                 overall = "red"
                 dbt_fail_reason = f"dbt build 失败（返回码 {dbt_rc}）或未生成本轮运行结果，下游被拦截"
-            else:
-                nodes_out, overall = _summarize(results_json, True)
-
-        if results_json is None:
-            nodes_out = {}
+            if results_json is not None:
+                # 即使已判红（如测试失败），仍解析节点明细供排查
+                nodes_out, derived = _summarize(results_json, ingest_ok)
+                overall = "red" if dbt_fail_reason else derived
         counts = {"total": len(nodes_out)}
         for n in nodes_out.values():
             counts[n["status"]] = counts.get(n["status"], 0) + 1

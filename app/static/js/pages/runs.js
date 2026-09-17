@@ -16,7 +16,13 @@ window.Pages.runs = {
       </div>`;
     document.getElementById('runs-refresh').addEventListener('click', () => this.list(el));
 
-    const data = await api('/api/runs');
+    let data;
+    try {
+      data = await api('/api/runs');
+    } catch (e) {
+      document.getElementById('runs-list').innerHTML = '<div class="empty-tip">加载失败（可能正在跑批），点"刷新"重试。</div>';
+      return;
+    }
     const runs = data.runs || [];
     document.getElementById('runs-list').innerHTML = runs.length ? `
       <table class="tbl">

@@ -114,6 +114,15 @@ def api_overview():
 
 
 # ---------------------------------------------------------------- 血缘
+# 节点状态 → 灯色词汇（血缘图/管道 chips 统一用绿黄红表达）
+_STATUS_TO_LIGHT = {
+    "success": "green", "pass": "green",
+    "warn": "yellow",
+    "error": "red", "fail": "red", "runtime error": "red",
+    "skipped": "unknown", "not_run": "unknown",
+}
+
+
 @app.get("/api/lineage/graph")
 def api_lineage_graph():
     g = lineage.graph()
@@ -125,9 +134,9 @@ def api_lineage_graph():
         for r in run["ingest"].get("results", []):
             ingest_by_source[r.get("source")] = r.get("status")
     for n in g["nodes"]:
-        st = status_by_uid.get(n["uid"], {})
-        if st.get("status"):
-            n["status"] = st["status"]
+        st = status_by_uid.get(n["uid"], {}).get("status")
+        if st:
+            n["status"] = _STATUS_TO_LIGHT.get(st, "unknown")
         elif n["resource_type"] == "source" and ingest_by_source:
             n["status"] = "green" if ingest_by_source.get(n["name"]) == "ok" else "red"
         else:
@@ -306,8 +315,8 @@ def api_run_detail(run_id: str):
 
     nodes = [_row(uid, n) for uid, n in run.get("nodes", {}).items()]
     nodes.sort(key=lambda r: (0 if r["kind"] == "model" else 1, r["name"]))
-    return {**{k: run.get(k) for k in ("run_id", "trigger", "started_at", "finished_at",
-                                       "status", "ingest_ok", "ingest", "counts", "error")},
+    return {**{k: run.get(k) for k in ("run_id", "trigger", "started_at", "finished_at", "status",
+                                       "ingest_ok", "ingest", "counts", "error", "dbt_returncode")},
             "nodes": nodes}
 
 

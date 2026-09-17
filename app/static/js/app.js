@@ -43,7 +43,8 @@ const STATUS_LABEL = {
 const StChip = {
   html(st) { return `<span class="status-chip st-${String(st).replace(' ', '-')}">${STATUS_LABEL[st] || st}</span>`; },
 };
-const DOT_CLASS = { success: 'dot-green', pass: 'dot-green', warn: 'dot-yellow', error: 'dot-red',
+const DOT_CLASS = { green: 'dot-green', yellow: 'dot-yellow', red: 'dot-red',
+  success: 'dot-green', pass: 'dot-green', warn: 'dot-yellow', error: 'dot-red',
   fail: 'dot-red', skipped: 'dot-skip', 'not_run': 'dot-skip', 'runtime error': 'dot-red', unknown: 'dot-gray' };
 
 const App = {

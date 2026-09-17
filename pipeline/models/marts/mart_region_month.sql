@@ -2,6 +2,10 @@
 -- 月 × 区域 骨架保证：某区域某月零销售也成行（收入记 0），
 -- 环比永远基于上一日历月；费用列 = 该区域当月分摊费用。
 with month_spine as (
+    -- 月骨架 = 费用月份 ∪ 销售月份（费用是完整月度台账，可兜住整月零销售的极端情况）
+    select distinct date_trunc('month', expense_date) as month
+    from {{ ref('stg_expenses') }}
+    union
     select distinct date_trunc('month', order_date) as month
     from {{ ref('int_sales_enriched') }}
 ),
@@ -16,8 +20,10 @@ grid as (
     cross join regions r
 ),
 region_names as (
+    -- 区域名取自客户维表（不依赖销售数据，从未有销售的区域也有名字）
     select region_code, max(region_name) as region_name
-    from {{ ref('int_sales_enriched') }}
+    from {{ ref('stg_customers') }}
+    where region_code is not null
     group by 1
 ),
 sales as (

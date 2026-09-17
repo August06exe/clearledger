@@ -22,7 +22,14 @@ window.Pages.lineage = {
         <div id="node-panel" class="card"><div class="empty">点击图中任意节点<br>查看它的来龙去脉</div></div>
       </div>`;
 
-    const g = await api('/api/lineage/graph');
+    let g;
+    try {
+      g = await api('/api/lineage/graph');
+    } catch (e) {
+      document.getElementById('flow-canvas').innerHTML =
+        '<div class="empty-tip">血缘数据加载失败（可能正在跑批），稍后点击左侧导航重试。</div>';
+      return;
+    }
     const statusFill = {
       green: ['#ECFDF5', '#10B981'], yellow: ['#FFFBEB', '#F59E0B'],
       red: ['#FEF2F2', '#EF4444'], unknown: ['#F8FAFC', '#CBD5E1'],
@@ -64,8 +71,12 @@ window.Pages.lineage = {
     });
     graph.data(data);
     graph.render();
-    graph.fitView(20);
+    // fitView 必须等布局真正落地后再执行，否则会按空包围盒放大到看不清
+    const doFit = () => { try { graph.fitView(20); } catch (_) {} };
+    graph.on('afterlayout', doFit);
+    setTimeout(doFit, 400);
     App.graph = graph;
+    window.__clGraph = graph;  // 调试句柄：控制台可直接检查血缘图实例
 
     // ---- tooltip ----
     const tip = document.createElement('div');
