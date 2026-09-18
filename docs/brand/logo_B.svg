@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 明账 ClearLedger 品牌标识 · 方案B「账本数据格」矢量版
+       寓意：翻开的账本 = 报表底座；左页数据散落(脏)、右页对齐成格(净)；
+       绿勾 = 契约校验通过；蓝→青渐变 = 从原始到清明 -->
+  <defs>
+    <linearGradient id="cl-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#0D9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="url(#cl-bg)"/>
+
+  <!-- 账本两页 -->
+  <path d="M50 42 C41 34 27 32 17 35 L17 63 C27 60 41 62 50 70 Z" fill="#FFFFFF"/>
+  <path d="M50 42 C59 34 73 32 83 35 L83 63 C73 60 59 62 50 70 Z" fill="#F1F5F9"/>
+  <path d="M50 42 L50 70" stroke="#CBD5E1" stroke-width="1.6"/>
+
+  <!-- 右页：对齐的数据格（3×2） -->
+  <g fill="#2563EB">
+    <rect x="58" y="45.5" width="5.6" height="5.6" rx="1.4"/>
+    <rect x="66" y="44.5" width="5.6" height="5.6" rx="1.4"/>
+    <rect x="58" y="53.5" width="5.6" height="5.6" rx="1.4"/>
+    <rect x="66" y="52.5" width="5.6" height="5.6" rx="1.4"/>
+  </g>
+  <g fill="#14B8A6">
+    <rect x="74" y="43.5" width="5.6" height="5.6" rx="1.4"/>
+    <rect x="74" y="51.5" width="5.6" height="5.6" rx="1.4"/>
+  </g>
+
+  <!-- 左页：残存格子 -->
+  <g fill="#2563EB">
+    <rect x="36" y="44.5" width="5.6" height="5.6" rx="1.4"/>
+    <rect x="28" y="45.5" width="5.6" height="5.6" rx="1.4"/>
+    <rect x="32" y="53" width="5.6" height="5.6" rx="1.4"/>
+  </g>
+  <!-- 散落飞出的脏数据格 -->
+  <g fill="#93C5FD">
+    <rect x="23" y="27" width="5" height="5" rx="1.2" transform="rotate(-18 25.5 29.5)"/>
+    <rect x="14" y="33" width="4.4" height="4.4" rx="1.1" transform="rotate(22 16.2 35.2)"/>
+  </g>
+  <g fill="#5EEAD4">
+    <rect x="27" y="17" width="4.4" height="4.4" rx="1.1" transform="rotate(8 29.2 19.2)"/>
+  </g>
+
+  <!-- 契约校验通过章 -->
+  <rect x="69" y="17" width="17" height="17" rx="5" fill="#22C555"/>
+  <path d="M73.6 26.2 L76.6 29.2 L82.4 22.6" fill="none" stroke="#FFFFFF"
+        stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
