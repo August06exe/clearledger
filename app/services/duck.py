@@ -43,7 +43,7 @@ def query_dicts(sql: str, params: list | None = None) -> list[dict]:
 
 
 def df_to_dicts(df) -> list[dict]:
-    """DataFrame → JSON 安全的记录列表（日期转 ISO 字符串，NaN 转 None，Decimal 转 float）"""
+    """DataFrame → JSON 安全的记录列表（日期转 ISO 字符串，NaN/None 转 null，Decimal 转 float）"""
     from decimal import Decimal
 
     if df is None or len(df) == 0:
@@ -54,5 +54,6 @@ def df_to_dicts(df) -> list[dict]:
             df[c] = df[c].dt.strftime("%Y-%m-%d")
         else:
             df[c] = df[c].map(lambda x: float(x) if isinstance(x, Decimal) else x)
-        df[c] = df[c].where(df[c].notna(), None)
+        # 先升为 object 再填 None：float64 列直接 where(None) 会被 pandas 强转回 NaN，炸 JSON 序列化
+        df[c] = df[c].astype(object).where(df[c].notna(), None)
     return df.to_dict("records")

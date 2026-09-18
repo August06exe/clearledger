@@ -25,8 +25,11 @@ def load() -> dict:
         data = {}
     merged = {**DEFAULTS, **{k: data.get(k, v) for k, v in DEFAULTS.items()}}
     merged["schedule_enabled"] = bool(merged["schedule_enabled"])
-    merged["schedule_hour"] = max(0, min(23, int(merged["schedule_hour"])))
-    merged["schedule_minute"] = max(0, min(59, int(merged["schedule_minute"])))
+    for key, hi in (("schedule_hour", 23), ("schedule_minute", 59)):
+        try:
+            merged[key] = max(0, min(hi, int(merged[key])))
+        except (TypeError, ValueError):
+            merged[key] = DEFAULTS[key]  # 配置被手改坏时回退默认，而不是 500
     return merged
 
 
