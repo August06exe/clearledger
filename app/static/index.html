@@ -4,14 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>明账 ClearLedger</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231D4ED8'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='serif'>账</text></svg>">
-<link rel="stylesheet" href="css/app.css?v=20260919a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232563EB'/%3E%3Cstop offset='1' stop-color='%237C3AED'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='26' fill='url(%23g)'/%3E%3Crect x='17' y='26' width='25' height='48' rx='7.5' fill='none' stroke='white' stroke-width='7.5'/%3E%3Cline x1='17' y1='50' x2='42' y2='50' stroke='white' stroke-width='7.5'/%3E%3Cpath d='M 74 23 A 27 27 0 1 0 74 77 A 38 38 0 0 1 74 23 Z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css?v=20260919b">
 </head>
 <body>
 <div id="app">
   <aside id="sidebar">
     <div class="logo">
-      <div class="logo-mark">账</div>
+      <div class="logo-mark">
+        <svg viewBox="0 0 100 100" width="44" height="44" aria-hidden="true">
+          <defs>
+            <linearGradient id="logo-g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#3B82F6"/>
+              <stop offset="1" stop-color="#8B5CF6"/>
+            </linearGradient>
+          </defs>
+          <rect width="100" height="100" rx="26" fill="url(#logo-g)"/>
+          <rect x="17" y="26" width="25" height="48" rx="7.5" fill="none" stroke="white" stroke-width="7.5"/>
+          <line x1="17" y1="50" x2="42" y2="50" stroke="white" stroke-width="7.5"/>
+          <path d="M 74 23 A 27 27 0 1 0 74 77 A 38 38 0 0 1 74 23 Z" fill="white"/>
+        </svg>
+      </div>
       <div class="logo-text">
         <div class="logo-name">明账</div>
         <div class="logo-sub">ClearLedger</div>
@@ -39,13 +52,13 @@
 <div id="toast"></div>
 <script src="vendor/echarts.min.js"></script>
 <script src="vendor/g6.min.js"></script>
-<script src="js/api.js?v=20260919a"></script>
-<script src="js/app.js?v=20260919a"></script>
-<script src="js/pages/overview.js?v=20260919a"></script>
-<script src="js/pages/lineage.js?v=20260919a"></script>
-<script src="js/pages/dictionary.js?v=20260919a"></script>
-<script src="js/pages/reports.js?v=20260919a"></script>
-<script src="js/pages/runs.js?v=20260919a"></script>
+<script src="js/api.js?v=20260919b"></script>
+<script src="js/app.js?v=20260919b"></script>
+<script src="js/pages/overview.js?v=20260919b"></script>
+<script src="js/pages/lineage.js?v=20260919b"></script>
+<script src="js/pages/dictionary.js?v=20260919b"></script>
+<script src="js/pages/reports.js?v=20260919b"></script>
+<script src="js/pages/runs.js?v=20260919b"></script>
 <script>window.addEventListener('DOMContentLoaded', () => App.init());</script>
 </body>
 </html>

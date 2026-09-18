@@ -47,6 +47,17 @@ const DOT_CLASS = { green: 'dot-green', yellow: 'dot-yellow', red: 'dot-red',
   success: 'dot-green', pass: 'dot-green', warn: 'dot-yellow', error: 'dot-red',
   fail: 'dot-red', skipped: 'dot-skip', 'not_run': 'dot-skip', 'runtime error': 'dot-red', unknown: 'dot-gray' };
 
+// 线性图标（feather 风格，stroke: currentColor，随导航文字变色）
+const ICON_SVG = {
+  overview: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  lineage: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+  dictionary: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  reports: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  runs: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+};
+const icon = (name) =>
+  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_SVG[name] || ''}</svg>`;
+
 const App = {
   charts: [],   // 已注册的 echarts 实例（切页时销毁）
   graph: null,  // g6 实例
@@ -54,11 +65,11 @@ const App = {
   sysTimer: null,
 
   NAV: [
-    { key: 'overview', label: '总览', ico: '◎' },
-    { key: 'lineage', label: '数据血缘', ico: '⛓' },
-    { key: 'dictionary', label: '数据字典', ico: '📖' },
-    { key: 'reports', label: '管理报表', ico: '▤' },
-    { key: 'runs', label: '跑批历史', ico: '⟳' },
+    { key: 'overview', label: '总览' },
+    { key: 'lineage', label: '数据血缘' },
+    { key: 'dictionary', label: '数据字典' },
+    { key: 'reports', label: '管理报表' },
+    { key: 'runs', label: '跑批历史' },
   ],
 
   init() {
@@ -75,7 +86,7 @@ const App = {
   buildNav() {
     const nav = document.getElementById('nav');
     nav.innerHTML = this.NAV.map(n =>
-      `<a href="#/${n.key}" data-key="${n.key}"><span class="ico">${n.ico}</span>${n.label}</a>`
+      `<a href="#/${n.key}" data-key="${n.key}"><span class="ico">${icon(n.key)}</span>${n.label}</a>`
     ).join('');
   },
 

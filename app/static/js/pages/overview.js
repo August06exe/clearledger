@@ -53,11 +53,11 @@ window.Pages.overview = {
       </div>
 
       <div class="grid grid-4">
-        ${this.kpiCard('营业收入', Fmt.wan(k.revenue), Fmt.signedPct(revD), revD, `${monthLabel} 完整月`)}
-        ${this.kpiCard('毛利', Fmt.wan(k.gross_profit), Fmt.signedPct(gpD), gpD, `毛利率 ${Fmt.pct(k.gross_margin)}`)}
-        ${this.kpiCard('净利', Fmt.wan(k.net_profit), Fmt.signedPct(npD), npD, `净利率 ${Fmt.pct(k.net_margin)}`)}
+        ${this.kpiCard('营业收入', Fmt.wan(k.revenue), Fmt.signedPct(revD), revD, `${monthLabel} 完整月`, '#3B82F6')}
+        ${this.kpiCard('毛利', Fmt.wan(k.gross_profit), Fmt.signedPct(gpD), gpD, `毛利率 ${Fmt.pct(k.gross_margin)}`, '#10B981')}
+        ${this.kpiCard('净利', Fmt.wan(k.net_profit), Fmt.signedPct(npD), npD, `净利率 ${Fmt.pct(k.net_margin)}`, '#8B5CF6')}
         ${this.kpiCard('毛利率', Fmt.pct(k.gross_margin),
-          mgD === null ? '—' : `${mgD >= 0 ? '↑' : '↓'} ${Math.abs(mgD * 100).toFixed(1)} pct`, mgD, '毛利 / 收入')}
+          mgD === null ? '—' : `${mgD >= 0 ? '↑' : '↓'} ${Math.abs(mgD * 100).toFixed(1)} pct`, mgD, '毛利 / 收入', '#F59E0B')}
       </div>
 
       <div class="grid grid-2">
@@ -128,10 +128,11 @@ window.Pages.overview = {
       </div>`).join('');
   },
 
-  kpiCard(title, value, delta, deltaVal, sub) {
+  kpiCard(title, value, delta, deltaVal, sub, accent) {
     const cls = deltaVal === null || deltaVal === undefined ? 'flat' : (deltaVal >= 0 ? 'up' : 'down');
     return `
-      <div class="card" style="margin-bottom:0">
+      <div class="card kpi-card" style="margin-bottom:0">
+        <div class="kpi-accent" style="background:linear-gradient(90deg, ${accent}, ${accent}44)"></div>
         <div class="muted">${title}</div>
         <div class="kpi-value">${value}</div>
         <div class="kpi-delta ${cls}">${delta || ''} <span class="muted" style="font-weight:400">${sub || ''}</span></div>
