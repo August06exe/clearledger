@@ -1,4 +1,4 @@
--- 生成物：宽表装配（orders + 2 张标签表左联 + 派生列）
+-- 生成物：宽表装配（orders + 2 张标签表有序左联 + 派生列）
 select
     m.order_no,
     m.order_time,

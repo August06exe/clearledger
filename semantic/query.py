@@ -40,10 +40,11 @@ def list_reports(instance: str) -> list[dict]:
 
 
 def filter_options(instance: str, report_key: str) -> dict[str, list]:
-    """报表可筛选项（白名单的机器来源：实查 distinct）——分组维度 + 声明的筛选维度，
-    含时间维度（按月过滤是常见需求，N-10）"""
+    """报表可筛选项（白名单的机器来源：实查 distinct）。
+    分组/时间维度从 mart 取；声明筛选维度从宽表取（mart 粒度=时间×维度，评审轮1 阻断1）"""
     inst = load_instance(instance)
     rep = _get_report(inst, report_key)
+    wide = inst.wide["wide"]
     con = _connect(inst)
     try:
         opts: dict[str, list] = {}
@@ -52,14 +53,16 @@ def filter_options(instance: str, report_key: str) -> dict[str, list]:
             dim_names.append(rep["time_dim"])
         for dn in dim_names:
             dim = inst.dimension(dn)
-            col = f'"{dim["name"]}"'
+            in_mart = not (rep.get("filters") and dn in rep["filters"])
+            table = f"marts.mart_{report_key}" if in_mart else f"intermediate.int_{wide['name']}"
+            col = f'"{dim["name"]}"' if in_mart else f'"{dim["column"]}"'
             try:
                 rows = con.execute(
-                    f'select distinct {col} from marts.mart_{report_key} where {col} is not null order by 1'
+                    f'select distinct {col} from {table} where {col} is not null order by 1'
                 ).fetchall()
                 opts[dn] = [r[0] for r in rows]
             except duckdb.Error:
-                pass  # mart 无此列（配置漂移）——跳过该筛选项
+                pass  # 列不可用（配置漂移）——跳过该筛选项
         return opts
     finally:
         con.close()
@@ -71,8 +74,11 @@ def build_query(instance: str, report_key: str, filters: dict | None = None,
     inst = load_instance(instance)
     rep = _get_report(inst, report_key)
     opts = filter_options(instance, report_key)
+    wide = inst.wide["wide"]
+    gdim = inst.dimension(rep["dimension"])
     sql = f'select * from marts.mart_{report_key}'
     conds, params = [], []
+    filter_dims = set(rep.get("filters", []))
     for dim_name, val in (filters or {}).items():
         # 名非法必须报错（拼错维度名不应静默变全量，P-08）；值非法静默回退（D14）
         if dim_name not in opts:
@@ -80,8 +86,16 @@ def build_query(instance: str, report_key: str, filters: dict | None = None,
                              f"可用: {list(opts.keys())}")
         if val not in opts[dim_name]:
             continue
-        conds.append(f'"{dim_name}" = ?')
-        params.append(val)
+        if dim_name in filter_dims:
+            # 筛选维度不在 mart 粒度中：子查询取"宽表中该筛选值命中的分组维度值集合"
+            fdim = inst.dimension(dim_name)
+            sub = (f'select distinct w."{gdim["column"]}" from intermediate.int_{wide["name"]} w '
+                   f'where w."{fdim["column"]}" = ?')
+            conds.append(f'"{gdim["name"]}" in ({sub})')
+            params.append(val)
+        else:
+            conds.append(f'"{dim_name}" = ?')
+            params.append(val)
     if conds:
         sql += " where " + " and ".join(conds)
     if rep.get("time_dim") or inst.dimension(rep["dimension"]).get("type") == "time":

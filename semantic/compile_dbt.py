@@ -194,14 +194,12 @@ def gen_mart_model(inst, rep: dict) -> str:
     has_time = bool(rep.get("time_dim"))
     time_dim = inst.dimension(rep["time_dim"]) if has_time else dim if dim.get("type") == "time" else None
 
+    # 粒度=时间×维度（设计 §4.2：marts 为 dimension × metrics 分组汇总；
+    # 筛选维度不并入分组——筛选在查询层对汇总表 SELECT 白名单过滤，评审轮1 阻断1 裁决）
     group_cols = []
     if time_dim is not None and has_time:
         group_cols.append(_dim_expr(time_dim, time_dim["column"]))
     group_cols.append(_dim_expr(dim, dim["column"]))
-    # 筛选维度：并入分组（维表功能性依赖不改变行数，但让 mart 可按其过滤）
-    for fname in rep.get("filters", []):
-        fd = inst.dimension(fname)
-        group_cols.append(_dim_expr(fd, fd["column"]))
     metrics = [f"    {inst.metric(m)['expr']} as \"{m}\"" for m in rep.get("metrics", [])]
 
     where = ""
