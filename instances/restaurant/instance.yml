@@ -1,0 +1,6 @@
+# 实例元信息：连锁餐饮（数据形态与销售公司完全不同：门店/菜品/渠道，无客户/区域/商品）
+name: restaurant
+title: 演示连锁餐饮
+inbox: data/inbox
+database: ../../../data/warehouse/restaurant.duckdb
+tz: Asia/Shanghai

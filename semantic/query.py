@@ -38,19 +38,26 @@ def list_reports(instance: str) -> list[dict]:
 
 
 def filter_options(instance: str, report_key: str) -> dict[str, list]:
-    """报表可筛选项（白名单的机器来源：实查 distinct）"""
+    """报表可筛选项（白名单的机器来源：实查 distinct）——分组维度 + 声明的筛选维度"""
     inst = load_instance(instance)
     rep = _get_report(inst, report_key)
     con = _connect(inst)
     try:
-        dim = inst.dimension(rep["dimension"])
-        if dim.get("type") == "time":
-            return {}
-        col = f'"{dim["name"]}"'
-        rows = con.execute(
-            f'select distinct {col} from marts.mart_{report_key} where {col} is not null order by 1'
-        ).fetchall()
-        return {rep["dimension"]: [r[0] for r in rows]}
+        opts: dict[str, list] = {}
+        dim_names = [rep["dimension"]] + list(rep.get("filters", []))
+        for dn in dim_names:
+            dim = inst.dimension(dn)
+            if dim.get("type") == "time":
+                continue
+            col = f'"{dim["name"]}"'
+            try:
+                rows = con.execute(
+                    f'select distinct {col} from marts.mart_{report_key} where {col} is not null order by 1'
+                ).fetchall()
+                opts[dn] = [r[0] for r in rows]
+            except duckdb.Error:
+                pass  # mart 无此列（配置漂移）——跳过该筛选项
+        return opts
     finally:
         con.close()
 
@@ -72,7 +79,7 @@ def build_query(instance: str, report_key: str, filters: dict | None = None,
         sql += " where " + " and ".join(conds)
     if rep.get("time_dim") or inst.dimension(rep["dimension"]).get("type") == "time":
         tcol = f'"{rep.get("time_dim") or rep["dimension"]}"'
-        sql += f" order by {tcol}"
+        sql += f" order by {tcol} desc"  # 时间倒序：limit 取最近 N 期
     sql += f" limit {max(1, min(int(limit), 5000))}"
     return sql, params
 
@@ -94,7 +101,8 @@ def run_report(instance: str, report_key: str, filters: dict | None = None,
                 if isinstance(v, Decimal):
                     r[k] = float(v)
                 elif isinstance(v, _dt.datetime):
-                    r[k] = v.strftime("%Y-%m-%d %H:%M:%S")
+                    r[k] = v.strftime("%Y-%m-%d") if (v.hour, v.minute, v.second) == (0, 0, 0) \
+                        else v.strftime("%Y-%m-%d %H:%M:%S")
                 elif isinstance(v, _dt.date):
                     r[k] = v.isoformat()
         return rows

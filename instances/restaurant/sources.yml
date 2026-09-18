@@ -1,0 +1,56 @@
+# 实例二：连锁餐饮 —— 入口档案 + 字段契约
+version: 1
+
+sources:
+  - name: orders
+    title: 订单流水
+    discover:
+      patterns: ["orders*.csv", "订单明细*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 订单号,   map: order_no,     type: string,  required: true}
+      - {cn: 下单时间, map: order_time,   type: date,    required: true}
+      - {cn: 门店编码, map: store_code,   type: string,  required: true}
+      - {cn: 菜品编码, map: dish_code,    type: string,  required: true}
+      - {cn: 数量,     map: quantity,     type: integer, required: true, range: [1, 1000]}
+      - {cn: 单价,     map: unit_price,   type: decimal}
+      - {cn: 金额,     map: amount,       type: decimal, required: true}
+      - {cn: 渠道,     map: channel,      type: string,  enum: [堂食, 外卖, 小程序], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+
+  - name: dishes
+    title: 菜品主数据
+    discover:
+      patterns: ["dishes*.xlsx", "菜品*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 菜品编码, map: dish_code,   type: string,  required: true, unique: true}
+      - {cn: 菜品名称, map: dish_name,   type: string}
+      - {cn: 菜品类别, map: dish_cat,    type: string,  enum: [热菜, 凉菜, 主食, 饮品, 甜点], level: yellow}
+      - {cn: 标准成本, map: std_cost,    type: decimal}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: stores
+    title: 门店主数据
+    discover:
+      patterns: ["stores*.xlsx", "门店*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 门店编码, map: store_code, type: string, required: true, unique: true}
+      - {cn: 门店名称, map: store_name, type: string}
+      - {cn: 城市,     map: city,       type: string}
+      - {cn: 商圈类型, map: biz_type,   type: string, enum: [购物中心, 社区, 交通枢纽, 景区], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red

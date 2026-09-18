@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_stores
+    description: 门店主数据（清洗层，由字段契约生成）
+    columns:
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: store_name
+        description: 门店名称（string）
+      - name: city
+        description: 城市（string）
+      - name: biz_type
+        description: 商圈类型（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['购物中心', '社区', '交通枢纽', '景区']

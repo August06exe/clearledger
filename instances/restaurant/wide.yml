@@ -1,0 +1,21 @@
+# 实例二：连锁餐饮 —— 宽表装配 + 匹配契约
+version: 1
+
+wide:
+  name: wide_orders
+  main: orders
+  joins:
+    - table: dishes
+      keys: {left: dish_code, right: dish_code}
+      how: left
+      columns: [dish_name, dish_cat, std_cost]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: stores
+      keys: {left: store_code, right: store_code}
+      how: left
+      columns: [store_name, city, biz_type]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+  derived:
+    - {name: cost_amount,  expr: "round(quantity * std_cost, 2)"}
+    - {name: gross_profit, expr: "round(amount - quantity * std_cost, 2)"}
+  drop: [_source_file, _loaded_at]

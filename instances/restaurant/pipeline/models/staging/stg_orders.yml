@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: 订单流水（清洗层，由字段契约生成）
+    columns:
+      - name: order_no
+        description: 订单号（string）
+        data_tests:
+          - not_null
+      - name: order_time
+        description: 下单时间（date）
+        data_tests:
+          - not_null
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: dish_code
+        description: 菜品编码（string）
+        data_tests:
+          - not_null
+      - name: quantity
+        description: 数量（integer）
+        data_tests:
+          - not_null
+      - name: unit_price
+        description: 单价（decimal）
+      - name: amount
+        description: 金额（decimal）
+        data_tests:
+          - not_null
+      - name: channel
+        description: 渠道（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['堂食', '外卖', '小程序']

@@ -1,0 +1,9 @@
+# 实例二：维度声明（门店/城市/菜品类别/渠道——引擎不认识这些词，只认声明）
+version: 1
+dimensions:
+  - {name: 月份,     column: order_time, type: time, grain: month}
+  - {name: 门店,     column: store_name,  type: category}
+  - {name: 城市,     column: city,        type: category}
+  - {name: 菜品类别, column: dish_cat,    type: category}
+  - {name: 渠道,     column: channel,     type: category}
+  - {name: 商圈类型, column: biz_type,    type: category}

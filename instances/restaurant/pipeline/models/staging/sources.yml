@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: 原始层（实例摄取写入，含契约校验后的规整数据）
+    tables:
+      - name: orders
+        description: 订单流水
+      - name: dishes
+        description: 菜品主数据
+      - name: stores
+        description: 门店主数据

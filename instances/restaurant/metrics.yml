@@ -1,0 +1,9 @@
+# 实例二：指标口径（餐饮口径——营业额/客单数，与销售公司的收入/客户数完全不同名不同义）
+version: 1
+metrics:
+  - {name: 营业额,   expr: "sum(amount)"}
+  - {name: 成本额,   expr: "sum(cost_amount)"}
+  - {name: 毛利,     expr: "sum(gross_profit)"}
+  - {name: 毛利率,   expr: "round(sum(gross_profit) / nullif(sum(amount), 0), 4)", format: percent}
+  - {name: 客单数,   expr: "count(distinct order_no)"}
+  - {name: 菜品销量, expr: "sum(quantity)"}

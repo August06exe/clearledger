@@ -1,0 +1,37 @@
+# 实例二：看板与报表
+version: 1
+
+reports:
+  - key: monthly_kpi
+    title: 经营月报（公司级）
+    dimension: 月份
+    metrics: [营业额, 毛利, 毛利率, 客单数]
+    chart: bar_line
+    full_period_only: true
+  - key: channel_month
+    title: 渠道月报
+    dimension: 渠道
+    time_dim: 月份
+    metrics: [营业额, 毛利]
+    chart: stack_bar
+    full_period_only: true
+  - key: store_rank
+    title: 门店经营排行
+    dimension: 门店
+    filters: [城市, 商圈类型]
+    metrics: [营业额, 毛利, 客单数, 毛利率]
+    chart: hbar
+  - key: dish_cat_month
+    title: 菜类月报
+    dimension: 菜品类别
+    time_dim: 月份
+    metrics: [营业额, 菜品销量]
+    chart: stack_bar
+    full_period_only: true
+  - key: city_month
+    title: 城市月报
+    dimension: 城市
+    time_dim: 月份
+    metrics: [营业额, 客单数]
+    chart: stack_bar
+    full_period_only: true

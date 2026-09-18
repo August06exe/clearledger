@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_dishes
+    description: 菜品主数据（清洗层，由字段契约生成）
+    columns:
+      - name: dish_code
+        description: 菜品编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: dish_name
+        description: 菜品名称（string）
+      - name: dish_cat
+        description: 菜品类别（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['热菜', '凉菜', '主食', '饮品', '甜点']
+      - name: std_cost
+        description: 标准成本（decimal）

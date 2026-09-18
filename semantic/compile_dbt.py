@@ -154,6 +154,10 @@ def gen_mart_model(inst, rep: dict) -> str:
     if time_dim is not None and has_time:
         group_cols.append(_dim_expr(time_dim, time_dim["column"]))
     group_cols.append(_dim_expr(dim, dim["column"]))
+    # 筛选维度：并入分组（维表功能性依赖不改变行数，但让 mart 可按其过滤）
+    for fname in rep.get("filters", []):
+        fd = inst.dimension(fname)
+        group_cols.append(_dim_expr(fd, fd["column"]))
     metrics = [f"    {inst.metric(m)['expr']} as \"{m}\"" for m in rep.get("metrics", [])]
 
     where = ""

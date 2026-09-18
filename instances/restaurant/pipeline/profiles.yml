@@ -1,0 +1,8 @@
+# 生成物：实例 restaurant 的 dbt 连接（库文件独立，实例间物理隔离）
+cl:
+  target: restaurant
+  outputs:
+    restaurant:
+      type: duckdb
+      path: "../../../data/warehouse/restaurant.duckdb"
+      threads: 4
