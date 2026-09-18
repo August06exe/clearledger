@@ -13,12 +13,13 @@ from urllib.parse import quote
 
 import duckdb
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, Body, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from app import config
 from app.services import artifacts, dbt_runner, duck, export, lineage, reports
+from app.services import settings as settings_svc
 
 # ---------------------------------------------------------------- 调度器
 scheduler = BackgroundScheduler(timezone="Asia/Shanghai")
@@ -28,21 +29,49 @@ def _scheduled_build() -> None:
     dbt_runner.trigger_run("schedule")
 
 
+def _apply_schedule() -> dict:
+    """按设置应用定时任务：开关关闭时彻底移除定时任务，门户回到纯手动模式"""
+    s = settings_svc.load()
+    if s["schedule_enabled"]:
+        scheduler.add_job(
+            _scheduled_build, "cron",
+            hour=s["schedule_hour"], minute=s["schedule_minute"],
+            id="daily_build", replace_existing=True,
+            misfire_grace_time=3600 * 6,  # 定时模式下，关机/睡眠错过 6 小时内醒来仍补跑
+            coalesce=True,
+        )
+    else:
+        try:
+            scheduler.remove_job("daily_build")
+        except Exception:
+            pass
+    return s
+
+
+def _schedule_info() -> dict:
+    s = settings_svc.load()
+    s["label"] = ("每天 {:02d}:{:02d}".format(s["schedule_hour"], s["schedule_minute"])
+                  if s["schedule_enabled"] else "手动模式")
+    s["next_run_time"] = None
+    try:
+        job = scheduler.get_job("daily_build")
+        if job is not None and job.next_run_time is not None:
+            s["next_run_time"] = job.next_run_time.strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        pass
+    return s
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    scheduler.add_job(
-        _scheduled_build, "cron",
-        hour=config.SCHEDULE_HOUR, minute=config.SCHEDULE_MINUTE,
-        id="daily_build", replace_existing=True,
-        misfire_grace_time=3600 * 6,  # 关机/睡眠错过 6 小时内醒来仍补跑
-        coalesce=True,
-    )
     scheduler.start()
-    # 启动补跑：上一次跑批距今超过 24 小时（比如放了几天假），自动补一次，避免"静默断更"
+    _apply_schedule()
+    # 启动补跑：仅在定时模式开启时生效——完全手动模式下，跑不跑由用户决定
     try:
+        s = settings_svc.load()
         runs = dbt_runner.history()
         stale = not runs or datetime.fromisoformat(runs[0]["finished_at"]) < datetime.now() - timedelta(hours=24)
-        if stale and not dbt_runner.status()["active"]:
+        if s["schedule_enabled"] and stale and not dbt_runner.status()["active"]:
             dbt_runner.trigger_run("catchup")
     except Exception:
         pass
@@ -104,8 +133,7 @@ def api_overview():
             "status": run["status"], "counts": run.get("counts", {}),
         },
         "running": dbt_runner.status(),
-        "schedule": {"hour": config.SCHEDULE_HOUR, "minute": config.SCHEDULE_MINUTE,
-                     "label": f"每天 {config.SCHEDULE_HOUR:02d}:{config.SCHEDULE_MINUTE:02d}"},
+        "schedule": _schedule_info(),
         "kpi": {"latest": latest, "prev": prev},
         "trend": kpi_rows,
         "node_counts": by_type,
@@ -277,6 +305,28 @@ def api_report_export(key: str, months: int | None = None, region: str | None = 
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )
 
+
+# ---------------------------------------------------------------- 设置
+@app.get("/api/settings")
+def api_settings_get():
+    return _schedule_info()
+
+
+@app.post("/api/settings")
+def api_settings_patch(payload: dict = Body(...)):
+    patch = {}
+    if "schedule_enabled" in payload:
+        patch["schedule_enabled"] = bool(payload["schedule_enabled"])
+    try:
+        if "hour" in payload:
+            patch["schedule_hour"] = int(payload["hour"])
+        if "minute" in payload:
+            patch["schedule_minute"] = int(payload["minute"])
+    except (TypeError, ValueError):
+        raise HTTPException(422, "时间格式不对")
+    settings_svc.save(patch)
+    _apply_schedule()
+    return _schedule_info()
 
 # ---------------------------------------------------------------- 跑批
 @app.get("/api/runs")

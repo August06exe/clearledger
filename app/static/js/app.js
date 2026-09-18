@@ -66,6 +66,7 @@ const App = {
     this.buildNav();
     window.addEventListener('hashchange', () => this.route());
     document.getElementById('btn-run').addEventListener('click', () => this.triggerRun());
+    document.getElementById('btn-sched').addEventListener('click', () => this.openSchedModal());
     this.refreshSys();
     this.sysTimer = setInterval(() => this.refreshSys(), 60_000);
     this.route();
@@ -114,11 +115,65 @@ const App = {
       const ov = await api('/api/overview');
       const st = ov.running && ov.running.active ? 'running' : ov.light;
       document.getElementById('sys-light').innerHTML = Light.html(st);
+      const s = ov.schedule || {};
+      const schedTxt = s.schedule_enabled
+        ? `自动 ${String(s.schedule_hour).padStart(2, '0')}:${String(s.schedule_minute).padStart(2, '0')}`
+        : '手动模式';
       const lr = ov.last_run;
       document.getElementById('sys-runinfo').textContent = lr
-        ? `上次跑批 ${Fmt.dt(lr.finished_at)} · 下次 ${ov.schedule.label}`
-        : `尚未跑批 · 计划 ${ov.schedule.label}`;
+        ? `上次跑批 ${Fmt.dt(lr.finished_at)} · ${schedTxt}`
+        : `尚未跑批 · ${schedTxt}`;
     } catch (_) { /* 静默：页面内已有错误提示 */ }
+  },
+
+  // ---------- 跑批设置弹窗 ----------
+  async openSchedModal() {
+    const old = document.getElementById('modal-overlay');
+    if (old) old.remove();
+    let s = {};
+    try { s = await api('/api/settings'); } catch (_) { return; }
+    const hh = String(s.schedule_hour).padStart(2, '0');
+    const mm = String(s.schedule_minute).padStart(2, '0');
+    const overlay = this.el(`
+      <div id="modal-overlay">
+        <div class="modal card">
+          <h3>⏰ 跑批设置</h3>
+          <label class="row" style="gap:8px;margin:16px 0 10px;font-size:14px">
+            <input type="checkbox" id="sch-en" ${s.schedule_enabled ? 'checked' : ''}>
+            每天定时自动跑批
+          </label>
+          <div style="margin-bottom:14px" class="muted">
+            开启后每天 <input type="time" id="sch-time" value="${hh}:${mm}"> 自动出数（T+1），
+            关机错过了会在开机后自动补跑。
+          </div>
+          <div style="margin-bottom:14px" class="muted">
+            关闭即<strong>完全手动</strong>：只有点"▶ 立即跑批"才会跑，不会有任何自动动作。
+          </div>
+          <div class="row" style="justify-content:flex-end;margin-top:16px">
+            <button class="btn" id="sch-cancel">取消</button>
+            <button class="btn btn-primary" id="sch-save">保存</button>
+          </div>
+        </div>
+      </div>`);
+    document.body.appendChild(overlay);
+    const syncTimeRow = () => {
+      const t = overlay.querySelector('#sch-time');
+      t.disabled = !overlay.querySelector('#sch-en').checked;
+    };
+    overlay.querySelector('#sch-en').addEventListener('change', syncTimeRow);
+    syncTimeRow();
+    overlay.querySelector('#sch-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#sch-save').addEventListener('click', async () => {
+      const en = overlay.querySelector('#sch-en').checked;
+      const [h, m] = (overlay.querySelector('#sch-time').value || '06:30').split(':');
+      try {
+        await api('/api/settings', { method: 'POST', body: JSON.stringify({ schedule_enabled: en, hour: h, minute: m }) });
+        overlay.remove();
+        Toast.show(en ? `已开启：每天 ${h.padStart(2, '0')}:${m} 自动跑批` : '已切换为完全手动模式');
+        this.refreshSys();
+      } catch (_) { /* toast 已提示 */ }
+    });
   },
 
   async triggerRun() {

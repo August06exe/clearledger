@@ -16,13 +16,16 @@ RUN_RESULTS = DBT_DIR / "target" / "run_results.json"
 # 运行时
 RUNS_DIR = ROOT / "data" / "runs"
 LOG_DIR = ROOT / "logs"
+DATA_DIR = ROOT / "data"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 # 门户
 HOST = "127.0.0.1"
 PORT = 8620
 
-# 跑批调度：每天 06:30（T+1 出数）
+# 跑批调度默认值（可在门户"跑批设置"里开关与调整，持久化到 data/settings.json）
+# 默认完全手动触发——定时是可选功能，不是默认行为
+SCHEDULE_ENABLED_DEFAULT = False
 SCHEDULE_HOUR = 6
 SCHEDULE_MINUTE = 30
 

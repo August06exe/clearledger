@@ -185,3 +185,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 #toast.err { background: #B91C1C; }
 
 .empty-tip { color: var(--muted); text-align: center; padding: 40px; line-height: 2; }
+
+/* 跑批设置弹窗 */
+#modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, .45);
+  z-index: 200; display: flex; align-items: center; justify-content: center; }
+#modal-overlay .modal { width: 440px; margin: 0; box-shadow: 0 12px 40px rgba(15, 23, 42, .25); }
+#sch-time { border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-size: 13px; }
+#sch-time:disabled { opacity: .5; }

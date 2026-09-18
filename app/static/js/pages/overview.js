@@ -22,6 +22,9 @@ window.Pages.overview = {
     const mgD = (k.gross_margin !== undefined && p.gross_margin !== undefined && k.gross_margin !== null)
       ? k.gross_margin - p.gross_margin : null;
     const monthLabel = k.month ? String(k.month).slice(0, 7) : '—';
+    const schedTxt = ov.schedule && ov.schedule.schedule_enabled
+      ? `每天 ${String(ov.schedule.schedule_hour).padStart(2, '0')}:${String(ov.schedule.schedule_minute).padStart(2, '0')} 自动跑批`
+      : '跑批模式：手动';
 
     const warnsHtml = (ov.warnings || []).length
       ? `<div class="mt8">${ov.warnings.map(w =>
@@ -40,7 +43,7 @@ window.Pages.overview = {
                 ${running ? '跑批进行中…' : (lr ? `上次跑批 ${Fmt.dt(lr.finished_at)}（${lr.trigger === 'schedule' ? '定时' : lr.trigger === 'catchup' ? '补跑' : '手动'}）` : '尚未跑批')}
               </div>
               <div class="muted">
-                ${lr ? `节点 ${lr.counts.total || '—'} 个 · 计划任务 ${ov.schedule.label}` : `计划任务 ${ov.schedule.label} · 首次使用请先点右上角"立即跑批"`}
+                ${lr ? `节点 ${lr.counts.total || '—'} 个 · ${schedTxt}` : `${schedTxt} · 放入数据文件后点右上角"立即跑批"`}
               </div>
             </div>
           </div>
