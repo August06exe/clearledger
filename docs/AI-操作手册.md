@@ -77,16 +77,16 @@ curl -s http://127.0.0.1:8620/api/overview | python -c "import json,sys;d=json.l
 1. 人类把新文件放进 `data/inbox/`
 2. `ingest/sources.yml` 加一段：`name/title/format/files/column_map(中文表头→英文snake_case)/date_columns/numeric_columns`
 3. `pipeline/models/staging/` 加 `stg_<name>.sql`（照抄现有 5 个的模式：trim 关键列、强类型、where 剔坏行）+ 在 `sources.yml`(staging 的) 声明 source + `_staging.yml` 加字典与测试（not_null/unique/relationships 至少各一）
-4. 若它参与宽表：进 `int_sales_enriched.sql` 关联（v0.5 后此步变为 wide.yml 配置）
+4. 若它参与宽表：进 `int_sales_enriched.sql` 关联（v0.3「通用积木」落地后此步变为 wide.yml 配置，见 §8）
 5. 跑 R-01 验证；门户字典页应出现新表
 6. **空文件会显式报错**（设计决策 D7：宁可不跑也不跑错），提醒人类确认导出
 
-### R-03 加一个指标（当前版本；v0.5 后改配置）
+### R-03 加一个指标（当前版本；v0.3「通用积木」后改为 metrics.yml 配置）
 - 计算逻辑 → intermediate 层加列（口径唯一出处），`_intermediate.yml` 补字典
 - 报表展示 → `app/services/reports.py` 的 REPORTS 注册表加一项（columns 列表 + run 函数，参数必须走 `_as_int/_in_whitelist` 白名单，**禁止字符串直拼 SQL**）
 
 ### R-04 加一张报表 / 改看板卡片
-- 新报表：reports.py 注册表 + `static/js/pages/reports.js` 的 drawChart 加分支（注意：这是已知技术债，v0.5 配置化后消失）
+- 新报表：reports.py 注册表 + `static/js/pages/reports.js` 的 drawChart 加分支（注意：这是已知技术债，v0.3 配置化后消失）
 - 总览 KPI 卡：`static/js/pages/overview.js` 的 kpiCard 调用处；**环比一律引用 mart 的 *_mom 字段，前端不许重算**（口径唯一出处原则）
 
 ### R-05 改跑批模式 / 时间
@@ -195,9 +195,9 @@ curl -s -X POST http://127.0.0.1:8620/api/runs/trigger && sleep 25 && curl -s ht
 | 7 | 前端两套状态词汇不统一→节点全灰 | _STATUS_TO_LIGHT 归一化；加状态时两套映射都改 |
 | 8 | Git Bash `>nul` 创建真实文件→git add 崩溃 | 用 >/dev/null；.gitignore 已兜底 nul |
 
-## 8. 与路线图的衔接（v0.5 积木化对本手册的影响）
+## 8. 与路线图的衔接（v0.3「通用积木」对本手册的影响）
 
-已定的方向（见与用户的讨论）：业务层从写死代码改为**五份配置**——sources.yml（已有）、wide.yml（声明式宽表：主表+左联标签表+派生列）、dimensions.yml、metrics.yml、dashboard.yml；引擎永不随公司变；**AI 的角色=读源文件+问答→生成五份配置→人类审核**。落地后：
+已定方向（路线图第 2 版，AI-Native 第一性原则）：业务层从写死代码改为**五份配置**——sources.yml（已有）、wide.yml（声明式宽表：主表+左联标签表+派生列）、dimensions.yml（维度声明，零预设）、metrics.yml（指标口径唯一出处）、dashboard.yml（看板卡片）；引擎永不随公司变；**双实例验证**（现有销售公司 + 虚构连锁餐饮，一键切换，引擎 git diff 为零）。落地后：
 - R-02/R-03/R-04 将从"改代码"降级为"改配置"（本手册相应章节会重写）
-- 将新增"配置生成 SOP"章节（含第二实例=虚构连锁餐饮的验证标准）
+- 新增"AI 装配 SOP"章节（v0.4：读文件→体检→问答→生成五配置→校验→人审核）
 - 摄取原则已由用户定调：**入库即干净字段**，原始快照仅作底账（清洗镜像层），报表只见干净层
