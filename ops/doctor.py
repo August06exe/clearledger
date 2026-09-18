@@ -140,23 +140,27 @@ def main() -> int:
         check("前端缓存版本号", "ok" if n >= 7 else "warn",
               f"{n} 处 ?v= 参数（改前端静态文件时必须同步升级，否则浏览器用旧缓存）")
 
-    for f in ("pipeline/target/manifest.json", "pipeline/target/run_results.json"):
-        check(f"dbt 产物 {f.split('/')[-1]}", "ok" if (ROOT / f).exists() else "warn",
-              "就绪" if (ROOT / f).exists() else "不存在（跑一次 dbt build 自动生成；血缘/字典页会降级）")
-
-    # ---- 7. 语义层实例（v0.3）----
+    # ---- 7. 语义层实例（v0.3，唯一管道）----
     try:
         from semantic.loader import list_instances, load_instance
         names = list_instances()
         if not names:
-            check("语义层实例", "warn", "instances/ 下无实例（v0.3 语义层未启用）")
+            check("语义层实例", "fail", "instances/ 下无实例——系统已全面实例化，必须至少一个实例")
         for n in names:
             try:
                 inst = load_instance(n)
                 db = (inst.pipeline_dir / inst.db_path).resolve()
+                run_hist = ROOT / "data" / "runs" / f"history_{n}.json"
+                last_st = ""
+                if run_hist.exists():
+                    try:
+                        last_st = json.loads(run_hist.read_text(encoding="utf-8"))[0].get("status", "")
+                    except Exception:
+                        pass
                 check(f"实例 {n}", "ok" if db.exists() else "warn",
-                      f"五配置校验通过 · {len(inst.dashboard.get('reports', []))} 张报表 · "
-                      f"库{'就绪' if db.exists() else '未建（跑 ingest+dbt build）'}")
+                      f"五配置通过 · {len(inst.dashboard.get('reports', []))} 报表 · "
+                      f"库{'就绪' if db.exists() else '未建'}"
+                      + (f" · 最近跑批 {last_st}" if last_st else ""))
             except Exception as e:
                 check(f"实例 {n}", "fail", f"配置校验失败：{e}")
     except Exception as e:

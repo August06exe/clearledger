@@ -1,9 +1,0 @@
-# 明账 ClearLedger 的 dbt 连接配置
-# 注意：相对路径以 pipeline/ 为工作目录解析，跑 dbt 前先 cd pipeline
-clearledger:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: "{{ env_var('CLEARLEDGER_DB', '../data/warehouse/warehouse.duckdb') }}"
-      threads: 4

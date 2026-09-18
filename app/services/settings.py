@@ -12,6 +12,7 @@ from app import config
 
 FILE = config.DATA_DIR / "settings.json"
 DEFAULTS = {
+    "instance": "sales",                       # 当前账套（默认实例一）
     "schedule_enabled": config.SCHEDULE_ENABLED_DEFAULT,
     "schedule_hour": config.SCHEDULE_HOUR,
     "schedule_minute": config.SCHEDULE_MINUTE,
@@ -29,7 +30,15 @@ def load() -> dict:
         try:
             merged[key] = max(0, min(hi, int(merged[key])))
         except (TypeError, ValueError):
-            merged[key] = DEFAULTS[key]  # 配置被手改坏时回退默认，而不是 500
+            merged[key] = DEFAULTS[key]
+    # 账套必须真实存在，否则回退默认
+    try:
+        from semantic.loader import list_instances
+        names = list_instances()
+        if merged.get("instance") not in names:
+            merged["instance"] = "sales" if "sales" in names else (names[0] if names else "sales")
+    except Exception:
+        pass
     return merged
 
 

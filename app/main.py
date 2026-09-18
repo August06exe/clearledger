@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""明账 ClearLedger — 门户后端
+"""明账 ClearLedger — 门户后端（v0.3 实例化版）
 
+账套模型：settings.instance 指向当前公司账套，全部数据 API 按账套路由到
+instances/<n>/（五配置）与 data/warehouse/<n>.duckdb（独立库）。旧手写管道已退役。
 启动：.venv/Scripts/python -m uvicorn app.main:app --host 127.0.0.1 --port 8620
-（前端静态页由本服务直接托管，浏览器访问 http://127.0.0.1:8620）
 """
 from __future__ import annotations
 
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -13,31 +15,38 @@ from urllib.parse import quote
 
 import duckdb
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import BackgroundTasks, Body, FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from semantic import query as semantic_query
+from semantic.loader import ConfigError, list_instances, load_instance
+
 from app import config
-from app.services import artifacts, dbt_runner, duck, export, lineage, reports
-from app.services import settings as settings_svc
+from app.services import dbt_runner, settings as settings_svc
+from app.services.export import to_xlsx
 
 # ---------------------------------------------------------------- 调度器
 scheduler = BackgroundScheduler(timezone="Asia/Shanghai")
 
 
 def _scheduled_build() -> None:
-    dbt_runner.trigger_run("schedule")
+    inst = settings_svc.load().get("instance", "sales")
+    dbt_runner.trigger_run(inst, "schedule")
 
 
 def _apply_schedule() -> dict:
-    """按设置应用定时任务：开关关闭时彻底移除定时任务，门户回到纯手动模式"""
     s = settings_svc.load()
     if s["schedule_enabled"]:
         scheduler.add_job(
             _scheduled_build, "cron",
             hour=s["schedule_hour"], minute=s["schedule_minute"],
             id="daily_build", replace_existing=True,
-            misfire_grace_time=3600 * 6,  # 定时模式下，关机/睡眠错过 6 小时内醒来仍补跑
+            misfire_grace_time=3600 * 6,
             coalesce=True,
         )
     else:
@@ -66,13 +75,13 @@ def _schedule_info() -> dict:
 async def lifespan(app: FastAPI):
     scheduler.start()
     _apply_schedule()
-    # 启动补跑：仅在定时模式开启时生效——完全手动模式下，跑不跑由用户决定
+    # 定时模式下的启动补跑（>24h 断档）；手动模式绝不自动跑（决策 D5/D11）
     try:
         s = settings_svc.load()
-        runs = dbt_runner.history()
+        runs = dbt_runner.history(s["instance"])
         stale = not runs or datetime.fromisoformat(runs[0]["finished_at"]) < datetime.now() - timedelta(hours=24)
         if s["schedule_enabled"] and stale and not dbt_runner.status()["active"]:
-            dbt_runner.trigger_run("catchup")
+            dbt_runner.trigger_run(s["instance"], "catchup")
     except Exception:
         pass
     yield
@@ -83,49 +92,80 @@ app = FastAPI(title=config.APP_NAME, version=config.APP_VERSION, lifespan=lifesp
 
 
 def _guard(fn, *args, **kwargs):
-    """仓库不可用/正被占用/表结构未就绪时统一转 503，前端给出友好提示"""
     try:
         return fn(*args, **kwargs)
-    except (FileNotFoundError, RuntimeError, duckdb.Error) as e:
-        raise HTTPException(503, f"数据仓库暂不可用（可能正在跑批或尚未初始化）：{e}")
+    except (FileNotFoundError, RuntimeError, ConfigError, duckdb.Error, ValueError) as e:
+        raise HTTPException(503, f"数据暂不可用（可能正在跑批或尚未初始化）：{e}")
+
+
+def _inst() -> str:
+    return settings_svc.load().get("instance", "sales")
+
+
+def _stale_info() -> tuple[bool, str | None]:
+    run = dbt_runner.latest_run(_inst())
+    if run and run.get("status") == "red":
+        return True, f"账套[{_inst()}] 最近一次跑批失败（{run.get('finished_at', '')}），以下为最近一次成功跑批的旧数据"
+    return False, None
+
+
+# ---------------------------------------------------------------- 账套
+@app.get("/api/instance")
+def api_instance_get():
+    s = settings_svc.load()
+    instances = []
+    for n in list_instances():
+        inst = load_instance(n)
+        run = dbt_runner.latest_run(n)
+        instances.append({
+            "name": n, "title": inst.title,
+            "status": (run or {}).get("status", "unknown"),
+            "last_run": (run or {}).get("finished_at"),
+        })
+    cur = next((i for i in instances if i["name"] == s["instance"]), None)
+    return {"current": s["instance"], "current_title": cur["title"] if cur else s["instance"],
+            "instances": instances}
+
+
+@app.post("/api/instance")
+def api_instance_switch(payload: dict = Body(...)):
+    name = payload.get("instance")
+    if not name or name not in list_instances():
+        raise HTTPException(404, f"账套不存在：{name}（可用: {list_instances()}）")
+    settings_svc.save({"instance": name})
+    return {"current": name, "message": f"已切换到账套 {name}"}
 
 
 # ---------------------------------------------------------------- 总览
+_STATUS_TO_LIGHT = {
+    "success": "green", "pass": "green", "warn": "yellow",
+    "error": "red", "fail": "red", "runtime error": "red",
+    "skipped": "unknown", "not_run": "unknown",
+}
+
+
 @app.get("/api/overview")
 def api_overview():
-    idx = artifacts.node_index()
-    run = dbt_runner.latest_run()
+    name = _inst()
+    run = dbt_runner.latest_run(name)
 
-    kpi_rows = _guard(
-        duck.query_dicts,
-        """
-        select * from (
-            select * from marts.mart_kpi_monthly
-            where month < date_trunc('month', current_date)
-            order by month desc limit 13
-        ) order by month
-        """,
-    )
+    # KPI：当前账套的月度报表（monthly_kpi）最新完整月 + 前月
+    kpi_rows = _guard(semantic_query.run_report, name, "monthly_kpi", None, 200) \
+        if any(r["key"] == "monthly_kpi" for r in semantic_query.list_reports(name)) else []
     latest = kpi_rows[-1] if kpi_rows else None
     prev = kpi_rows[-2] if len(kpi_rows) > 1 else None
 
-    # 最新一轮跑批里的告警测试明细
     warns = []
     if run:
         for uid, n in run.get("nodes", {}).items():
             if uid.startswith("test.") and n.get("status") == "warn":
-                meta = idx["nodes"].get(uid, {})
-                warns.append({
-                    "uid": uid, "name": meta.get("name", uid),
-                    "message": n.get("message"), "failures": n.get("failures"),
-                })
-
-    by_type: dict[str, int] = {}
-    for n in idx["nodes"].values():
-        by_type[n["resource_type"]] = by_type.get(n["resource_type"], 0) + 1
+                warns.append({"uid": uid, "name": uid.split(".")[-1],
+                              "message": n.get("message"), "failures": n.get("failures")})
 
     return {
         "app": {"name": config.APP_NAME, "version": config.APP_VERSION},
+        "instance": {"name": name, "title": next(
+            (i["title"] for i in api_instance_get()["instances"] if i["name"] == name), name)},
         "light": run["status"] if run else "unknown",
         "last_run": None if not run else {
             "run_id": run["run_id"], "trigger": run["trigger"],
@@ -136,72 +176,158 @@ def api_overview():
         "schedule": _schedule_info(),
         "kpi": {"latest": latest, "prev": prev},
         "trend": kpi_rows,
-        "node_counts": by_type,
         "warnings": warns,
     }
 
 
 # ---------------------------------------------------------------- 血缘
-# 节点状态 → 灯色词汇（血缘图/管道 chips 统一用绿黄红表达）
-_STATUS_TO_LIGHT = {
-    "success": "green", "pass": "green",
-    "warn": "yellow",
-    "error": "red", "fail": "red", "runtime error": "red",
-    "skipped": "unknown", "not_run": "unknown",
-}
-
-
 @app.get("/api/lineage/graph")
 def api_lineage_graph():
-    g = lineage.graph()
-    run = dbt_runner.latest_run()
+    name = _inst()
+    try:
+        inst = load_instance(name)
+    except ConfigError as e:
+        raise HTTPException(503, str(e))
+    run = dbt_runner.latest_run(name)
     status_by_uid = (run or {}).get("nodes", {})
-    # 源表节点不参与 dbt 执行，用摄取结果着色（绿=成功入库 / 红=摄取失败）
-    ingest_by_source: dict[str, str] = {}
+    ingest_by_source = {}
     if run and run.get("ingest"):
         for r in run["ingest"].get("results", []):
             ingest_by_source[r.get("source")] = r.get("status")
-    for n in g["nodes"]:
-        st = status_by_uid.get(n["uid"], {}).get("status")
-        if st:
-            n["status"] = _STATUS_TO_LIGHT.get(st, "unknown")
-        elif n["resource_type"] == "source" and ingest_by_source:
-            n["status"] = "green" if ingest_by_source.get(n["name"]) == "ok" else "red"
-        else:
-            n["status"] = "unknown"
-    return g
+
+    nodes, edges = [], []
+    wide = inst.wide.get("wide", {})
+    wide_name = wide.get("name")
+    main = wide.get("main")
+    # 源节点
+    for src in inst.sources.get("sources", []):
+        st = "unknown"
+        if src["name"] in ingest_by_source:
+            st = "green" if ingest_by_source[src["name"]] == "ok" else "red"
+        nodes.append({"uid": f"source.raw.{src['name']}", "name": src["name"],
+                      "resource_type": "source", "schema": "raw",
+                      "description": src.get("title", ""), "column_count": 0,
+                      "test_count": 0, "tags": [], "status": st})
+    # 宽表 + 报表节点（来自 manifest 的真实依赖）
+    manifest_path = inst.pipeline_dir / "target" / "manifest.json"
+    if manifest_path.exists():
+        import json
+        m = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for uid, n in {**m.get("nodes", {}), **m.get("sources", {})}.items():
+            rt = n.get("resource_type")
+            if rt not in ("model", "seed", "snapshot"):
+                continue
+            st = (status_by_uid.get(uid, {}) or {}).get("status")
+            nodes.append({
+                "uid": uid, "name": n.get("name"), "resource_type": rt,
+                "schema": n.get("schema"),
+                "description": (n.get("description") or "").strip(),
+                "column_count": len(n.get("columns") or {}),
+                "test_count": 0, "tags": n.get("tags") or [],
+                "status": _STATUS_TO_LIGHT.get(st, "unknown") if st else "unknown",
+            })
+            for dep in (n.get("depends_on") or {}).get("nodes", []):
+                edges.append({"source": dep, "target": uid})
+    else:
+        # 未编译过：至少给出配置级骨架
+        nodes.append({"uid": f"model.{wide_name}", "name": wide_name, "resource_type": "model",
+                      "schema": "intermediate", "description": "宽表（尚未编译）",
+                      "column_count": 0, "test_count": 0, "tags": [], "status": "unknown"})
+    # 过滤孤立节点（血缘图只留有边或被边引用的；load_log 类孤立源由 ingest_by_source 着色保留）
+    linked = {e["source"] for e in edges} | {e["target"] for e in edges}
+    nodes = [n for n in nodes if n["uid"] in linked or n["resource_type"] == "source"]
+    return {"nodes": nodes, "edges": edges, "generated_at": datetime.now().isoformat(timespec="seconds")}
 
 
 @app.get("/api/lineage/columns/{name}")
 def api_lineage_columns(name: str):
-    return lineage.column_lineage(name)
+    name_ = _inst()
+    manifest_path = load_instance(name_).pipeline_dir / "target" / "manifest.json"
+    import json
+    if not manifest_path.exists():
+        return {"model": name, "available": False, "reason": "暂无编译产物（先跑一次批）", "columns": []}
+    m = json.loads(manifest_path.read_text(encoding="utf-8"))
+    node = next((n for n in m.get("nodes", {}).values()
+                 if n.get("name") == name and n.get("resource_type") == "model"), None)
+    if node is None:
+        return {"model": name, "available": False, "reason": "模型不存在", "columns": []}
+    sql = node.get("compiled_code")
+    if not sql:
+        return {"model": name, "available": False, "reason": "暂无编译后 SQL", "columns": []}
+    import re as _re
+    upstream = []
+    for dep in (node.get("depends_on") or {}).get("nodes", []):
+        parts = dep.split(".")
+        upstream.append(parts[-1] if len(parts) >= 3 else dep)
+    # 标识符启发式：列 ← 提及的上游表
+    cols_out = []
+    for col, meta in (node.get("columns") or {}).items():
+        cols_out.append({"column": col, "description": (meta.get("description") or "").strip(),
+                         "upstreams": [], "ok": True})
+    # 用 SQLGlot 做真实字段级血缘（与 pipeline 无关，纯解析）
+    try:
+        import sqlglot
+        from sqlglot.lineage import lineage as sg
+        simplified = sql = node.get("compiled_code") or ""
+        for u in sorted(set(upstream), key=len, reverse=True):
+            pattern = rf'(?:"?[\w]+"?\.)+"?{ _re.escape(u) }"?(?![\w])'
+            simplified = _re.sub(pattern, u, simplified)
+        schema_map = {}
+        for dep_uid, dn in {**m.get("nodes", {}), **m.get("sources", {})}.items():
+            if dn.get("name") in upstream:
+                schema_map[dn["name"]] = {c: "UNKNOWN" for c in (dn.get("columns") or {})}
+        for entry in cols_out:
+            try:
+                root = sg(entry["column"], simplified, schema=schema_map, dialect="duckdb")
+                seen = set()
+                for nd in root.walk():
+                    src = getattr(nd, "source", None)
+                    if isinstance(src, sqlglot.exp.Table):
+                        tbl = src.name
+                        rawname = str(getattr(nd, "name", ""))
+                        cp = rawname.split(":", 1)[0].strip()
+                        if "." in cp:
+                            cp = cp.rsplit(".", 1)[-1]
+                        if ":" in rawname or cp in ("", "*"):
+                            cp = "*"
+                        if (tbl, cp) == (name, entry["column"]):
+                            continue
+                        if (tbl, cp) not in seen:
+                            seen.add((tbl, cp))
+                            entry["upstreams"].append({"table": tbl, "column": cp})
+            except Exception:
+                entry["ok"] = False
+    except Exception:
+        pass
+    return {"model": name, "available": True, "columns": cols_out}
 
 
 @app.get("/api/node/{uid}")
 def api_node_detail(uid: str):
-    idx = artifacts.node_index()
-    node = idx["nodes"].get(uid)
+    name_ = _inst()
+    manifest_path = load_instance(name_).pipeline_dir / "target" / "manifest.json"
+    import json
+    if not manifest_path.exists():
+        raise HTTPException(404, "暂无编译产物")
+    m = json.loads(manifest_path.read_text(encoding="utf-8"))
+    node = {**m.get("nodes", {}), **m.get("sources", {})}.get(uid)
     if node is None:
         raise HTTPException(404, "节点不存在")
-    run = dbt_runner.latest_run()
+    run = dbt_runner.latest_run(name_)
     st = (run or {}).get("nodes", {}).get(uid, {})
-    # 补充实时列类型
-    types: dict[str, str] = {}
-    if node["resource_type"] in ("model", "source"):
-        try:
-            rows = duck.query_dicts(
-                "select column_name, data_type from information_schema.columns "
-                "where table_schema = ? and table_name = ?",
-                [node["schema"], node["name"]],
-            )
-            types = {r["column_name"]: r["data_type"] for r in rows}
-        except Exception:
-            types = {}
-    cols = []
-    for c, meta in node["columns"].items():
-        cols.append({"name": c, "description": meta.get("description"), "type": types.get(c)})
-    return {**{k: node[k] for k in ("uid", "name", "resource_type", "schema", "description", "tags", "path")},
-            "columns": cols, "tests": node["tests"],
+    cols = [{"name": c, "type": None, "description": (meta.get("description") or "").strip()}
+            for c, meta in (node.get("columns") or {}).items()]
+    tests = [{"uid": t_uid, "name": t_name, "kind": "自定义",
+              "severity": ((t_cfg or {}).get("severity")) or "error"}
+             for t_uid, t_node in m.get("nodes", {}).items()
+             if t_node.get("resource_type") == "test"
+             for t_cfg in [t_node.get("config")]
+             if ((t_node.get("depends_on") or {}).get("nodes") or [None])[0] == uid
+             for t_name in [t_node.get("name")]]
+    return {"uid": uid, "name": node.get("name"), "resource_type": node.get("resource_type"),
+            "schema": node.get("schema"), "description": (node.get("description") or "").strip(),
+            "tags": node.get("tags") or [], "path": node.get("original_file_path"),
+            "columns": cols, "tests": tests,
             "status": st.get("status", "unknown"), "last_message": st.get("message"),
             "last_time": st.get("time")}
 
@@ -209,101 +335,116 @@ def api_node_detail(uid: str):
 # ---------------------------------------------------------------- 数据字典
 @app.get("/api/dictionary")
 def api_dictionary():
-    idx = artifacts.node_index()
-    type_map: dict[tuple[str, str], dict[str, str]] = {}
+    name_ = _inst()
     try:
-        rows = duck.query_dicts(
-            "select table_schema, table_name, column_name, data_type "
-            "from information_schema.columns "
-            "where table_schema in ('raw','staging','intermediate','marts')"
-        )
-        for r in rows:
-            key = (r["table_schema"], r["table_name"])
-            type_map.setdefault(key, {})[r["column_name"]] = r["data_type"]
-    except Exception:
-        rows = []
+        inst = load_instance(name_)
+    except ConfigError as e:
+        raise HTTPException(503, str(e))
+    manifest_path = inst.pipeline_dir / "target" / "manifest.json"
+    import json
+    m = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {"nodes": {}, "sources": {}}
 
-    tables: list[dict] = []
-    for uid, n in idx["nodes"].items():
-        col_types = type_map.get((n["schema"], n["name"]), {})
-        tables.append({
-            "uid": uid,
-            "schema": n["schema"],
-            "name": n["name"],
-            "kind": n["resource_type"],
-            "description": n["description"],
-            "test_count": len(n["tests"]),
-            "columns": [
-                {"name": c, "type": col_types.get(c), "description": m.get("description")}
-                for c, m in n["columns"].items()
-            ],
-        })
-    # raw.load_log（摄取日志）不在 manifest sources 里，手动补上
+    type_map: dict[tuple, dict] = {}
     try:
-        log_cols = duck.query_dicts(
-            "select column_name, data_type from information_schema.columns "
-            "where table_schema='raw' and table_name='load_log'"
-        )
-        if log_cols:
-            tables.append({
-                "uid": "raw.load_log", "schema": "raw", "name": "load_log", "kind": "log",
-                "description": "摄取日志：每个源文件每次入库的行数与时间，数据来龙去脉的第一环",
-                "test_count": 0,
-                "columns": [{"name": r["column_name"], "type": r["data_type"], "description": ""} for r in log_cols],
-            })
+        rows = duckdb.connect(str((inst.pipeline_dir / inst.db_path).resolve()), read_only=True).execute(
+            "select table_schema, table_name, column_name, data_type from information_schema.columns "
+            "where table_schema in ('raw','staging','intermediate','marts')"
+        ).fetchall()
+        for s_, t_, c_, d_ in rows:
+            type_map.setdefault((s_, t_), {})[c_] = d_
     except Exception:
         pass
-    tables.sort(key=lambda t: ({"source": 0, "model": 1}.get(t["kind"], 2), t["schema"], t["name"]))
+
+    tables: list[dict] = []
+    for uid, n in {**m.get("nodes", {}), **m.get("sources", {})}.items():
+        if n.get("resource_type") not in ("model", "source"):
+            continue
+        ct = type_map.get((n.get("schema"), n.get("name")), {})
+        tables.append({
+            "uid": uid, "schema": n.get("schema"), "name": n.get("name"),
+            "kind": n.get("resource_type"),
+            "description": (n.get("description") or "").strip(),
+            "test_count": sum(1 for t in m.get("nodes", {}).values()
+                              if t.get("resource_type") == "test"
+                              and ((t.get("depends_on") or {}).get("nodes") or [None])[0] == uid),
+            "columns": [{"name": c, "type": ct.get(c),
+                         "description": (meta.get("description") or "").strip()}
+                        for c, meta in (n.get("columns") or {}).items()],
+        })
+    tables.sort(key=lambda t: ({"source": 0, "model": 1}.get(t["kind"], 2), t["schema"] or "", t["name"]))
     return {"tables": tables, "generated_at": datetime.now().isoformat(timespec="seconds")}
 
 
-# ---------------------------------------------------------------- 报表
+# ---------------------------------------------------------------- 报表（语义层驱动）
 @app.get("/api/reports")
 def api_reports():
-    return {"reports": reports.list_reports(), "options": reports.report_options()}
+    name = _inst()
+    reports = semantic_query.list_reports(name)
+    out = []
+    for r in reports:
+        out.append({
+            "key": r["key"], "title": r["title"], "description": r["title"],
+            "params": ([{"name": r["dimension"], "label": r["dimension"], "type": "select",
+                         "options_from": r["dimension"], "default": ""}] +
+                       [{"name": f, "label": f, "type": "select", "options_from": f, "default": ""}
+                        for f in (r.get("filters") or [])]),
+        })
+    return {"reports": out, "options": _all_options(name)}
 
-
-def _stale_info() -> tuple[bool, str | None]:
-    """红灯 = 最新数据未被本轮确认，报表应明确告知"这是旧数" """
-    run = dbt_runner.latest_run()
-    if run and run.get("status") == "red":
-        return True, f"最近一次跑批失败（{run.get('finished_at', '')}），以下为最近一次成功跑批的旧数据"
-    return False, None
+def _all_options(instance: str) -> dict:
+    opts: dict[str, list] = {}
+    for r in semantic_query.list_reports(instance):
+        try:
+            for k, v in semantic_query.filter_options(instance, r["key"]).items():
+                opts.setdefault(k, [])
+                for v_ in v:
+                    if v_ not in opts[k]:
+                        opts[k].append(v_)
+        except Exception:
+            pass
+    return opts
 
 
 @app.get("/api/reports/{key}/data")
-def api_report_data(key: str, months: int | None = None, region: str | None = None,
-                    level: str | None = None, category: str | None = None, limit: int | None = None):
+def api_report_data(key: str, request: Request, limit: int | None = None):
     try:
-        rep = reports.get_report(key)
-    except KeyError:
+        rep = next(r for r in semantic_query.list_reports(_inst()) if r["key"] == key)
+    except StopIteration:
         raise HTTPException(404, f"报表不存在：{key}")
-    params = {"months": months, "region": region, "level": level,
-              "category": category, "limit": limit}
-    columns, rows = _guard(reports.run_report, key, params)
+    filters = {k: v for k, v in request.query_params.items() if k != "limit"}
+    rows = _guard(semantic_query.run_report, _inst(), key, filters, limit or 500)
+    cols = [(rep["dimension"], rep["dimension"])] + (
+        [(rep["time_dim"], rep["time_dim"])] if rep.get("time_dim") else [])
+    seen = {c for _, c in cols}
+    if rows:
+        for k in rows[0]:
+            if k not in seen:
+                cols.append((k, k))
     stale, info = _stale_info()
-    return {"key": key, "title": rep["title"], "columns": columns, "rows": rows,
+    return {"key": key, "title": rep["title"], "columns": cols, "rows": rows,
             "stale": stale, "stale_info": info}
 
 
 @app.get("/api/reports/{key}/export")
-def api_report_export(key: str, months: int | None = None, region: str | None = None,
-                      level: str | None = None, category: str | None = None, limit: int | None = None):
+def api_report_export(key: str, request: Request, limit: int | None = None):
     try:
-        rep = reports.get_report(key)
-    except KeyError:
+        rep = next(r for r in semantic_query.list_reports(_inst()) if r["key"] == key)
+    except StopIteration:
         raise HTTPException(404, f"报表不存在：{key}")
-    params = {"months": months, "region": region, "level": level,
-              "category": category, "limit": limit}
-    columns, rows = _guard(reports.run_report, key, params)
+    filters = {k: v for k, v in request.query_params.items() if k != "limit"}
+    rows = _guard(semantic_query.run_report, _inst(), key, filters, limit or 5000)
+    cols = [(rep["dimension"], rep["dimension"])] + (
+        [(rep["time_dim"], rep["time_dim"])] if rep.get("time_dim") else [])
+    if rows:
+        for k in rows[0]:
+            if all(k != c for c, _ in cols):
+                cols.append((k, k))
     stale, info = _stale_info()
-    content = export.to_xlsx(columns, rows, sheet=rep["title"], note=info)
+    content = to_xlsx(cols, rows, sheet=rep["title"], note=info)
     filename = f"{rep['title']}_{datetime.now():%Y%m%d}.xlsx"
-    return Response(
-        content=content,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
-    )
+    return Response(content=content,
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"})
 
 
 # ---------------------------------------------------------------- 设置
@@ -330,10 +471,12 @@ def api_settings_patch(payload: dict = Body(...)):
 
 # ---------------------------------------------------------------- 跑批
 @app.get("/api/runs")
-def api_runs():
+def api_runs(instance: str | None = None):
+    runs = dbt_runner.history(instance) if instance else dbt_runner.all_history()
     return {"runs": [
-        {k: r.get(k) for k in ("run_id", "trigger", "started_at", "finished_at", "status", "counts")}
-        for r in dbt_runner.history()
+        {k: r.get(k) for k in ("run_id", "instance", "trigger", "started_at",
+                               "finished_at", "status", "counts")}
+        for r in runs
     ]}
 
 
@@ -343,36 +486,45 @@ def api_run_status():
 
 
 @app.post("/api/runs/trigger")
-def api_run_trigger(background_tasks: BackgroundTasks):
-    run_id = dbt_runner.trigger_run("manual")
+def api_run_trigger(instance: str | None = None):
+    inst = instance or _inst()
+    run_id = dbt_runner.trigger_run(inst, "manual")
     if run_id is None:
         raise HTTPException(409, "已有跑批在进行中")
-    return {"run_id": run_id, "message": "跑批已启动"}
+    return {"run_id": run_id, "instance": inst, "message": f"账套[{inst}] 跑批已启动"}
 
 
 @app.get("/api/runs/{run_id}")
 def api_run_detail(run_id: str):
-    run = next((r for r in dbt_runner.history() if r["run_id"] == run_id), None)
+    run = next((r for r in dbt_runner.all_history() if r["run_id"] == run_id), None)
     if run is None:
         raise HTTPException(404, "运行记录不存在")
-    idx = artifacts.node_index()
+    manifest_uids: dict[str, dict] = {}
+    try:
+        inst = load_instance(run.get("instance") or _inst())
+        mp = inst.pipeline_dir / "target" / "manifest.json"
+        if mp.exists():
+            import json as _json
+            mm = _json.loads(mp.read_text(encoding="utf-8"))
+            manifest_uids = {uid: n.get("name", uid) for uid, n in mm.get("nodes", {}).items()}
+    except Exception:
+        pass
 
     def _row(uid: str, n: dict):
-        meta = idx["nodes"].get(uid, {})
-        return {"uid": uid, "name": meta.get("name", uid.split(".")[-1] if uid else uid),
-                "kind": meta.get("resource_type", uid.split(".")[0] if uid else "?"),
+        return {"uid": uid, "name": manifest_uids.get(uid, uid.split(".")[-1] if uid else uid),
+                "kind": "model" if uid.startswith("model.") else ("test" if uid.startswith("test.") else "?"),
                 "status": n.get("status"), "time": n.get("time"), "message": n.get("message")}
 
     nodes = [_row(uid, n) for uid, n in run.get("nodes", {}).items()]
     nodes.sort(key=lambda r: (0 if r["kind"] == "model" else 1, r["name"]))
-    return {**{k: run.get(k) for k in ("run_id", "trigger", "started_at", "finished_at", "status",
-                                       "ingest_ok", "ingest", "counts", "error", "dbt_returncode")},
+    return {**{k: run.get(k) for k in ("run_id", "instance", "trigger", "started_at", "finished_at",
+                                       "status", "ingest_ok", "ingest", "counts", "error", "dbt_returncode")},
             "nodes": nodes}
 
 
 @app.get("/api/runs/{run_id}/log")
 def api_run_log(run_id: str, tail: int = 300):
-    run = next((r for r in dbt_runner.history() if r["run_id"] == run_id), None)
+    run = next((r for r in dbt_runner.all_history() if r["run_id"] == run_id), None)
     if run is None:
         raise HTTPException(404, "运行记录不存在")
     log_file = Path(run.get("log_file", ""))

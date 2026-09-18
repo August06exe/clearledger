@@ -78,9 +78,26 @@ const App = {
     window.addEventListener('hashchange', () => this.route());
     document.getElementById('btn-run').addEventListener('click', () => this.triggerRun());
     document.getElementById('btn-sched').addEventListener('click', () => this.openSchedModal());
+    document.getElementById('inst-select').addEventListener('change', async e => {
+      try {
+        await api('/api/instance', { method: 'POST', body: JSON.stringify({ instance: e.target.value }) });
+        Toast.show('已切换账套：' + e.target.selectedOptions[0].text);
+        this.route();          // 当前页按新账套重渲染
+      } catch (_) { this.refreshSys(); }
+    });
     this.refreshSys();
     this.sysTimer = setInterval(() => this.refreshSys(), 60_000);
     this.route();
+  },
+
+  async refreshInstances(selected) {
+    try {
+      const data = await api('/api/instance');
+      const sel = document.getElementById('inst-select');
+      const cur = selected || data.current;
+      sel.innerHTML = data.instances.map(i =>
+        `<option value="${i.name}" ${i.name === cur ? 'selected' : ''}>🏷 ${i.title}</option>`).join('');
+    } catch (_) {}
   },
 
   buildNav() {
@@ -124,6 +141,11 @@ const App = {
   async refreshSys() {
     try {
       const ov = await api('/api/overview');
+      this.refreshInstances(ov.instance && ov.instance.name);
+      if (ov.instance) {
+        document.getElementById('page-title').textContent =
+          (this.NAV.find(n => n.key === this.currentKey()) || {}).label + '';
+      }
       const st = ov.running && ov.running.active ? 'running' : ov.light;
       document.getElementById('sys-light').innerHTML = Light.html(st);
       const s = ov.schedule || {};
@@ -131,10 +153,17 @@ const App = {
         ? `自动 ${String(s.schedule_hour).padStart(2, '0')}:${String(s.schedule_minute).padStart(2, '0')}`
         : '手动模式';
       const lr = ov.last_run;
+      const instName = ov.instance ? `【${ov.instance.title}】` : '';
       document.getElementById('sys-runinfo').textContent = lr
-        ? `上次跑批 ${Fmt.dt(lr.finished_at)} · ${schedTxt}`
-        : `尚未跑批 · ${schedTxt}`;
+        ? `${instName}上次跑批 ${Fmt.dt(lr.finished_at)} · ${schedTxt}`
+        : `${instName}尚未跑批 · ${schedTxt}`;
     } catch (_) { /* 静默：页面内已有错误提示 */ }
+  },
+
+  currentKey() {
+    const raw = (location.hash || '#/overview').replace(/^#\//, '');
+    const key = raw.split('/')[0];
+    return window.Pages[key] ? key : 'overview';
   },
 
   // ---------- 跑批设置弹窗 ----------

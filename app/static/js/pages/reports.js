@@ -1,4 +1,4 @@
-// 管理报表页：报表列表 + 参数筛选 + 图表 + 明细表 + Excel 导出
+// 管理报表页：账套感知——报表列表来自 dashboard.yml，列=维度+指标，图表类型配置驱动
 window.Pages.reports = {
   async render(el, key) {
     let data;
@@ -10,7 +10,11 @@ window.Pages.reports = {
     }
     this.options = data.options || {};
     const reports = data.reports || [];
-    if (!key || !reports.find(r => r.key === key)) key = reports[0] && reports[0].key;
+    if (!reports.length) {
+      el.innerHTML = '<div class="card empty-tip">当前账套没有配置报表。</div>';
+      return;
+    }
+    if (!key || !reports.find(r => r.key === key)) key = reports[0].key;
     this.key = key;
 
     el.innerHTML = `
@@ -19,7 +23,7 @@ window.Pages.reports = {
           ${reports.map(r => `
             <div class="report-item ${r.key === key ? 'active' : ''}" data-key="${r.key}">
               <div class="t">${r.title}</div>
-              <div class="d">${r.description}</div>
+              <div class="d">${(r.metrics || []).join(' / ')}</div>
             </div>`).join('')}
         </div>
         <div id="report-main" class="card"></div>
@@ -36,21 +40,24 @@ window.Pages.reports = {
 
   async renderReport() {
     const main = document.getElementById('report-main');
-    const meta = (await api('/api/reports')).reports.find(r => r.key === this.key);
+    let meta;
+    try {
+      meta = (await api('/api/reports')).reports.find(r => r.key === this.key);
+    } catch (e) {
+      main.innerHTML = '<div class="empty-tip">加载失败，稍后重试</div>';
+      return;
+    }
     if (!meta) { main.innerHTML = '<div class="empty-tip">报表不存在</div>'; return; }
+    this.meta = meta;
 
-    // 参数栏
+    // 参数栏：全部 select（维度筛选，选项来自语义层白名单）
     const paramsHtml = (meta.params || []).map(p => {
-      if (p.type === 'select') {
-        const opts = this.options[p.options_from] || [];
-        return `<div><label>${p.label}</label>
-          <select data-param="${p.name}">
-            <option value="">全部</option>
-            ${opts.map(o => `<option value="${o}" ${p.default === o ? 'selected' : ''}>${o}</option>`).join('')}
-          </select></div>`;
-      }
+      const opts = this.options[p.options_from] || [];
       return `<div><label>${p.label}</label>
-        <input type="number" data-param="${p.name}" value="${p.default ?? ''}" min="1" max="36" style="width:90px"></div>`;
+        <select data-param="${p.name}">
+          <option value="">全部</option>
+          ${opts.map(o => `<option value="${o}">${o}</option>`).join('')}
+        </select></div>`;
     }).join('');
 
     main.innerHTML = `
@@ -63,16 +70,16 @@ window.Pages.reports = {
           <button id="rp-export" class="btn btn-sm">⬇ 导出 Excel</button>
         </div>
       </div>
-      <div class="muted mt8">${meta.description}</div>
-      <div class="param-bar mt16">${paramsHtml}</div>
+      <div class="muted mt8">指标：${(meta.metrics || []).join('、')}　维度：${meta.dimension}${meta.time_dim ? ' × ' + meta.time_dim : ''}</div>
+      <div class="param-bar mt16">${paramsHtml || '<span class="muted">无筛选参数</span>'}</div>
       <div id="rp-chart" class="chart"></div>
       <div id="rp-table" class="mt16" style="max-height:420px;overflow:auto"></div>`;
 
-    document.getElementById('rp-query').addEventListener('click', () => this.query(meta));
+    document.getElementById('rp-query').addEventListener('click', () => this.query());
     document.getElementById('rp-export').addEventListener('click', () => {
       window.open('/api/reports/' + this.key + '/export?' + this.qs(), '_blank');
     });
-    this.query(meta);
+    this.query();
   },
 
   qs() {
@@ -84,8 +91,9 @@ window.Pages.reports = {
     return params.join('&');
   },
 
-  async query(meta) {
+  async query() {
     const table = document.getElementById('rp-table');
+    if (!table) return;
     try {
       const r = await api(`/api/reports/${this.key}/data?` + this.qs());
       this.last = r;
@@ -94,134 +102,124 @@ window.Pages.reports = {
         if (r.stale) {
           banner.textContent = '⚠ ' + (r.stale_info || '数据过期：最近跑批失败，以下为上次成功数据');
           banner.style.display = '';
-        } else {
-          banner.style.display = 'none';
-        }
+        } else banner.style.display = 'none';
       }
       const cols = r.columns || [];
       if (!r.rows.length) {
-        table.innerHTML = '<div class="empty-tip">没有数据（试试调大月数）</div>';
+        table.innerHTML = '<div class="empty-tip">没有数据</div>';
       } else {
         table.innerHTML = `
           <table class="tbl"><thead><tr>
             ${cols.map(([, label]) => `<th class="${this.isNum(label) ? 'num' : ''}">${label}</th>`).join('')}
           </tr></thead>
           <tbody>${r.rows.map(row => `<tr>
-            ${cols.map(([key, label]) => `<td class="${this.isNum(label) ? 'num' : ''}">${this.fmtCell(label, row[key])}</td>`).join('')}
+            ${cols.map(([key, label], i) => `<td class="${this.isNum(label) ? 'num' : ''}">${this.fmtCell(label, row[key], i)}</td>`).join('')}
           </tr>`).join('')}</tbody></table>`;
       }
       this.drawChart(cols, r.rows);
-    } catch (_) {
+    } catch (e) {
       table.innerHTML = '<div class="empty-tip">查询失败（可能正在跑批，稍后再试）</div>';
     }
   },
 
   isNum(label) {
-    return !['月份', '区域', '行业', '客户等级', '状态', '部门名称', '部门编码', '费用类别',
-      '品类', '商品编号', '商品名称', '客户名称', '客户编号', '最近下单'].includes(label);
+    return !this.isTextDim(label) && !label.includes('率') && !label.includes('比');
   },
 
-  fmtCell(label, v) {
+  isTextDim(label) {
+    return ['月份', '区域', '行业', '客户等级', '状态', '门店', '城市', '商圈类型', '菜品类别',
+      '渠道', '品类', '商品名称', '商品编号', '客户名称', '客户编号', '部门名称', '部门编码',
+      '费用类别', '最近下单'].includes(label);
+  },
+
+  fmtCell(label, v, idx) {
     if (v === null || v === undefined) return '—';
-    if (label.includes('率') || label.includes('环比')) return Fmt.pct(v);
-    if (!this.isNum(label)) return label === '月份' ? String(v).slice(0, 7) : String(v);
+    if (this.isRate(label)) return Fmt.pct(v);
+    if (!this.isNum(label) || idx === 0) {
+      return /日期|时间|月份|月/.test(label) ? String(v).slice(0, 10) : String(v);
+    }
     return Fmt.yuan(v);
   },
 
   drawChart(cols, rows) {
     const el = document.getElementById('rp-chart');
-    if (!el || !rows.length) { if (el) el.style.display = 'none'; return; }
+    if (!el) return;
+    const meta = this.meta || {};
+    if (!rows.length) { el.style.display = 'none'; return; }
     el.style.display = '';
-    const keyOf = label => (cols.find(([k, l]) => l === label) || [])[0];
-    const monthKey = keyOf('月份');
-    const asc = rows.slice().sort((a, b) => String(a.month).localeCompare(String(b.month)));
-    const months = [...new Set(asc.map(r => String(r.month).slice(0, 7)))];
+    const keys = cols.map(c => c[0]);
+    const dimKey = meta.dimension;
+    const timeKey = meta.time_dim;
+    const rateKeys = keys.filter(k => this.isRate(k));
+    const volKeys = keys.filter(k => !this.isRate(k) && k !== dimKey && k !== timeKey);
     const wan = v => v === null || v === undefined ? null : +(v / 1e4).toFixed(1);
+    const sortAsc = r => {
+      const s = rows.slice().sort((a, b) => String(a[timeKey || dimKey]).localeCompare(String(b[timeKey || dimKey])));
+      return timeKey ? s : s.reverse();
+    };
 
-    let option = null;
-    if (this.key === 'monthly_kpi') {
-      option = {
-        tooltip: { trigger: 'axis' },
-        legend: { top: 0 },
-        grid: { left: 8, right: 40, top: 34, bottom: 0, containLabel: true },
-        xAxis: { type: 'category', data: months },
-        yAxis: [{ type: 'value', name: '万元' }, { type: 'value', name: '%', position: 'right', axisLabel: { formatter: '{value}%' } }],
-        series: [
-          { name: '收入', type: 'bar', barMaxWidth: 24, itemStyle: { color: '#3B82F6', borderRadius: [4, 4, 0, 0] }, data: asc.map(r => wan(r.revenue)) },
-          { name: '毛利', type: 'bar', barMaxWidth: 24, itemStyle: { color: '#93C5FD', borderRadius: [4, 4, 0, 0] }, data: asc.map(r => wan(r.gross_profit)) },
-          { name: '净利', type: 'line', smooth: true, itemStyle: { color: '#16A34A' }, data: asc.map(r => wan(r.net_profit)) },
-          { name: '毛利率', type: 'line', yAxisIndex: 1, smooth: true, itemStyle: { color: '#D97706' }, data: asc.map(r => r.gross_margin === null ? null : +(r.gross_margin * 100).toFixed(1)) },
-        ],
-      };
-    } else if (this.key === 'region_month') {
-      const regions = [...new Set(asc.map(r => r.region_name))];
-      const pivot = {};
-      asc.forEach(r => {
-        const m = String(r.month).slice(0, 7);
-        (pivot[m] = pivot[m] || {})[r.region_name] = wan(r.revenue);
-      });
-      option = {
-        tooltip: { trigger: 'axis', valueFormatter: v => v + ' 万' },
-        legend: { top: 0 },
-        grid: { left: 8, right: 8, top: 34, bottom: 0, containLabel: true },
-        xAxis: { type: 'category', data: months },
-        yAxis: { type: 'value', name: '万元' },
-        series: regions.map((rg, i) => ({
-          name: rg, type: 'bar', stack: 'revenue', barMaxWidth: 30,
-          itemStyle: { color: ['#1D4ED8', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'][i % 5] },
-          data: months.map(m => (pivot[m] || {})[rg]),
-        })),
-      };
-    } else if (this.key === 'customer_summary') {
+    if (!timeKey) {
+      // 无时间维度：横向条形排行（Top 15）
       const top = rows.slice(0, 15).slice().reverse();
-      option = {
+      App.chart(el, {
         tooltip: { trigger: 'axis', valueFormatter: v => v + ' 万' },
         grid: { left: 8, right: 30, top: 10, bottom: 0, containLabel: true },
         xAxis: { type: 'value', name: '万元' },
-        yAxis: { type: 'category', data: top.map(r => r.customer_name), axisLabel: { fontSize: 11 } },
-        series: [{ type: 'bar', barMaxWidth: 14, itemStyle: { color: '#1D4ED8', borderRadius: [0, 4, 4, 0] }, data: top.map(r => wan(r.ltm_revenue)) }],
-      };
-    } else if (this.key === 'product_month') {
-      const cats = [...new Set(asc.map(r => r.category))];
-      const pivot = {};
-      asc.forEach(r => {
-        const m = String(r.month).slice(0, 7);
-        (pivot[m] = pivot[m] || {})[r.category] = (pivot[m] || {})[r.category] + r.revenue || r.revenue;
-      });
-      option = {
-        tooltip: { trigger: 'axis', valueFormatter: v => v + ' 万' },
-        legend: { top: 0 },
-        grid: { left: 8, right: 8, top: 34, bottom: 0, containLabel: true },
-        xAxis: { type: 'category', data: months },
-        yAxis: { type: 'value', name: '万元' },
-        series: cats.map((c, i) => ({
-          name: c, type: 'bar', stack: 'rev', barMaxWidth: 30,
-          itemStyle: { color: ['#1D4ED8', '#16A34A', '#D97706', '#7C3AED', '#0891B2'][i % 5] },
-          data: months.map(m => wan((pivot[m] || {})[c])),
+        yAxis: { type: 'category', data: top.map(r => r[dimKey]), axisLabel: { fontSize: 11 } },
+        series: volKeys.slice(0, 1).map((k, i) => ({
+          name: k, type: 'bar', barMaxWidth: 14,
+          itemStyle: { color: '#1D4ED8', borderRadius: [0, 4, 4, 0] },
+          data: top.map(r => wan(r[k])),
         })),
-      };
-    } else if (this.key === 'expense_dept_month') {
-      const cats = [...new Set(asc.map(r => r.category))];
-      const pivot = {};
-      asc.forEach(r => {
-        const m = String(r.month).slice(0, 7);
-        (pivot[m] = pivot[m] || {})[r.category] = (pivot[m] || {})[r.category] + r.allocated_amount || r.allocated_amount;
       });
-      option = {
-        tooltip: { trigger: 'axis', valueFormatter: v => v + ' 万' },
-        legend: { top: 0, type: 'scroll' },
-        grid: { left: 8, right: 8, top: 34, bottom: 0, containLabel: true },
-        xAxis: { type: 'category', data: months },
-        yAxis: { type: 'value', name: '万元' },
-        series: cats.map((c, i) => ({
-          name: c, type: 'bar', stack: 'exp', barMaxWidth: 30,
-          itemStyle: { color: ['#1D4ED8', '#3B82F6', '#7C3AED', '#0891B2', '#D97706', '#65A30D'][i % 6] },
-          data: months.map(m => wan((pivot[m] || {})[c])),
-        })),
-      };
+      return;
     }
 
-    if (option) App.chart(el, option);
-    else el.style.display = 'none';
+    const asc = sortAsc();
+    const months = [...new Set(asc.map(r => String(r[timeKey]).slice(0, 7)))];
+
+    if (dimKey === timeKey || asc.every(r => r[dimKey] === r[timeKey]) || asc.length === months.length && !asc.some(r => r[dimKey] !== r[timeKey] && !months.includes(String(r[dimKey]).slice(0, 7)))) {
+      // 维度即时间（公司级月报）：指标系列
+      const series = [];
+      volKeys.slice(0, 2).forEach((k, i) => series.push({
+        name: k, type: i === 0 ? 'bar' : 'line', smooth: i > 0, barMaxWidth: 26,
+        itemStyle: { color: ['#3B82F6', '#16A34A'][i] },
+        data: asc.map(r => wan(r[k])),
+      }));
+      rateKeys.slice(0, 1).forEach(k => series.push({
+        name: k, type: 'line', yAxisIndex: 1, smooth: true, itemStyle: { color: '#D97706' },
+        data: asc.map(r => r[k] === null ? null : +(r[k] * 100).toFixed(1)),
+      }));
+      App.chart(el, {
+        tooltip: { trigger: 'axis' },
+        legend: { top: 0 },
+        grid: { left: 8, right: 44, top: 34, bottom: 0, containLabel: true },
+        xAxis: { type: 'category', data: months },
+        yAxis: [{ type: 'value', name: '万元' }, { type: 'value', name: '%', position: 'right', axisLabel: { formatter: '{value}%' } }],
+        series,
+      });
+      return;
+    }
+
+    // 时间 × 维度：按维度值堆叠（第一个量值指标）
+    const dims = [...new Set(asc.map(r => r[dimKey]))];
+    const pivot = {};
+    asc.forEach(r => {
+      const m = String(r[timeKey]).slice(0, 7);
+      (pivot[m] = pivot[m] || {})[r[dimKey]] = wan(r[volKeys[0]]);
+    });
+    const palette = ['#1D4ED8', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#16A34A', '#0D9488', '#7C3AED'];
+    App.chart(el, {
+      tooltip: { trigger: 'axis', valueFormatter: v => v + ' 万' },
+      legend: { top: 0, type: 'scroll' },
+      grid: { left: 8, right: 8, top: 34, bottom: 0, containLabel: true },
+      xAxis: { type: 'category', data: months },
+      yAxis: { type: 'value', name: '万元' },
+      series: dims.map((d, i) => ({
+        name: d, type: 'bar', stack: 'v', barMaxWidth: 30,
+        itemStyle: { color: palette[i % palette.length] },
+        data: months.map(m => (pivot[m] || {})[d]),
+      })),
+    });
   },
 };

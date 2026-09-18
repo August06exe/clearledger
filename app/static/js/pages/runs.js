@@ -26,10 +26,11 @@ window.Pages.runs = {
     const runs = data.runs || [];
     document.getElementById('runs-list').innerHTML = runs.length ? `
       <table class="tbl">
-        <thead><tr><th>状态</th><th>运行编号</th><th>触发</th><th>开始</th><th>结束</th><th>耗时</th><th class="num">节点</th><th>明细</th></tr></thead>
+        <thead><tr><th>状态</th><th>账套</th><th>运行编号</th><th>触发</th><th>开始</th><th>结束</th><th>耗时</th><th class="num">节点</th><th>明细</th></tr></thead>
         <tbody>${runs.map(r => `
           <tr>
             <td>${Light.html(r.status)}</td>
+            <td>${r.instance || '—'}</td>
             <td style="font-family:Consolas,monospace;font-size:12px">${r.run_id}</td>
             <td>${r.trigger === 'schedule' ? '定时' : r.trigger === 'catchup' ? '补跑' : '手动'}</td>
             <td>${Fmt.dt(r.started_at)}</td>
