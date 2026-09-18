@@ -44,6 +44,14 @@ data/inbox/ 投放区        pipeline/ 口径管道(dbt)       app/ 门户(浏�
 - **备份数据**：双击 `备份数据.bat`（数据本质是 `data/warehouse/warehouse.duckdb` 一个文件）
 - **出错了**：跑批历史页能看到失败节点和日志末尾；把报错贴给 AI 助手（ZCode）即可
 
+## AI-Native 维护模式（本项目第一性原则）
+
+这套系统的第一读者和第一操作者是 **AI**，人类只做验收与拍板。为此配备：
+
+- **[AGENTS.md](AGENTS.md)** — 任何 AI agent 接管本仓库的入口（30 秒认知 + 红线 + 快速命令）
+- **[docs/AI-操作手册.md](docs/AI-操作手册.md)** — 详尽操作圣经：系统地图、状态资产清单、8 个操作配方、故障 playbook、agent 自动化 SOP、历史教训 TOP8
+- **`ops/doctor.py`** — 系统自检（人类表格 / `--json` 机器可读），AI 动手前的第一条命令
+
 ## 技术栈
 
 DuckDB（嵌入式分析引擎）· dbt（口径管道与测试）· FastAPI（门户后端）
