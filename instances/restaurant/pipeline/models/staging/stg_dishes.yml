@@ -17,5 +17,7 @@ models:
           - accepted_values:
               arguments:
                 values: ['热菜', '凉菜', '主食', '饮品', '甜点']
+              config:
+                severity: warn
       - name: std_cost
         description: 标准成本（decimal）

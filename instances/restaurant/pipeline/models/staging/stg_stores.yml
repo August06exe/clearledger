@@ -19,3 +19,5 @@ models:
           - accepted_values:
               arguments:
                 values: ['购物中心', '社区', '交通枢纽', '景区']
+              config:
+                severity: warn

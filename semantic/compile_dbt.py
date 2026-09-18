@@ -51,8 +51,13 @@ def gen_staging_model(src: dict) -> str:
 
 def gen_staging_yml(src: dict) -> str:
     name = src["name"]
-    lines = [f"version: 2\n\nmodels:", f"  - name: stg_{name}",
+    lines = ["version: 2\n\nmodels:", f"  - name: stg_{name}",
              f"    description: {src.get('title', name)}（清洗层，由字段契约生成）", "    columns:"]
+
+    def sev_of(level: str) -> str:
+        # 字段契约 level → dbt severity（ingest 层与 dbt 层灯色一致，评审拍板 P-04）
+        return "error" if level == "red" else "warn"
+
     for f in src.get("fields", []):
         col = f["map"]
         lines.append(f"      - name: {col}")
@@ -64,12 +69,32 @@ def gen_staging_yml(src: dict) -> str:
             tests.append("unique")
         if f.get("enum"):
             vals = ", ".join(_sql_str(v) for v in f["enum"])
-            tests.append(f"accepted_values:\n              arguments:\n                values: [{vals}]")
+            if f.get("level", "yellow") != "red":
+                tests.append(f"accepted_values:\n              arguments:\n                values: [{vals}]"
+                             f"\n              config:\n                severity: warn")
+            else:
+                tests.append(f"accepted_values:\n              arguments:\n                values: [{vals}]")
         if tests:
             lines.append("        data_tests:")
             for t in tests:
                 lines.append(f"          - {t}")
     return "\n".join(lines) + "\n"
+
+
+def gen_range_tests(src: dict) -> list[tuple[str, str]]:
+    """P-03：range 契约编译为 dbt 测试（severity 按字段 level）"""
+    out = []
+    for f in src.get("fields", []):
+        if not f.get("range") or f.get("type") not in ("integer", "decimal"):
+            continue
+        col, rng, level = f["map"], f["range"], f.get("level", "yellow")
+        out.append((
+            f"range_{src['name']}_{col}.sql",
+            f"{{{{ config(severity='{'error' if level == 'red' else 'warn'}') }}}}\n"
+            f"-- 字段契约：{f['cn']} 范围 [{rng[0]}, {rng[1]}]\n"
+            f"select {col}\nfrom {{{{ ref('stg_{src['name']}') }}}}\n"
+            f"where {col} < {rng[0]} or {col} > {rng[1]}\n"))
+    return out
 
 
 def gen_sources_yml(inst) -> str:
@@ -104,27 +129,29 @@ def gen_wide_model(inst) -> str:
                      f"\n  on m.{keys['left']} = {alias}.{keys['right']}")
     derived = ""
     for d in wide.get("derived", []):
-        select_parts.append(f"    {d['expr']} as {d['name']}")
+        select_parts.append(f'    {d["expr"]} as "{d["name"]}"')
 
     return (f"-- 生成物：宽表装配（{main} + {len(joins)} 张标签表左联 + 派生列）\n"
             f"select\n" + ",\n".join(select_parts) + f"\nfrom {from_sql}{join_sql}\n")
 
 
 def gen_match_tests(inst) -> list[tuple[str, str]]:
-    """匹配契约 → dbt 数据测试。fanout=维表键重复（扇出风险）；null_match=主表键匹空"""
+    """匹配契约 → dbt 数据测试。fanout=维表键重复（扇出风险）；null_match=主表键匹空；
+    orphan_right 非 ignore=右表孤儿清单（warn）——契约策略组合全部被尊重（N-03/N-04）"""
     wide = inst.wide["wide"]
     main = wide["main"]
     out: list[tuple[str, str]] = []
     for j in wide.get("joins", []):
         c = j.get("contract", {})
         tbl, on = j["table"], j["keys"]
-        sev_fanout = "error" if c.get("fanout", "red") == "red" else "warn"
-        out.append((
-            f"match_{tbl}_fanout.sql",
-            f"{{{{ config(severity='{sev_fanout}') }}}}\n"
-            f"-- 匹配契约：{tbl} 的键 {on['right']} 必须唯一，否则 join 扇出/笛卡尔积\n"
-            f"select {on['right']}\nfrom {{{{ ref('stg_{tbl}') }}}}\n"
-            f"group by 1 having count(*) > 1\n"))
+        if c.get("fanout", "red") != "ignore":
+            sev_fanout = "error" if c.get("fanout", "red") == "red" else "warn"
+            out.append((
+                f"match_{tbl}_fanout.sql",
+                f"{{{{ config(severity='{sev_fanout}') }}}}\n"
+                f"-- 匹配契约：{tbl} 的键 {on['right']} 必须唯一，否则 join 扇出/笛卡尔积\n"
+                f"select {on['right']}\nfrom {{{{ ref('stg_{tbl}') }}}}\n"
+                f"group by 1 having count(*) > 1\n"))
         if c.get("null_match", "yellow") != "ignore":
             sev_null = "error" if c.get("null_match") == "red" else "warn"
             out.append((
@@ -134,6 +161,15 @@ def gen_match_tests(inst) -> list[tuple[str, str]]:
                 f"select distinct m.{on['left']}\nfrom {{{{ ref('stg_{main}') }}}} m\n"
                 f"left join {{{{ ref('stg_{tbl}') }}}} d on m.{on['left']} = d.{on['right']}\n"
                 f"where m.{on['left']} is not null and d.{on['right']} is null\n"))
+        orphan = c.get("orphan_right", "ignore")
+        if orphan not in ("ignore",):
+            out.append((
+                f"match_{tbl}_orphan_right.sql",
+                f"{{{{ config(severity='warn') }}}}\n"
+                f"-- 匹配契约：{tbl} 有键但主表无流水的孤儿清单（仅记录）\n"
+                f"select distinct d.{on['right']}\nfrom {{{{ ref('stg_{tbl}') }}}} d\n"
+                f"left join {{{{ ref('stg_{main}') }}}} m on d.{on['right']} = m.{on['left']}\n"
+                f"where m.{on['left']} is null\n"))
     return out
 
 
@@ -195,13 +231,13 @@ models:
       +schema: marts
       +materialized: table
 """
-    profiles_yml = f"""# 生成物：实例 {n} 的 dbt 连接（库文件独立，实例间物理隔离）
+    profiles_yml = f"""# 生成物：实例 {n} 的 dbt 连接（库文件独立，实例间物理隔离；绝对路径防 CWD 漂移）
 cl:
   target: {n}
   outputs:
     {n}:
       type: duckdb
-      path: "{inst.db_path.as_posix()}"
+      path: "{(inst.pipeline_dir / inst.db_path).resolve().as_posix()}"
       threads: 4
 """
     macro = """{% macro generate_schema_name(custom_schema_name, node) -%}
@@ -230,9 +266,12 @@ def compile_instance(inst) -> dict:
     # intermediate（宽表）
     files[f"models/intermediate/int_{inst.wide['wide']['name']}.sql"] = gen_wide_model(inst)
 
-    # 匹配契约测试
+    # 匹配契约测试 + 字段 range 契约测试
     for fname, content in gen_match_tests(inst):
         files[f"tests/{fname}"] = content
+    for src in inst.sources.get("sources", []):
+        for fname, content in gen_range_tests(src):
+            files[f"tests/{fname}"] = content
 
     # marts
     for rep in inst.dashboard.get("reports", []):

@@ -14,6 +14,8 @@ from semantic.loader import ConfigError, Instance, load_instance
 
 def _connect(inst: Instance, readonly: bool = True) -> duckdb.DuckDBPyConnection:
     db = (inst.pipeline_dir / inst.db_path).resolve()
+    if readonly and not db.exists():
+        raise FileNotFoundError(f"实例库不存在：{db}（先跑一次 ingest + dbt build）")
     last = None
     for _ in range(20):
         try:
@@ -38,17 +40,18 @@ def list_reports(instance: str) -> list[dict]:
 
 
 def filter_options(instance: str, report_key: str) -> dict[str, list]:
-    """报表可筛选项（白名单的机器来源：实查 distinct）——分组维度 + 声明的筛选维度"""
+    """报表可筛选项（白名单的机器来源：实查 distinct）——分组维度 + 声明的筛选维度，
+    含时间维度（按月过滤是常见需求，N-10）"""
     inst = load_instance(instance)
     rep = _get_report(inst, report_key)
     con = _connect(inst)
     try:
         opts: dict[str, list] = {}
         dim_names = [rep["dimension"]] + list(rep.get("filters", []))
+        if rep.get("time_dim"):
+            dim_names.append(rep["time_dim"])
         for dn in dim_names:
             dim = inst.dimension(dn)
-            if dim.get("type") == "time":
-                continue
             col = f'"{dim["name"]}"'
             try:
                 rows = con.execute(
@@ -71,8 +74,12 @@ def build_query(instance: str, report_key: str, filters: dict | None = None,
     sql = f'select * from marts.mart_{report_key}'
     conds, params = [], []
     for dim_name, val in (filters or {}).items():
-        if dim_name not in opts or val not in opts[dim_name]:
-            continue  # 非白名单 → 静默忽略（决策 D14 同源）
+        # 名非法必须报错（拼错维度名不应静默变全量，P-08）；值非法静默回退（D14）
+        if dim_name not in opts:
+            raise ValueError(f"报表 {report_key} 不存在可筛选维度 [{dim_name}]，"
+                             f"可用: {list(opts.keys())}")
+        if val not in opts[dim_name]:
+            continue
         conds.append(f'"{dim_name}" = ?')
         params.append(val)
     if conds:
@@ -118,13 +125,17 @@ def _get_report(inst: Instance, key: str) -> dict:
 
 
 if __name__ == "__main__":
+    import argparse
     import json
-    import sys
-    inst_name = sys.argv[1] if len(sys.argv) > 1 else "sales"
-    key = sys.argv[2] if len(sys.argv) > 2 else None
-    reps = list_reports(inst_name)
-    if not key:
-        print(json.dumps(reps, ensure_ascii=False, indent=1))
+    ap = argparse.ArgumentParser(description="语义层查询编译器 CLI")
+    ap.add_argument("instance", nargs="?", default="sales", help="实例名（默认 sales）")
+    ap.add_argument("report", nargs="?", help="报表 key（缺省则列出全部报表）")
+    ap.add_argument("--filter", action="append", default=[], metavar="维度=值",
+                    help="筛选，可多次，如 --filter 区域=华东")
+    args = ap.parse_args()
+    if not args.report:
+        print(json.dumps(list_reports(args.instance), ensure_ascii=False, indent=1))
     else:
-        rows = run_report(inst_name, key, limit=5)
+        filters = dict(kv.split("=", 1) for kv in args.filter)
+        rows = run_report(args.instance, args.report, filters=filters, limit=5)
         print(json.dumps(rows, ensure_ascii=False, indent=1, default=str))

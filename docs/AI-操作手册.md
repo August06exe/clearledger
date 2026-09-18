@@ -113,6 +113,21 @@ for pid in $(netstat -ano | grep ":8620" | grep LISTENING | awk '{print $5}' | s
 `重建演示数据.bat` 或分步：`sample_data/generate.py` → `ingest/ingest.py` → cd pipeline && dbt build。
 生成器特性：截止昨天动态生成；**预埋 2026-05 华东断供异常**（所以黄灯是预期，不是 bug）；300 行客户编号带首尾空格（清洗层演示）。
 
+### R-09 语义层实例操作（v0.3 配置驱动，推荐路径）
+实例 = `instances/<名字>/` 五配置 + 独立库。全链路三步：
+```bash
+.venv/Scripts/python.exe -m semantic.ingest_run   --instance <名字>   # 摄取+契约校验（red→退出1）
+.venv/Scripts/python.exe -m semantic.compile_dbt  --instance <名字>   # 配置→dbt project（输出diff摘要）
+cd instances/<名字>/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors
+```
+查询编译器：`.venv/Scripts/python.exe -m semantic.query <实例> [报表key] [--filter 维度=值]`。
+要点：
+- 契约违规留痕在实例库 `raw.contract_report`（按 run_id 追溯）；多文件命中取 mtime 最新并黄灯留痕
+- 改任何 yml 后必须重跑 compile（生成物进 git，提交前看 diff 摘要）
+- 双实例物理隔离：`data/warehouse/<实例>.duckdb` 各自独立；引擎 `semantic/` 零业务预设，**为适配新公司改引擎=设计违规**
+- 新公司接入 = 复制 instances/sales 起草五配置（AI 主笔）→ R-09 三步 → 对照对数
+- 悬空引用（指标/派生列引用不存在的列、报表引用未知指标维度）在 compile 期被 ConfigError 指名道姓拦下
+
 ## 4. 故障排查 Playbook（按症状查）
 
 ### 症状：总览红灯

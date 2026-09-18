@@ -36,3 +36,5 @@ models:
           - accepted_values:
               arguments:
                 values: ['堂食', '外卖', '小程序']
+              config:
+                severity: warn

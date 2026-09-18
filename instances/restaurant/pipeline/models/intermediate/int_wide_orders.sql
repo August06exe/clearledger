@@ -14,8 +14,8 @@ select
     d1.store_name,
     d1.city,
     d1.biz_type,
-    round(quantity * std_cost, 2) as cost_amount,
-    round(amount - quantity * std_cost, 2) as gross_profit
+    round(quantity * std_cost, 2) as "cost_amount",
+    round(amount - quantity * std_cost, 2) as "gross_profit"
 from {{ ref('stg_orders') }} m
 left join {{ ref('stg_dishes') }} d0
   on m.dish_code = d0.dish_code

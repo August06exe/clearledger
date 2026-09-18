@@ -17,12 +17,16 @@ models:
           - accepted_values:
               arguments:
                 values: ['制造业', '零售连锁', '互联网', '教育培训', '医疗健康', '金融服务']
+              config:
+                severity: warn
       - name: customer_level
         description: 客户等级（string）
         data_tests:
           - accepted_values:
               arguments:
                 values: ['战略客户', '大客户', '中型客户', '小微企业']
+              config:
+                severity: warn
       - name: region_code
         description: 区域编码（string）
       - name: region_name
@@ -33,3 +37,5 @@ models:
           - accepted_values:
               arguments:
                 values: ['活跃', '流失']
+              config:
+                severity: warn

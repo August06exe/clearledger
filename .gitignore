@@ -17,3 +17,7 @@ pipeline/dbt_packages/
 .DS_Store
 Thumbs.db
 nul
+
+# 实例生成管道的 dbt 构建产物（生成源码 instances/*/pipeline/models 保留入库）
+instances/*/pipeline/target/
+instances/*/pipeline/logs/

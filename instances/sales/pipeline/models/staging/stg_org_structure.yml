@@ -21,5 +21,7 @@ models:
           - accepted_values:
               arguments:
                 values: ['是', '否']
+              config:
+                severity: warn
       - name: region_code
         description: 负责区域编码（string）

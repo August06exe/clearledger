@@ -17,9 +17,9 @@ select
     d1.product_name,
     d1.category,
     d1.std_cost,
-    round(amount * (1 - discount_rate), 2) as net_amount,
-    round(quantity * std_cost, 2) as cost_amount,
-    round(amount * (1 - discount_rate) - quantity * std_cost, 2) as gross_profit
+    round(amount * (1 - discount_rate), 2) as "net_amount",
+    round(quantity * std_cost, 2) as "cost_amount",
+    round(amount * (1 - discount_rate) - quantity * std_cost, 2) as "gross_profit"
 from {{ ref('stg_sales_transactions') }} m
 left join {{ ref('stg_customers') }} d0
   on m.customer_id = d0.customer_id

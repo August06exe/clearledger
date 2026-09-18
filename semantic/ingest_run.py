@@ -20,24 +20,35 @@ from pathlib import Path
 
 import duckdb
 import pandas as pd
+from pandas.errors import EmptyDataError
 
-from semantic.loader import ConfigError, load_instance
+from semantic.loader import ROOT, ConfigError, load_instance
 
 LEVEL_ORDER = {"red": 3, "yellow": 2, "pending": 1, "ignore": 0}
 
 
-def discover_file(inbox: Path, patterns: list[str]) -> Path | None:
+def discover_file(inbox: Path, patterns: list[str], problems: list[dict],
+                  source_name: str) -> Path | None:
+    """按序匹配模式；同模式多命中取 mtime 最新的一份，其余记 multi_match 黄灯留痕
+    （防旧文件遮蔽新月文件——绿灯出旧数据比找不到文件更危险）"""
     for pat in patterns:
-        hits = sorted(inbox.glob(pat))
+        hits = sorted(inbox.glob(pat), key=lambda p: p.stat().st_mtime, reverse=True)
         if hits:
+            if len(hits) > 1:
+                problems.append({
+                    "source": source_name, "rule": "multi_match", "level": "yellow",
+                    "detail": f"模式 {pat} 命中 {len(hits)} 个文件，已取最新 {hits[0].name}（mtime），"
+                              f"被忽略: {[h.name for h in hits[1:]]}"})
             return hits[0]
     return None
 
 
-def read_file(path: Path, encodings: list[str]) -> pd.DataFrame:
+def read_file(path: Path, encodings: list[str], sheet: int | None = None) -> pd.DataFrame:
     last_err: Exception | None = None
     suffix = path.suffix.lower()
     if suffix == ".csv":
+        if path.stat().st_size == 0:
+            raise EmptyDataError(f"{path.name} 是 0 字节文件")
         for enc in encodings:
             try:
                 return pd.read_csv(path, encoding=enc, dtype=str)
@@ -45,7 +56,11 @@ def read_file(path: Path, encodings: list[str]) -> pd.DataFrame:
                 last_err = e
         raise RuntimeError(f"编码尝试全部失败 {[enc for enc in encodings]}: {path.name}（{last_err}）")
     if suffix in (".xlsx", ".xls"):
-        return pd.read_excel(path, engine="openpyxl", dtype=str)
+        # 仅支持 xlsx（openpyxl 不读 legacy xls——xls 会显式报错而非崩溃）
+        if suffix == ".xls":
+            raise RuntimeError(f"{path.name} 是旧版 .xls，请另存为 .xlsx 后投放")
+        return pd.read_excel(path, engine="openpyxl", dtype=str,
+                             sheet_name=sheet if sheet is not None else 0)
     raise RuntimeError(f"不支持的文件类型: {path.name}")
 
 
@@ -58,9 +73,10 @@ def apply_clean(df: pd.DataFrame, steps: list[dict | str]) -> pd.DataFrame:
             df.columns = [str(c).strip() for c in df.columns]
         elif name == "strip_strings":
             for c in df.columns:
-                if df[c].dtype == object:
-                    df[c] = df[c].astype("string").str.strip()
-                    df[c] = df[c].replace({"": None, "nan": None})
+                # pandas 3 的字符串列是 StringDtype 而非 object——两种都判，.str.strip() 均适用
+                if df[c].dtype == object or str(df[c].dtype) in ("string", "str"):
+                    df[c] = df[c].str.strip()
+                    df[c] = df[c].replace({"": None})
         elif name == "drop_rows_if":
             col, op = arg["col"], arg["op"]
             if col not in df.columns:
@@ -80,14 +96,15 @@ def _check_range(series, rng):
 
 def validate_and_transform(df: pd.DataFrame, fields: list[dict], source_name: str,
                            violations: list[dict]) -> pd.DataFrame:
-    """逐字段契约校验 + 类型化。违规记录进 violations（不阻断，按级别汇总定级）。"""
+    """逐字段契约校验 + 类型化。前置条件：df 已按字段契约 rename 为英文列名（map）。
+    违规记录进 violations（不阻断，按级别汇总定级）；类型化同步完成（date/integer/decimal）。"""
     for f in fields:
-        cn, col, typ = f["cn"], f["map"], f.get("type", "string")
+        col, typ = f["map"], f.get("type", "string")
         level = f.get("level", "yellow")
-        if cn not in df.columns:
-            continue  # 表头级问题在前面已处理
-        s = df[cn]
+        if col not in df.columns:
+            continue  # 表头级问题已在 header_changed 处理
 
+        s = df[col]
         # 类型化 + 转换失败统计
         if typ == "date":
             t = pd.to_datetime(s, errors="coerce")
@@ -100,12 +117,13 @@ def validate_and_transform(df: pd.DataFrame, fields: list[dict], source_name: st
             bad = 0
         if bad:
             violations.append({"source": source_name, "field": col, "rule": "type_coerce",
-                               "level": level, "count": bad, "sample": str(s[t.isna()].dropna().iloc[:3].tolist())})
-            df[cn] = t
+                               "level": level, "count": bad,
+                               "sample": str(s[t.isna()].dropna().iloc[:3].tolist())})
+            df[col] = t
         else:
-            df[cn] = t
+            df[col] = t
 
-        cur = df[cn]
+        cur = df[col]
         # required：缺失行剔除（计数留痕）
         if f.get("required"):
             n = int(cur.isna().sum())
@@ -113,12 +131,11 @@ def validate_and_transform(df: pd.DataFrame, fields: list[dict], source_name: st
                 violations.append({"source": source_name, "field": col, "rule": "required_missing_dropped",
                                    "level": level, "count": n, "sample": ""})
                 df = df[cur.notna()]
-                cur = df[cn]
+                cur = df[col]
         # 缺失策略
-        miss = f.get("missing")
-        if miss == "default" and "default" in f:
-            df[cn] = cur.fillna(f["default"])
-            cur = df[cn]
+        if f.get("missing") == "default" and "default" in f:
+            df[col] = cur.fillna(f["default"])
+            cur = df[col]
         # range
         if f.get("range") and typ in ("integer", "decimal"):
             mask = _check_range(cur, f["range"])
@@ -140,7 +157,7 @@ def validate_and_transform(df: pd.DataFrame, fields: list[dict], source_name: st
                 violations.append({"source": source_name, "field": col, "rule": "format",
                                    "level": level, "count": int(mask.sum()),
                                    "sample": str(cur[mask].iloc[:3].tolist())})
-        # unique（唯一键冲突 = 数据损坏，red）
+        # unique（唯一键冲突 = 数据损坏，恒 red——双计收入风险）
         if f.get("unique"):
             dup = int(cur.duplicated(keep=False).sum())
             if dup:
@@ -154,7 +171,7 @@ def ingest_source(con, inst, src: dict, inbox: Path, run_id: str,
                   violations: list[dict], problems: list[dict]) -> dict:
     name, title = src["name"], src.get("title", src["name"])
     disc = src.get("discover", {})
-    path = discover_file(inbox, disc.get("patterns", [f"{name}.*"]))
+    path = discover_file(inbox, disc.get("patterns", [f"{name}.*"]), problems, name)
 
     def problem(rule: str, level: str, detail: str):
         problems.append({"source": name, "rule": rule, "level": level, "detail": detail})
@@ -164,7 +181,11 @@ def ingest_source(con, inst, src: dict, inbox: Path, run_id: str,
                 f"投放区 {inbox} 未匹配 {disc.get('patterns')}")
         return {"source": name, "status": "error", "error": "file_missing"}
 
-    df = read_file(path, disc.get("encodings", ["utf-8-sig"]))
+    try:
+        df = read_file(path, disc.get("encodings", ["utf-8-sig"]), disc.get("sheet"))
+    except (EmptyDataError, RuntimeError) as e:
+        problem("read_failed", "red", f"{path.name} 读取失败: {e}")
+        return {"source": name, "status": "error", "error": f"read_failed: {e}"}
     raw_rows = len(df)
     if raw_rows == 0:
         problem("empty_file", src.get("problems", {}).get("empty_file", "red"), f"{path.name} 为空文件")
@@ -250,7 +271,12 @@ def main() -> int:
     try:
         con.execute("create schema if not exists raw")
         for src in inst.sources.get("sources", []):
-            r = ingest_source(con, inst, src, inst.inbox, run_id, violations, problems)
+            try:
+                r = ingest_source(con, inst, src, inst.inbox, run_id, violations, problems)
+            except Exception as e:  # N-02：单源崩溃不得拖垮整轮——留痕后继续处理其他源
+                problems.append({"source": src.get("name"), "rule": "ingest_crashed", "level": "red",
+                                 "detail": f"{type(e).__name__}: {e}"})
+                r = {"source": src.get("name"), "status": "error", "error": f"crashed: {e}"}
             results.append(r)
             tag = "ok" if r["status"] == "ok" else "FAIL"
             print(f"  [{tag}] {r['source']:22s} {r.get('file', '-'):28s} {r.get('rows', '-')} 行")
@@ -279,8 +305,8 @@ def main() -> int:
         "results": results, "problems": problems, "violations": violations,
         "pending_count": len(pendings),
     }
-    Path("logs").mkdir(exist_ok=True)
-    Path(f"logs/ingest_{inst.name}_last.json").write_text(
+    (ROOT / "logs").mkdir(exist_ok=True)
+    (ROOT / f"logs/ingest_{inst.name}_last.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
 
     print(f"摄取完成: {'RED' if has_red else 'OK'} | 违规 {len(violations)} 项"

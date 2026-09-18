@@ -92,18 +92,36 @@ def load_instance(name: str) -> Instance:
         dashboard=_read_yaml(d / CONFIG_FILES["dashboard"]),
     )
 
+    # ---- 结构完整性：缺键要 ConfigError 指名道姓，不能裸 KeyError（N-09）----
+    for s in inst.sources.get("sources", []):
+        for i, f in enumerate(s.get("fields", [])):
+            for k in ("cn", "map"):
+                if k not in f:
+                    raise ConfigError(f"[{name}] sources.{s.get('name')}.fields[{i}] 缺少必需键 {k}")
+    for rep in inst.dashboard.get("reports", []):
+        for k in ("key", "dimension", "metrics"):
+            if k not in rep:
+                raise ConfigError(f"[{name}] dashboard.reports[{rep.get('key', '?')}] 缺少必需键 {k}")
+
     # ---- 交叉引用校验 ----
     wide = inst.wide.get("wide", {})
     main = wide.get("main")
     if not main:
         raise ConfigError(f"[{name}] wide.yml 缺少 main")
+    if not wide.get("name"):
+        raise ConfigError(f"[{name}] wide.yml 缺少 name")
     inst.source(main)  # 存在性
 
     wide_cols: set[str] = set(inst.columns_of(main))
     for j in wide.get("joins", []):
+        for k in ("table", "keys"):
+            if k not in j:
+                raise ConfigError(f"[{name}] wide.joins[{j.get('table', '?')}] 缺少必需键 {k}")
         tbl = j["table"]
         inst.source(tbl)
         on = j["keys"]
+        if "left" not in on or "right" not in on:
+            raise ConfigError(f"[{name}] wide.joins[{tbl}].keys 缺少 left/right")
         if on["left"] not in wide_cols:
             raise ConfigError(f"[{name}] join 左键 {on['left']} 不在主表 {main} 字段中")
         if on["right"] not in inst.columns_of(tbl):
@@ -114,17 +132,39 @@ def load_instance(name: str) -> Instance:
             if c in wide_cols:
                 raise ConfigError(f"[{name}] join 列 {c} 与主表列冲突（需在源配置中改名）")
             wide_cols.add(c)
+    for d in wide.get("derived", []):
+        if "name" not in d or "expr" not in d:
+            raise ConfigError(f"[{name}] wide.derived[{d.get('name', '?')}] 缺少 name/expr")
+        wide_cols.add(d["name"])
 
     # 维度列必须在宽表可见列中
     for dim in inst.dimensions:
         if dim["column"] not in wide_cols:
             raise ConfigError(f"[{name}] 维度 [{dim['name']}] 引用列 {dim['column']} 不在宽表中")
 
+    # 派生列/指标 expr 的标识符启发式校验（P-07：常见断链在装配期拦下，而非 dbt build 期）
+    import re
+    _SQL_KEYWORDS = {"sum", "count", "distinct", "round", "nullif", "coalesce", "null",
+                     "cast", "as", "date_trunc", "abs", "min", "max", "avg", "case",
+                     "when", "then", "else", "end", "and", "or", "not", "in", "true", "false"}
+    for d in wide.get("derived", []):
+        tokens = set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", d["expr"])) - _SQL_KEYWORDS
+        dangling = sorted(t for t in tokens if t not in wide_cols)
+        if dangling:
+            raise ConfigError(f"[{name}] 派生列 [{d['name']}] 引用了宽表不存在的列: {dangling}")
+    for m in inst.metrics:
+        tokens = set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", m["expr"])) - _SQL_KEYWORDS
+        dangling = sorted(t for t in tokens if t not in wide_cols)
+        if dangling:
+            raise ConfigError(f"[{name}] 指标 [{m['name']}] 引用了宽表不存在的列: {dangling}")
+
     # 报表引用的指标/维度必须存在；time_dim 若为时间维度必须声明
     for rep in inst.dashboard.get("reports", []):
         for m in rep.get("metrics", []):
             inst.metric(m)
         inst.dimension(rep["dimension"])
+        for fd in rep.get("filters", []):
+            inst.dimension(fd)
         if rep.get("time_dim"):
             td = inst.dimension(rep["time_dim"])
             if td.get("type") != "time":

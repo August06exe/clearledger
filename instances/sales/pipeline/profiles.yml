@@ -1,8 +1,8 @@
-# 生成物：实例 sales 的 dbt 连接（库文件独立，实例间物理隔离）
+# 生成物：实例 sales 的 dbt 连接（库文件独立，实例间物理隔离；绝对路径防 CWD 漂移）
 cl:
   target: sales
   outputs:
     sales:
       type: duckdb
-      path: "../../../data/warehouse/sales.duckdb"
+      path: "D:/Workshop/3000-Projects/3005-DA-AI Native数据底座系统/data/warehouse/sales.duckdb"
       threads: 4
