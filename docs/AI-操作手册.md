@@ -7,38 +7,33 @@
 
 ---
 
-## 1. 系统地图（一页认知）
+## 1. 系统地图（一页认知，v0.3 多账套）
 
 ```
-                    ┌────────────────────────── 人类世界 ──────────────────────────┐
-                    │  把 Excel/CSV 放进 data/inbox/  ←→  浏览器 http://127.0.0.1:8620  │
-                    └──────────┬───────────────────────────────▲──────────────────┘
-                               │ 文件                           │ HTTP
-┌──────────────────────────────▼───────────────┐   ┌───────────┴──────────────────┐
-│ ingest/ingest.py（摄取器）                    │   │ app/（门户）                  │
-│ 读 ingest/sources.yml 声明的 5 个数据源        │   │ main.py  FastAPI 全部 API     │
-│ 清洗→列名标准化→raw schema（全量快照覆盖）      │   │ services/ 业务逻辑            │
-└──────────────────┬───────────────────────────┘   │  duck.py       查询(带锁重试) │
-                   │ 写 warehouse.duckdb           │  dbt_runner.py 跑批执行器      │
-┌──────────────────▼───────────────────────────┐   │  artifacts.py dbt产物解析     │
-│ pipeline/（dbt 三层管道，55 节点）             │   │  lineage.py    血缘(表级+字段级)│
-│ raw → staging(清洗) → intermediate(口径)      │   │  reports.py    报表注册表      │
-│        → marts(报表层，只许报表读)             │   │  settings.py   跑批模式开关    │
-│ 每次跑批产出 manifest.json + run_results.json │   │ static/  原生JS门户(ECharts/G6)│
-└──────────────────┬───────────────────────────┘   └───────────▲──────────────────┘
-                   │ 读写 warehouse.duckdb                     │ APScheduler
-                   └───────────────────► data/warehouse/ ◄─────┘（仅定时模式开启时）
+              ┌─────────────── 人类世界 ────────────────┐
+              │ 投放区 instances/<账套>/data/inbox/        │
+              │ 浏览器 http://127.0.0.1:8620（顶栏切账套） │
+              └──────────┬──────────────────▲─────────┘
+                         │                  │ HTTP（全部 API 按账套路由）
+┌────────────────────────▼──────────────┐   ┌┴─────────────────────────┐
+│ semantic/ 引擎（零业务预设，永不随账套改）│   │ app/ 门户                  │
+│ ingest_run.py  入口档案+字段契约→raw     │   │ main.py 按账套路由的 API    │
+│ compile_dbt.py 五配置→dbt project 生成  │   │ dbt_runner.py 实例三步链   │
+│ query.py       指标×维度→SQL 编译       │   │ settings.py 账套+跑批模式  │
+└────────────────────────┬──────────────┘   │ static/ 原生JS门户         │
+                         │                  └──────────────────────────┘
+   instances/<账套>/                     每账套独立：
+     五配置 yml（业务差异全在这）          data/warehouse/<账套>.duckdb
+     pipeline/（生成物，进git勿手改）      data/runs/history_<账套>.json
 ```
 
-**进程模型**：常驻进程只有一个——uvicorn（门户+调度器）。跑批时它 fork 两个子进程
-（ingest.py、dbt.exe），子进程日志追加写入 `logs/run_<run_id>.log`。DuckDB 单写者：
-跑批期间（约 8 秒）门户查询靠 `duck.py` 的 20×0.5s 重试熬过去。
+**进程模型**：常驻进程只有 uvicorn（门户+调度器）。跑批 fork 三个子进程（ingest_run →
+compile_dbt → dbt build），日志 logs/run_<账套>_<run_id>.log。全系统跑批互斥。
 
-**关键判定逻辑（你必须理解，这是红绿灯的灵魂）**：
-- 红 = 摄取失败（缺文件/表头变了/空文件）或 dbt 返回码≠0 或 run_results.json 不是本轮新产物（mtime 校验，防"假绿灯"）→ 下游拦截 + 报表挂"数据过期"横幅
-- 黄 = dbt build 整体成功但存在 severity=warn 的测试（如区域收入环比骤降>50%）
-- 绿 = 全部通过
-- 状态词汇两套：dbt 词汇（success/pass/warn/fail）在 run 明细里；**灯色词汇（green/yellow/red）**在 `/api/lineage/graph` 里（`_STATUS_TO_LIGHT` 归一化）——新增状态映射时两套都要对齐
+**红绿灯判定**：红 = 三步任一退出码非零或无本轮新鲜 run_results；黄 = dbt 测试 warn；
+绿 = 全过。状态词汇两套（dbt 词汇 vs 灯色词汇），映射见 main.py 的 _STATUS_TO_LIGHT。
+
+---
 
 ## 2. 状态资产清单（每个文件：谁写、含什么、可否删）
 
@@ -64,17 +59,23 @@
 
 ## 3. 操作配方（按任务组织，照做即可）
 
-### R-01 跑一次批并确认结果
+### R-01 跑一次批并确认结果（v0.3 实例链路）
 ```bash
-curl -s -X POST http://127.0.0.1:8620/api/runs/trigger   # 返回 run_id
-sleep 25                                                  # 完整跑批约 8~15s，留余量
-curl -s http://127.0.0.1:8620/api/overview | python -c "import json,sys;d=json.load(sys.stdin);print(d['light'],d['last_run']['counts'])"
-# 预期：yellow（55 节点：12 success + 42 pass + 1 warn）——那 1 个 warn 是预埋演示异常，属预期
-```
-判断标准：green/yellow 都算"数据可用"；red 时去 §4 排障。**不要用 CLI 直跑 dbt 代替 API 触发**——会绕过运行历史留痕。
+# 方式一：门户 API（推荐，自动带当前账套）
+curl -s -X POST "http://127.0.0.1:8620/api/runs/trigger?instance=sales"
+# 方式二：CLI 三步链
+.venv/Scripts/python.exe -m semantic.ingest_run  --instance sales
+.venv/Scripts/python.exe -m semantic.compile_dbt --instance sales
+(cd instances/sales/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors)
 
-### R-02 新增/修改一个数据源（最常见任务）
-1. 人类把新文件放进 `data/inbox/`
+sleep 30
+curl -s "http://127.0.0.1:8620/api/overview" | python -c "import json,sys;d=json.load(sys.stdin);print(d['instance']['title'], d['light'], d['last_run']['counts'])"
+```
+各账套基线：sales 37 节点 / restaurant 27 / retail 70（60绿10黄）/ hro 56（52绿4黄）。
+retail/hro 的 warn 是混沌条款预埋（幽灵合同/供应商空键），属预期。red 时去 §4 排障。
+
+### R-02 新增/修改一个数据源（v0.3 配置驱动）
+1. 人类把新文件放进 `instances/<账套>/data/inbox/`（文件名按 sources.yml 的 patterns）
 2. `ingest/sources.yml` 加一段：`name/title/format/files/column_map(中文表头→英文snake_case)/date_columns/numeric_columns`
 3. `pipeline/models/staging/` 加 `stg_<name>.sql`（照抄现有 5 个的模式：trim 关键列、强类型、where 剔坏行）+ 在 `sources.yml`(staging 的) 声明 source + `_staging.yml` 加字典与测试（not_null/unique/relationships 至少各一）
 4. 若它参与宽表：进 `int_sales_enriched.sql` 关联（v0.3「通用积木」落地后此步变为 wide.yml 配置，见 §8）
@@ -95,7 +96,7 @@ curl -s http://127.0.0.1:8620/api/overview | python -c "import json,sys;d=json.l
 curl -s -X POST http://127.0.0.1:8620/api/settings -H "Content-Type: application/json" \
   -d '{"schedule_enabled": true, "hour": 7, "minute": 15}'
 ```
-持久化在 data/settings.json，重启生效。**手动模式（默认）下系统绝不自动跑批**——这是用户拍板的决策 D5，不要"顺手"改默认值。
+持久化在 data/settings.json，重启生效。定时触发的是**当前账套**（settings.instance）。**手动模式（默认）下系统绝不自动跑批**——这是用户拍板的决策 D5，不要"顺手"改默认值。
 
 ### R-06 备份 / 恢复 / 迁移新机器
 - 备份：跑 `备份数据.bat`（PowerShell 时间戳，连 .wal 一起，失败显式报错）
