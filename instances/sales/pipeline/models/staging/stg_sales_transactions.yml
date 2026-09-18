@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: stg_sales_transactions
+    description: 销售流水（清洗层，由字段契约生成）
+    columns:
+      - name: order_id
+        description: 订单号（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: order_date
+        description: 订单日期（date）
+        data_tests:
+          - not_null
+      - name: customer_id
+        description: 客户编号（string）
+        data_tests:
+          - not_null
+      - name: product_id
+        description: 商品编号（string）
+        data_tests:
+          - not_null
+      - name: quantity
+        description: 数量（integer）
+        data_tests:
+          - not_null
+      - name: unit_price
+        description: 单价（decimal）
+      - name: discount_rate
+        description: 折扣率（decimal）
+      - name: amount
+        description: 金额（decimal）
+        data_tests:
+          - not_null

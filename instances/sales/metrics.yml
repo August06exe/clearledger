@@ -1,0 +1,9 @@
+# 实例一：指标口径（唯一出处——所有报表引用此处，不得重算）
+version: 1
+metrics:
+  - {name: 收入,     expr: "sum(net_amount)"}
+  - {name: 成本,     expr: "sum(cost_amount)"}
+  - {name: 毛利,     expr: "sum(gross_profit)"}
+  - {name: 毛利率,   expr: "round(sum(gross_profit) / nullif(sum(net_amount), 0), 4)", format: percent}
+  - {name: 订单行数, expr: "count(*)"}
+  - {name: 客户数,   expr: "count(distinct customer_id)"}

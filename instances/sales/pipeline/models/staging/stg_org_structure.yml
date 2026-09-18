@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_org_structure
+    description: 组织架构（清洗层，由字段契约生成）
+    columns:
+      - name: dept_code
+        description: 部门编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: dept_name
+        description: 部门名称（string）
+      - name: parent_code
+        description: 上级部门编码（string）
+      - name: dept_level
+        description: 层级（integer）
+      - name: is_sales_dept
+        description: 是否销售部门（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['是', '否']
+      - name: region_code
+        description: 负责区域编码（string）

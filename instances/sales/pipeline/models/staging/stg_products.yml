@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_products
+    description: 商品主数据（清洗层，由字段契约生成）
+    columns:
+      - name: product_id
+        description: 商品编号（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: product_name
+        description: 商品名称（string）
+      - name: category
+        description: 品类（string）
+      - name: unit
+        description: 单位（string）
+      - name: std_price
+        description: 标准单价（decimal）
+      - name: std_cost
+        description: 标准成本（decimal）

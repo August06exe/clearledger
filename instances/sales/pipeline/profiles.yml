@@ -1,0 +1,8 @@
+# 生成物：实例 sales 的 dbt 连接（库文件独立，实例间物理隔离）
+cl:
+  target: sales
+  outputs:
+    sales:
+      type: duckdb
+      path: "../../../data/warehouse/sales.duckdb"
+      threads: 4

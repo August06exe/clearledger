@@ -1,0 +1,36 @@
+# 实例一：看板与报表（报表 = 维度 × 指标 × 图表；引擎编译为 marts 汇总模型 + 门户报表注册表）
+version: 1
+
+reports:
+  - key: monthly_kpi
+    title: 经营月报（公司级）
+    dimension: 月份
+    metrics: [收入, 成本, 毛利, 毛利率]
+    chart: bar_line
+    full_period_only: true          # 时间维度只取完整期
+  - key: region_month
+    title: 区域经营月报
+    dimension: 区域
+    time_dim: 月份                   # 月份作时间轴，区域作分组
+    metrics: [收入, 毛利, 毛利率]
+    chart: stack_bar
+    full_period_only: true
+  - key: industry_summary
+    title: 行业经营汇总
+    dimension: 行业
+    metrics: [收入, 毛利, 毛利率, 客户数]
+    chart: hbar
+  - key: level_month
+    title: 客户等级月报
+    dimension: 客户等级
+    time_dim: 月份
+    metrics: [收入, 毛利]
+    chart: stack_bar
+    full_period_only: true
+  - key: category_month
+    title: 品类月报
+    dimension: 品类
+    time_dim: 月份
+    metrics: [收入, 毛利]
+    chart: stack_bar
+    full_period_only: true

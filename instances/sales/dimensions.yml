@@ -1,0 +1,9 @@
+# 实例一：维度声明（零预设——引擎不认识"区域"，只认识被声明的列）
+version: 1
+dimensions:
+  - {name: 月份,     column: order_date,     type: time, grain: month}
+  - {name: 区域,     column: region_name,    type: category}
+  - {name: 客户等级, column: customer_level, type: category}
+  - {name: 行业,     column: industry,       type: category}
+  - {name: 品类,     column: category,       type: category}
+  - {name: 客户状态, column: status,         type: category}

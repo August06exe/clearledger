@@ -1,0 +1,23 @@
+# 实例一：销售公司 —— 宽表装配 + 匹配契约
+# 引擎编译为 dbt 模型 int_wide_sales；匹配契约编译为 dbt 测试（fanout=error / null_match=warn / orphan_right=跳过）
+version: 1
+
+wide:
+  name: wide_sales
+  main: sales_transactions
+  joins:
+    - table: customers
+      keys: {left: customer_id, right: customer_id}
+      how: left
+      columns: [customer_name, industry, customer_level, region_code, region_name, status]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: products
+      keys: {left: product_id, right: product_id}
+      how: left
+      columns: [product_name, category, std_cost]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+  derived:
+    - {name: net_amount,   expr: "round(amount * (1 - discount_rate), 2)"}
+    - {name: cost_amount,  expr: "round(quantity * std_cost, 2)"}
+    - {name: gross_profit, expr: "round(amount * (1 - discount_rate) - quantity * std_cost, 2)"}
+  drop: [_source_file, _loaded_at]

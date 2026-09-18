@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: 原始层（实例摄取写入，含契约校验后的规整数据）
+    tables:
+      - name: sales_transactions
+        description: 销售流水
+      - name: customers
+        description: 客户主数据（含标签）
+      - name: products
+        description: 商品主数据
+      - name: org_structure
+        description: 组织架构
+      - name: expenses
+        description: 部门费用流水

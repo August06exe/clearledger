@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: stg_expenses
+    description: 部门费用流水（清洗层，由字段契约生成）
+    columns:
+      - name: expense_date
+        description: 记账日期（date）
+        data_tests:
+          - not_null
+      - name: dept_code
+        description: 部门编码（string）
+        data_tests:
+          - not_null
+      - name: dept_name
+        description: 部门名称（string）
+      - name: category
+        description: 费用类别（string）
+      - name: amount
+        description: 金额（decimal）
+        data_tests:
+          - not_null

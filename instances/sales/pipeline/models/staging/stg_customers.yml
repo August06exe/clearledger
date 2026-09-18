@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: 客户主数据（含标签）（清洗层，由字段契约生成）
+    columns:
+      - name: customer_id
+        description: 客户编号（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_name
+        description: 客户名称（string）
+      - name: industry
+        description: 行业（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['制造业', '零售连锁', '互联网', '教育培训', '医疗健康', '金融服务']
+      - name: customer_level
+        description: 客户等级（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['战略客户', '大客户', '中型客户', '小微企业']
+      - name: region_code
+        description: 区域编码（string）
+      - name: region_name
+        description: 区域（string）
+      - name: status
+        description: 状态（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['活跃', '流失']

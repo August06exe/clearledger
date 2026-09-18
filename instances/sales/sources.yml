@@ -1,0 +1,102 @@
+# 实例一：销售公司 —— 入口档案 + 字段契约（sources 配置，v0.3 schema）
+# 引擎读此文件完成：文件发现（模式匹配）→ 有序清洗 → 逐字段契约校验 → 问题策略定级 → 落 raw
+version: 1
+
+sources:
+  - name: sales_transactions
+    title: 销售流水
+    discover:
+      patterns: ["sales_transactions*.csv", "销售明细*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean:
+      - trim_columns
+      - strip_strings
+    fields:
+      - {cn: 订单号,   map: order_id,      type: string,  required: true, unique: true}
+      - {cn: 订单日期, map: order_date,    type: date,    required: true}
+      - {cn: 客户编号, map: customer_id,   type: string,  required: true}
+      - {cn: 商品编号, map: product_id,    type: string,  required: true}
+      - {cn: 数量,     map: quantity,      type: integer, required: true, range: [1, 1000000]}
+      - {cn: 单价,     map: unit_price,    type: decimal}
+      - {cn: 折扣率,   map: discount_rate, type: decimal, range: [0, 1], missing: default, default: 0}
+      - {cn: 金额,     map: amount,        type: decimal, required: true}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      empty_after_clean: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: customers
+    title: 客户主数据（含标签）
+    discover:
+      patterns: ["customers*.xlsx", "客户*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 客户编号, map: customer_id,   type: string, required: true, unique: true}
+      - {cn: 客户名称, map: customer_name, type: string}
+      - {cn: 行业,     map: industry,      type: string, enum: [制造业, 零售连锁, 互联网, 教育培训, 医疗健康, 金融服务], level: yellow}
+      - {cn: 客户等级, map: customer_level, type: string, enum: [战略客户, 大客户, 中型客户, 小微企业], level: yellow}
+      - {cn: 区域编码, map: region_code,   type: string}
+      - {cn: 区域,     map: region_name,   type: string}
+      - {cn: 状态,     map: status,        type: string, enum: [活跃, 流失], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+
+  - name: products
+    title: 商品主数据
+    discover:
+      patterns: ["products*.xlsx", "商品*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 商品编号, map: product_id,   type: string,  required: true, unique: true}
+      - {cn: 商品名称, map: product_name, type: string}
+      - {cn: 品类,     map: category,     type: string}
+      - {cn: 单位,     map: unit,         type: string}
+      - {cn: 标准单价, map: std_price,    type: decimal}
+      - {cn: 标准成本, map: std_cost,     type: decimal}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: org_structure
+    title: 组织架构
+    discover:
+      patterns: ["org_structure*.csv", "组织*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 部门编码,     map: dept_code,     type: string, required: true, unique: true}
+      - {cn: 部门名称,     map: dept_name,     type: string}
+      - {cn: 上级部门编码, map: parent_code,   type: string}
+      - {cn: 层级,         map: dept_level,    type: integer}
+      - {cn: 是否销售部门, map: is_sales_dept, type: string, enum: [是, 否]}
+      - {cn: 负责区域编码, map: region_code,   type: string}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: expenses
+    title: 部门费用流水
+    discover:
+      patterns: ["expenses*.xlsx", "费用*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 记账日期, map: expense_date, type: date,    required: true}
+      - {cn: 部门编码, map: dept_code,    type: string,  required: true}
+      - {cn: 部门名称, map: dept_name,    type: string}
+      - {cn: 费用类别, map: category,     type: string}
+      - {cn: 金额,     map: amount,       type: decimal, required: true}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red

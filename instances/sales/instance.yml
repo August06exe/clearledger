@@ -1,0 +1,6 @@
+# 实例元信息：一个公司 = 一个实例目录 + 一个独立库文件
+name: sales
+title: 演示销售公司
+inbox: data/inbox            # 相对实例目录
+database: ../../../data/warehouse/sales.duckdb   # 相对生成的 pipeline/ 目录（dbt 工作目录）
+tz: Asia/Shanghai

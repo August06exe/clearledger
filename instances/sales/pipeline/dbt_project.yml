@@ -1,0 +1,21 @@
+# 生成物：由 semantic.compile_dbt 从 instances/sales/ 五配置生成，勿手改
+name: cl_sales
+version: "1.0.0"
+config-version: 2
+profile: cl
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+clean-targets: ["target"]
+
+models:
+  cl_sales:
+    +materialized: view
+    staging:
+      +schema: staging
+    intermediate:
+      +schema: intermediate
+    marts:
+      +schema: marts
+      +materialized: table
