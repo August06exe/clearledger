@@ -1,0 +1,28 @@
+version: 1
+wide:
+  name: wide_hro
+  main: hro_ledger
+  joins:
+    - table: contracts
+      keys: {left: contract_no, right: contract_no}
+      how: left
+      columns: [customer_code, bu_name, monthly_fee, start_month, end_month]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+      # 幽灵合同 HT-9999/HT-8888 → 黄灯清单主考察点
+    - table: customers
+      keys: {left: customer_code, right: customer_code}   # 左列来自 contracts join——有序 join 依赖（设计 §3.2）
+      how: left
+      columns: [customer_name, industry, customer_level]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: delivery_groups
+      keys: {left: group_code, right: group_code}
+      how: left
+      columns: [group_name]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+      # 黄灯基线：账单/回款行交付组编码为空属预期
+  derived:
+    - {name: bill_amt,  expr: "case when entry_type = '账单' then coalesce(amount, 0) else 0 end"}
+    - {name: pay_amt,   expr: "case when entry_type = '回款' then coalesce(amount, 0) else 0 end"}
+    - {name: cost_amt,  expr: "case when entry_type = '在册' then coalesce(salary_cost, 0) else 0 end"}
+    - {name: gross_amt, expr: "case when entry_type = '账单' then coalesce(amount, 0) when entry_type = '在册' then -coalesce(salary_cost, 0) else 0 end"}
+  drop: [_source_file, _loaded_at]

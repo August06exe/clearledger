@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stg_roster
+    description: 外派花名册（员工×月份 在册表）（清洗层，由字段契约生成）
+    columns:
+      - name: employee_no
+        description: 员工编号（string）
+        data_tests:
+          - not_null
+      - name: emp_name
+        description: 姓名（string）
+      - name: doc_month
+        description: 月份（date）
+        data_tests:
+          - not_null
+      - name: group_code
+        description: 交付组编码（string）
+        data_tests:
+          - not_null
+      - name: contract_no
+        description: 合同号（string）
+        data_tests:
+          - not_null
+      - name: position
+        description: 岗位（string）
+      - name: salary_cost
+        description: 月薪资成本（decimal）

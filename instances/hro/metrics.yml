@@ -1,0 +1,14 @@
+version: 1
+metrics:
+  - {name: 服务费收入,   expr: "sum(bill_amt)"}
+  - {name: 回款额,       expr: "sum(pay_amt)"}
+  - {name: 回款率,       expr: "round(sum(pay_amt) / nullif(sum(bill_amt), 0), 4)", format: percent}
+  - {name: 应收余额,     expr: "sum(bill_amt) - sum(pay_amt)"}
+  - {name: 人力成本,     expr: "sum(cost_amt)"}
+  - {name: 毛利,         expr: "sum(gross_amt)"}
+  - {name: 毛利率,       expr: "round(sum(gross_amt) / nullif(sum(bill_amt), 0), 4)", format: percent}
+  - {name: 外派人数,     expr: "count(distinct case when entry_type = '在册' then employee_no end)"}
+  - {name: 人均产值,     expr: "round(sum(bill_amt) / nullif(count(distinct case when entry_type = '在册' then employee_no end), 0), 2)"}
+  - {name: 人均人力成本, expr: "round(sum(cost_amt) / nullif(count(distinct case when entry_type = '在册' then employee_no end), 0), 2)"}
+  - {name: 在单客户数,   expr: "count(distinct case when entry_type = '账单' then customer_code end)"}
+  - {name: 在单合同数,   expr: "count(distinct case when entry_type = '账单' then contract_no end)"}

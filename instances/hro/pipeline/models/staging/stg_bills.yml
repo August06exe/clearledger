@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: stg_bills
+    description: 月度账单（清洗层，由字段契约生成）
+    columns:
+      - name: doc_month
+        description: 月份（date）
+        data_tests:
+          - not_null
+      - name: contract_no
+        description: 合同号（string）
+        data_tests:
+          - not_null
+      - name: amount
+        description: 账单金额（decimal）

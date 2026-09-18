@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: 原始层（实例摄取写入，含契约校验后的规整数据）
+    tables:
+      - name: hro_ledger
+        description: 经营台账
+      - name: business_units
+        description: 事业部
+      - name: delivery_groups
+        description: 交付组
+      - name: customers
+        description: 客户
+      - name: contracts
+        description: 合同
+      - name: roster
+        description: 外派花名册（员工×月份 在册表）
+      - name: bills
+        description: 月度账单
+      - name: payments
+        description: 回款记录

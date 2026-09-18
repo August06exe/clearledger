@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: 原始层（实例摄取写入，含契约校验后的规整数据）
+    tables:
+      - name: fact_ledger
+        description: 进销存台账
+      - name: sales_flow
+        description: 销售流水
+      - name: purchase_orders
+        description: 采购单
+      - name: purchase_returns
+        description: 采购退货
+      - name: stock_snapshots
+        description: 库存快照
+      - name: stores
+        description: 门店
+      - name: products
+        description: 商品
+      - name: suppliers
+        description: 供应商
+      - name: promotions
+        description: 促销活动

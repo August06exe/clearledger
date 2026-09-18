@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: stg_purchase_orders
+    description: 采购单（清洗层，由字段契约生成）
+    columns:
+      - name: po_no
+        description: 采购单号（string）
+        data_tests:
+          - not_null
+      - name: po_date
+        description: 采购日期（date）
+        data_tests:
+          - not_null
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: product_code
+        description: 商品编码（string）
+        data_tests:
+          - not_null
+      - name: supplier_code
+        description: 供应商编码（string）
+      - name: quantity
+        description: 数量（integer）
+        data_tests:
+          - not_null
+      - name: unit_price
+        description: 采购单价（decimal）

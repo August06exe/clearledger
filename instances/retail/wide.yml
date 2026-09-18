@@ -1,0 +1,32 @@
+version: 1
+wide:
+  name: wide_ledger
+  main: fact_ledger
+  joins:
+    - table: stores
+      keys: {left: store_code, right: store_code}
+      how: left
+      columns: [store_name, city, region_name, open_date]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: products
+      keys: {left: product_code, right: product_code}
+      how: left
+      columns: [product_name, category, std_cost]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: suppliers
+      keys: {left: supplier_code, right: supplier_code}
+      how: left
+      columns: [supplier_name]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+      # 黄灯基线：销售/库存行供应商编码为空属预期；真黄灯=幽灵供应商 SUP-9999
+  derived:
+    - {name: sales_net,    expr: "case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end"}
+    - {name: sales_cost,   expr: "case when entry_type = '销售' then round(quantity * std_cost, 2) else 0 end"}
+    - {name: gross_profit, expr: "case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate) - quantity * std_cost, 2) else 0 end"}
+    - {name: sales_qty,    expr: "case when entry_type = '销售' then quantity else 0 end"}
+    - {name: sales_flag,   expr: "case when entry_type = '销售' then 1 else 0 end"}
+    - {name: ecomm_net,    expr: "case when entry_type = '销售' and channel = '电商' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end"}
+    - {name: purchase_amt, expr: "case when entry_type = '采购' then round(quantity * unit_price, 2) else 0 end"}
+    - {name: return_amt,   expr: "case when entry_type = '采购退货' then round(quantity * unit_price, 2) else 0 end"}
+    - {name: stock_qty,    expr: "case when entry_type = '期末库存' then coalesce(ending_qty, 0) else 0 end"}
+  drop: [_source_file, _loaded_at]

@@ -1,0 +1,9 @@
+version: 1
+dimensions:
+  - {name: 月份,     column: doc_month,     type: time, grain: month}
+  - {name: 事业部,   column: bu_name,       type: category}
+  - {name: 交付组,   column: group_name,    type: category}
+  - {name: 客户,     column: customer_name, type: category}
+  - {name: 行业,     column: industry,      type: category}
+  - {name: 客户级别, column: customer_level, type: category}
+  - {name: 合同,     column: contract_no,   type: category}

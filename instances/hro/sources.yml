@@ -1,0 +1,127 @@
+version: 1
+sources:
+  - name: hro_ledger
+    title: 经营台账
+    discover: {patterns: ["经营台账*.csv", "hro_ledger*.csv"], encodings: [utf-8-sig, gbk]}
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 事项类型,   map: entry_type,   type: string,  required: true, enum: [账单, 回款, 在册], level: yellow}
+      - {cn: 单据号,     map: doc_no,       type: string,  required: true, unique: true}
+      - {cn: 单据月份,   map: doc_month,    type: date,    required: true}
+      - {cn: 合同号,     map: contract_no,  type: string,  required: true}
+      - {cn: 交付组编码, map: group_code,   type: string}
+      - {cn: 员工编号,   map: employee_no,  type: string}
+      - {cn: 姓名,       map: emp_name,     type: string}
+      - {cn: 岗位,       map: position,     type: string,  missing: default, default: 未分类}
+      - {cn: 月薪资成本, map: salary_cost,  type: decimal, missing: default, default: 0, range: [0, 100000], level: yellow}
+      - {cn: 金额,       map: amount,       type: decimal}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      empty_after_clean: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: business_units
+    title: 事业部
+    discover: {patterns: ["事业部*.xlsx"], encodings: [utf-8-sig]}
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 事业部编码,   map: bu_code,       type: string, required: true, unique: true}
+      - {cn: 事业部名称,   map: bu_name,       type: string}
+      - {cn: 事业部负责人, map: bu_owner,      type: string}
+    problems: {file_missing: red, header_changed: red, empty_file: red}
+
+  - name: delivery_groups
+    title: 交付组
+    discover: {patterns: ["交付组*.xlsx"], encodings: [utf-8-sig]}
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 组编码,         map: group_code, type: string, required: true, unique: true}
+      - {cn: 组名称,         map: group_name, type: string}
+      - {cn: 所属事业部编码, map: bu_code,    type: string, required: true}
+    problems: {file_missing: red, header_changed: red, empty_file: red}
+
+  - name: customers
+    title: 客户
+    discover: {patterns: ["客户*.xlsx"], encodings: [utf-8-sig]}
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 客户编码, map: customer_code,  type: string, required: true, unique: true}
+      - {cn: 客户名称, map: customer_name,  type: string}
+      - {cn: 行业,     map: industry,       type: string, enum: [金融, 互联网, 制造, 零售], level: yellow}
+      - {cn: 客户级别, map: customer_level, type: string, enum: [A, B, C], level: yellow}
+    problems: {file_missing: red, header_changed: red, empty_file: red}
+
+  - name: contracts
+    title: 合同
+    discover: {patterns: ["合同*.xlsx"], encodings: [utf-8-sig]}
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 合同号,       map: contract_no,   type: string,  required: true, unique: true}
+      - {cn: 客户编码,     map: customer_code, type: string,  required: true}
+      - {cn: 签约事业部编码, map: bu_code,     type: string,  required: true}
+      - {cn: 签约事业部名称, map: bu_name,     type: string}
+      - {cn: 月服务费,     map: monthly_fee,   type: decimal, required: true, range: [1000, 100000], level: yellow}
+      - {cn: 开始月,       map: start_month,   type: string,  required: true, format: "^\\d{4}-\\d{2}$", level: yellow}
+      - {cn: 结束月,       map: end_month,     type: string,  required: true, format: "^\\d{4}-\\d{2}$", level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      empty_after_clean: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: roster
+    title: 外派花名册（员工×月份 在册表）
+    discover: {patterns: ["外派花名册*.xlsx"], encodings: [utf-8-sig]}
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 员工编号,   map: employee_no,  type: string, required: true}
+      - {cn: 姓名,       map: emp_name,     type: string}
+      - {cn: 月份,       map: doc_month,    type: date,   required: true}
+      - {cn: 交付组编码, map: group_code,   type: string, required: true}
+      - {cn: 合同号,     map: contract_no,  type: string, required: true}
+      - {cn: 岗位,       map: position,     type: string, missing: default, default: 未分类}
+      - {cn: 月薪资成本, map: salary_cost,  type: decimal, missing: default, default: 0, range: [0, 100000], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      empty_after_clean: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: bills
+    title: 月度账单
+    discover: {patterns: ["月度账单*.csv"], encodings: [utf-8-sig, gbk]}
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 月份,     map: doc_month,    type: date,   required: true}
+      - {cn: 合同号,   map: contract_no,  type: string, required: true}
+      - {cn: 账单金额, map: amount,       type: decimal, range: [0, 100000000], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      empty_after_clean: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: payments
+    title: 回款记录
+    discover: {patterns: ["回款记录*.csv"], encodings: [utf-8-sig, gbk]}   # 双文件命中→mtime 最新胜出（N-01）
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 月份,     map: doc_month,    type: date,   required: true}
+      - {cn: 合同号,   map: contract_no,  type: string, required: true}
+      - {cn: 回款金额, map: amount,       type: decimal, range: [0, 100000000], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      empty_after_clean: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}

@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_hro_ledger
+    description: 经营台账（清洗层，由字段契约生成）
+    columns:
+      - name: entry_type
+        description: 事项类型（string）
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['账单', '回款', '在册']
+              config:
+                severity: warn
+      - name: doc_no
+        description: 单据号（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: doc_month
+        description: 单据月份（date）
+        data_tests:
+          - not_null
+      - name: contract_no
+        description: 合同号（string）
+        data_tests:
+          - not_null
+      - name: group_code
+        description: 交付组编码（string）
+      - name: employee_no
+        description: 员工编号（string）
+      - name: emp_name
+        description: 姓名（string）
+      - name: position
+        description: 岗位（string）
+      - name: salary_cost
+        description: 月薪资成本（decimal）
+      - name: amount
+        description: 金额（decimal）

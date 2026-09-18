@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: stg_contracts
+    description: 合同（清洗层，由字段契约生成）
+    columns:
+      - name: contract_no
+        description: 合同号（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_code
+        description: 客户编码（string）
+        data_tests:
+          - not_null
+      - name: bu_code
+        description: 签约事业部编码（string）
+        data_tests:
+          - not_null
+      - name: bu_name
+        description: 签约事业部名称（string）
+      - name: monthly_fee
+        description: 月服务费（decimal）
+        data_tests:
+          - not_null
+      - name: start_month
+        description: 开始月（string）
+        data_tests:
+          - not_null
+      - name: end_month
+        description: 结束月（string）
+        data_tests:
+          - not_null

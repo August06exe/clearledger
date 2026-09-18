@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: stg_sales_flow
+    description: 销售流水（清洗层，由字段契约生成）
+    columns:
+      - name: flow_no
+        description: 流水号（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: sale_date
+        description: 销售日期（date）
+        data_tests:
+          - not_null
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: product_code
+        description: 商品编码（string）
+        data_tests:
+          - not_null
+      - name: channel
+        description: 渠道（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['门店', '电商']
+              config:
+                severity: warn
+      - name: quantity
+        description: 数量（integer）
+        data_tests:
+          - not_null
+      - name: unit_price
+        description: 单价（decimal）
+      - name: discount_rate
+        description: 折扣率（decimal）

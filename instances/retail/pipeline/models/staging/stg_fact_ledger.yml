@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: stg_fact_ledger
+    description: 进销存台账（清洗层，由字段契约生成）
+    columns:
+      - name: entry_type
+        description: 事项类型（string）
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['销售', '采购', '采购退货', '期末库存']
+              config:
+                severity: warn
+      - name: doc_no
+        description: 单据号（string）
+        data_tests:
+          - not_null
+      - name: doc_date
+        description: 单据日期（date）
+        data_tests:
+          - not_null
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: product_code
+        description: 商品编码（string）
+        data_tests:
+          - not_null
+      - name: supplier_code
+        description: 供应商编码（string）
+      - name: channel
+        description: 渠道（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['门店', '电商']
+              config:
+                severity: warn
+      - name: quantity
+        description: 数量（integer）
+      - name: unit_price
+        description: 单价（decimal）
+      - name: discount_rate
+        description: 折扣率（decimal）
+      - name: ending_qty
+        description: 期末数量（integer）

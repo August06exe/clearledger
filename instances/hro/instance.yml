@@ -1,0 +1,5 @@
+name: hro
+title: 睿才人力
+inbox: data/inbox
+database: ../../../data/warehouse/hro.duckdb
+tz: Asia/Shanghai

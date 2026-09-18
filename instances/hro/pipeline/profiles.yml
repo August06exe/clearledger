@@ -1,0 +1,8 @@
+# 生成物：实例 hro 的 dbt 连接（库文件独立，实例间物理隔离；绝对路径防 CWD 漂移）
+cl:
+  target: hro
+  outputs:
+    hro:
+      type: duckdb
+      path: "D:/Workshop/3000-Projects/3005-DA-AI Native数据底座系统/data/warehouse/hro.duckdb"
+      threads: 4

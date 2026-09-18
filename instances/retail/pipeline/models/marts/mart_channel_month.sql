@@ -1,0 +1,10 @@
+-- 生成物：报表汇总模型（渠道月报 = 维度×指标）
+select
+date_trunc('month', doc_date) as "月份",
+channel as "渠道",
+    sum(sales_net) as "销售额",
+    sum(gross_profit) as "毛利",
+    round(sum(ecomm_net) / nullif(sum(sales_net), 0), 4) as "电商销售占比"
+from {{ ref('int_wide_ledger') }}
+where date_trunc('month', doc_date) < date_trunc('month', current_date)
+group by 1, 2

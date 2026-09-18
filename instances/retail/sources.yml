@@ -1,0 +1,172 @@
+# 实例：荟品汇零售连锁 —— 入口档案 + 字段契约（依据 tests/v0.4/S1_retail/SPEC.md）
+version: 1
+
+sources:
+  - name: fact_ledger
+    title: 进销存台账
+    discover:
+      patterns: ["进销存台账*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 事项类型, map: entry_type,    type: string,  required: true, enum: [销售, 采购, 采购退货, 期末库存], level: yellow}
+      - {cn: 单据号,   map: doc_no,        type: string,  required: true}
+      - {cn: 单据日期, map: doc_date,      type: date,    required: true}
+      - {cn: 门店编码, map: store_code,    type: string,  required: true}
+      - {cn: 商品编码, map: product_code,  type: string,  required: true}
+      - {cn: 供应商编码, map: supplier_code, type: string}
+      - {cn: 渠道,     map: channel,       type: string,  enum: [门店, 电商], level: yellow}
+      - {cn: 数量,     map: quantity,      type: integer, range: [1, 1000], level: yellow}
+      - {cn: 单价,     map: unit_price,    type: decimal}
+      - {cn: 折扣率,   map: discount_rate, type: decimal, range: [0, 1], level: yellow, missing: default, default: 0}
+      - {cn: 期末数量, map: ending_qty,    type: integer, range: [0, 1000000], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      empty_after_clean: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: sales_flow
+    title: 销售流水
+    discover:
+      patterns: ["销售流水*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 流水号,   map: flow_no,       type: string,  required: true, unique: true}
+      - {cn: 销售日期, map: sale_date,     type: date,    required: true}
+      - {cn: 门店编码, map: store_code,    type: string,  required: true}
+      - {cn: 商品编码, map: product_code,  type: string,  required: true}
+      - {cn: 渠道,     map: channel,       type: string,  enum: [门店, 电商], level: yellow}
+      - {cn: 数量,     map: quantity,      type: integer, required: true, range: [1, 1000], level: yellow}
+      - {cn: 单价,     map: unit_price,    type: decimal}
+      - {cn: 折扣率,   map: discount_rate, type: decimal, range: [0, 1], level: yellow, missing: default, default: 0}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: purchase_orders
+    title: 采购单
+    discover:
+      patterns: ["采购单*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 采购单号,   map: po_no,         type: string, required: true}
+      - {cn: 采购日期,   map: po_date,       type: date,   required: true}
+      - {cn: 门店编码,   map: store_code,    type: string, required: true}
+      - {cn: 商品编码,   map: product_code,  type: string, required: true}
+      - {cn: 供应商编码, map: supplier_code, type: string}
+      - {cn: 数量,       map: quantity,      type: integer, required: true}
+      - {cn: 采购单价,   map: unit_price,    type: decimal}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: purchase_returns
+    title: 采购退货
+    discover:
+      patterns: ["采购退货*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 退货单号,   map: return_no,     type: string,  required: true, unique: true}
+      - {cn: 退货日期,   map: return_date,   type: date,    required: true}
+      - {cn: 门店编码,   map: store_code,    type: string,  required: true}
+      - {cn: 商品编码,   map: product_code,  type: string,  required: true}
+      - {cn: 供应商编码, map: supplier_code, type: string}
+      - {cn: 数量,       map: quantity,      type: integer, required: true, range: [1, 100000], level: yellow}
+      - {cn: 退货单价,   map: unit_price,    type: decimal}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: stock_snapshots
+    title: 库存快照
+    discover:
+      patterns: ["库存快照*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 快照月份, map: snap_month,  type: string}
+      - {cn: 快照日期, map: snap_date,   type: date, required: true}
+      - {cn: 门店编码, map: store_code,  type: string, required: true}
+      - {cn: 商品编码, map: product_code, type: string, required: true}
+      - {cn: 期末数量, map: ending_qty,  type: integer, required: true, range: [0, 1000000], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: stores
+    title: 门店
+    discover:
+      patterns: ["门店*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 门店编码, map: store_code,   type: string, required: true, unique: true}
+      - {cn: 门店名称, map: store_name,   type: string}
+      - {cn: 城市,     map: city,         type: string}
+      - {cn: 大区,     map: region_name,  type: string, enum: [华东, 华北, 华南], level: yellow}
+      - {cn: 开业日期, map: open_date,    type: date}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: products
+    title: 商品
+    discover:
+      patterns: ["商品*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 商品编码, map: product_code, type: string, required: true, unique: true}
+      - {cn: 商品名称, map: product_name, type: string}
+      - {cn: 品类,     map: category,     type: string, enum: [食品, 百货, 日化], level: yellow}
+      - {cn: 单位,     map: unit,         type: string}
+      - {cn: 标准成本, map: std_cost,     type: decimal}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: suppliers
+    title: 供应商
+    discover:
+      patterns: ["供应商*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 供应商编码, map: supplier_code, type: string, required: true, unique: true}
+      - {cn: 供应商名称, map: supplier_name, type: string}
+      - {cn: 结算方式,   map: settle_type,   type: string, enum: [月结30, 月结60, 现结], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+
+  - name: promotions
+    title: 促销活动
+    discover:
+      patterns: ["促销活动*.xlsx"]
+      encodings: [utf-8-sig]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 门店编码, map: store_code, type: string, required: true}
+      - {cn: 活动名称, map: promo_name, type: string}
+      - {cn: 开始日期, map: start_date, type: date, required: true}
+      - {cn: 结束日期, map: end_date,   type: date}
+      - {cn: 折扣力度, map: discount,   type: decimal, range: [0, 0.5], level: yellow}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red

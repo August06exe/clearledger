@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: stg_delivery_groups
+    description: 交付组（清洗层，由字段契约生成）
+    columns:
+      - name: group_code
+        description: 组编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: group_name
+        description: 组名称（string）
+      - name: bu_code
+        description: 所属事业部编码（string）
+        data_tests:
+          - not_null

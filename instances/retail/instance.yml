@@ -1,0 +1,5 @@
+name: retail
+title: 荟品汇零售连锁
+inbox: data/inbox
+database: ../../../data/warehouse/retail.duckdb
+tz: Asia/Shanghai

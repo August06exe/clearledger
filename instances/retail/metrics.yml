@@ -1,0 +1,15 @@
+version: 1
+metrics:
+  - {name: 销售额,       expr: "sum(sales_net)"}
+  - {name: 销售成本,     expr: "sum(sales_cost)"}
+  - {name: 毛利,         expr: "sum(gross_profit)"}
+  - {name: 毛利率,       expr: "round(sum(gross_profit) / nullif(sum(sales_net), 0), 4)", format: percent}
+  - {name: 销售数量,     expr: "sum(sales_qty)"}
+  - {name: 销售行数,     expr: "sum(sales_flag)"}
+  - {name: 动销商品数,   expr: "count(distinct case when entry_type = '销售' then product_code end)"}
+  - {name: 采购额,       expr: "sum(purchase_amt)"}
+  - {name: 退货额,       expr: "sum(return_amt)"}
+  - {name: 净采购,       expr: "sum(purchase_amt) - sum(return_amt)"}
+  - {name: 期末库存量,   expr: "sum(stock_qty)"}
+  - {name: 库存周转率,   expr: "round(sum(sales_cost) / nullif(sum(stock_qty), 0), 4)"}
+  - {name: 电商销售占比, expr: "round(sum(ecomm_net) / nullif(sum(sales_net), 0), 4)", format: percent}

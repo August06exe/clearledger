@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_purchase_returns
+    description: 采购退货（清洗层，由字段契约生成）
+    columns:
+      - name: return_no
+        description: 退货单号（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: return_date
+        description: 退货日期（date）
+        data_tests:
+          - not_null
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: product_code
+        description: 商品编码（string）
+        data_tests:
+          - not_null
+      - name: supplier_code
+        description: 供应商编码（string）
+      - name: quantity
+        description: 数量（integer）
+        data_tests:
+          - not_null
+      - name: unit_price
+        description: 退货单价（decimal）

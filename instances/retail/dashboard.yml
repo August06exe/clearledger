@@ -1,0 +1,42 @@
+version: 1
+reports:
+  - key: monthly_kpi
+    title: 月度经营总览
+    dimension: 月份
+    metrics: [销售额, 销售成本, 毛利, 毛利率, 期末库存量, 库存周转率, 电商销售占比, 动销商品数]
+    chart: bar_line
+    full_period_only: true
+  - key: region_month
+    title: 大区月报
+    dimension: 大区
+    time_dim: 月份
+    metrics: [销售额, 净采购, 毛利, 毛利率]
+    filters: [城市]
+    chart: stack_bar
+    full_period_only: true
+  - key: category_month
+    title: 品类月报
+    dimension: 品类
+    time_dim: 月份
+    metrics: [销售额, 销售数量, 毛利, 毛利率]
+    filters: [大区]
+    chart: stack_bar
+    full_period_only: true
+  - key: channel_month
+    title: 渠道月报
+    dimension: 渠道
+    time_dim: 月份
+    metrics: [销售额, 毛利, 电商销售占比]
+    chart: stack_bar
+    full_period_only: true
+  - key: store_rank
+    title: 门店排行
+    dimension: 门店
+    metrics: [销售额, 毛利, 毛利率, 库存周转率]
+    filters: [大区, 城市]
+    chart: hbar
+  - key: supplier_rank
+    title: 供应商采购排行
+    dimension: 供应商
+    metrics: [采购额, 退货额, 净采购]
+    chart: hbar

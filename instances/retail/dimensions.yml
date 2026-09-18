@@ -1,0 +1,9 @@
+version: 1
+dimensions:
+  - {name: 月份,   column: doc_date,      type: time, grain: month}
+  - {name: 大区,   column: region_name,   type: category}
+  - {name: 城市,   column: city,          type: category}
+  - {name: 门店,   column: store_name,    type: category}
+  - {name: 品类,   column: category,      type: category}
+  - {name: 渠道,   column: channel,       type: category}
+  - {name: 供应商, column: supplier_name, type: category}

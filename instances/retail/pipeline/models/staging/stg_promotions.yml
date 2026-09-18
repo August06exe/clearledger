@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: stg_promotions
+    description: 促销活动（清洗层，由字段契约生成）
+    columns:
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: promo_name
+        description: 活动名称（string）
+      - name: start_date
+        description: 开始日期（date）
+        data_tests:
+          - not_null
+      - name: end_date
+        description: 结束日期（date）
+      - name: discount
+        description: 折扣力度（decimal）

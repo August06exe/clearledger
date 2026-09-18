@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_business_units
+    description: 事业部（清洗层，由字段契约生成）
+    columns:
+      - name: bu_code
+        description: 事业部编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: bu_name
+        description: 事业部名称（string）
+      - name: bu_owner
+        description: 事业部负责人（string）

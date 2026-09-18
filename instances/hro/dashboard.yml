@@ -1,0 +1,41 @@
+version: 1
+reports:
+  - key: monthly_kpi
+    title: 月度经营总览
+    dimension: 月份
+    metrics: [服务费收入, 人力成本, 毛利, 毛利率, 回款额, 回款率, 外派人数, 人均产值, 在单客户数]
+    chart: bar_line
+    full_period_only: true
+  - key: bu_month
+    title: 事业部月报
+    dimension: 事业部
+    time_dim: 月份
+    metrics: [服务费收入, 毛利, 毛利率, 外派人数]
+    filters: [行业]
+    chart: stack_bar
+    full_period_only: true
+  - key: group_rank
+    title: 交付组排行
+    dimension: 交付组
+    metrics: [外派人数, 人力成本, 人均人力成本]
+    filters: [事业部]
+    chart: hbar
+  - key: customer_ar
+    title: 客户应收榜
+    dimension: 客户
+    metrics: [服务费收入, 回款额, 应收余额, 在单合同数]
+    filters: [行业, 客户级别]
+    chart: hbar
+  - key: industry_month
+    title: 行业月报
+    dimension: 行业
+    time_dim: 月份
+    metrics: [服务费收入, 毛利, 外派人数]
+    filters: [客户级别]
+    chart: stack_bar
+    full_period_only: true
+  - key: contract_ledger
+    title: 合同台账
+    dimension: 合同
+    metrics: [服务费收入, 回款额, 应收余额, 外派人数]
+    chart: hbar

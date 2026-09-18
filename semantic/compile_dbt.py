@@ -112,26 +112,30 @@ def gen_wide_model(inst) -> str:
     joins = wide.get("joins", [])
     drop = set(wide.get("drop", []))
 
-    main_cols = [f["map"] for f in inst.fields_of(main)
-                 if f["map"] not in drop]
-    select_parts = [f"    m.{c}" for c in main_cols]
+    main_fields = [f["map"] for f in inst.fields_of(main) if f["map"] not in drop]
+    # 有序左联（设计 §3.2）：维护 可用列→来源别名 映射，后序 join 的左键可引用前序 join 的输出列
+    col_src: dict[str, str] = {c: "m" for c in main_fields}
+    select_parts = [f"    m.{c}" for c in main_fields]
     from_sql = f"{{{{ ref('stg_{main}') }}}} m"
-    for i, j in enumerate(joins):
-        alias = f"d{i}"
-        for c in j.get("columns", []):
-            select_parts.append(f"    {alias}.{c}")
     join_sql = ""
     for i, j in enumerate(joins):
         alias = f"d{i}"
-        how = j.get("how", "left")
         keys = j["keys"]
-        join_sql += (f"\n{how} join {{{{ ref('stg_{j['table']}') }}}} {alias}"
-                     f"\n  on m.{keys['left']} = {alias}.{keys['right']}")
-    derived = ""
+        left = keys["left"]
+        if left in col_src:
+            left_ref = f"{col_src[left]}.{left}"
+        else:  # loader 已校验，双保险
+            raise KeyError(f"join 左键 {left} 不在主表或前序 join 的可用列中")
+        join_sql += (f"\n{j.get('how', 'left')} join {{{{ ref('stg_{j['table']}') }}}} {alias}"
+                     f"\n  on {left_ref} = {alias}.{keys['right']}")
+        for c in j.get("columns", []):
+            select_parts.append(f"    {alias}.{c}")
+            col_src[c] = alias
+
     for d in wide.get("derived", []):
         select_parts.append(f'    {d["expr"]} as "{d["name"]}"')
 
-    return (f"-- 生成物：宽表装配（{main} + {len(joins)} 张标签表左联 + 派生列）\n"
+    return (f"-- 生成物：宽表装配（{main} + {len(joins)} 张标签表有序左联 + 派生列）\n"
             f"select\n" + ",\n".join(select_parts) + f"\nfrom {from_sql}{join_sql}\n")
 
 
@@ -154,13 +158,17 @@ def gen_match_tests(inst) -> list[tuple[str, str]]:
                 f"group by 1 having count(*) > 1\n"))
         if c.get("null_match", "yellow") != "ignore":
             sev_null = "error" if c.get("null_match") == "red" else "warn"
+            # 从宽表 anti-join 维表：天然支持链式左键（左列可能来自前序 join 的输出列）
             out.append((
                 f"match_{tbl}_null_match.sql",
                 f"{{{{ config(severity='{sev_null}') }}}}\n"
                 f"-- 匹配契约：主表 {on['left']} 在 {tbl} 中匹空的清单（未匹配标签）\n"
-                f"select distinct m.{on['left']}\nfrom {{{{ ref('stg_{main}') }}}} m\n"
-                f"left join {{{{ ref('stg_{tbl}') }}}} d on m.{on['left']} = d.{on['right']}\n"
-                f"where m.{on['left']} is not null and d.{on['right']} is null\n"))
+                f"select distinct w.{on['left']}\n"
+                f"from {{{{ ref('int_{wide['name']}') }}}} w\n"
+                f"where w.{on['left']} is not null\n"
+                f"  and not exists (\n"
+                f"    select 1 from {{{{ ref('stg_{tbl}') }}}} d\n"
+                f"    where d.{on['right']} = w.{on['left']})\n"))
         orphan = c.get("orphan_right", "ignore")
         if orphan not in ("ignore",):
             out.append((
