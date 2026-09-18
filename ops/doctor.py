@@ -69,24 +69,28 @@ def main() -> int:
         except Exception as e:
             check("数据仓库", "fail", f"无法只读打开：{e}（可能跑批进行中或文件损坏）")
 
-    # ---- 3. 投放区 vs 声明的数据源 ----
+    # ---- 3. 投放区 vs 各实例声明的数据源（v0.3 多账套）----
     try:
-        import yaml
-        cfg = yaml.safe_load((ROOT / "ingest" / "sources.yml").read_text(encoding="utf-8"))
-        inbox = ROOT / "data" / "inbox"
-        missing = []
-        for src in cfg.get("sources", []):
-            found = False
-            for pat in src.get("files", []):
-                if any(inbox.glob(pat)):
-                    found = True
-                    break
-            if not found:
-                missing.append(f"{src['name']}({','.join(src.get('files', []))})")
-        if missing:
-            check("投放区", "fail", "缺少声明文件：" + "；".join(missing) + "（跑批会红灯）")
-        else:
-            check("投放区", "ok", f"{len(cfg.get('sources', []))} 个数据源文件齐全")
+        import yaml as _yaml
+        for inst_dir in sorted((ROOT / "instances").glob("*/")):
+            src_cfg = inst_dir / "sources.yml"
+            if not src_cfg.exists():
+                continue
+            cfg = _yaml.safe_load(src_cfg.read_text(encoding="utf-8"))
+            inbox = inst_dir / "data" / "inbox"
+            missing = []
+            for src in cfg.get("sources", []):
+                found = any(
+                    any(inbox.glob(pat)) for pat in src.get("discover", {}).get("patterns",
+                        src.get("files", []))
+                )
+                if not found:
+                    missing.append(src["name"])
+            label = f"投放区[{inst_dir.name}]"
+            if missing:
+                check(label, "fail", "缺少声明文件：" + "；".join(missing) + "（跑批会红灯）")
+            else:
+                check(label, "ok", f"{len(cfg.get('sources', []))} 个数据源文件齐全")
     except Exception as e:
         check("投放区", "fail", f"sources.yml 解析失败：{e}")
 
