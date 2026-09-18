@@ -13,7 +13,7 @@
 - 判分依据只有 answer.json / actual_*.json / dashboard.yml（维度×指标定义），
   不读引擎代码结论、不读测试报告的任何判定。
 
-输出：tests/v0.4/judge/score_round1.json + stdout 人类可读摘要。
+输出：tests/v0.4/judge/score_<tag>.json（--tag，默认 round1）+ stdout 人类可读摘要。
 只读运行，不改任何引擎/实例/答案文件。
 """
 from __future__ import annotations
@@ -209,6 +209,11 @@ def judge_report(ans: dict, act: dict, metrics: list[str]) -> dict:
 
 
 def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tag", default="round1", help="输出文件名标签：score_<tag>.json")
+    args = ap.parse_args()
+    out_path = HERE / f"score_{args.tag}.json"
     dashboards = {n: yaml.safe_load(DASHBOARD[n].read_text(encoding="utf-8"))
                   for n in ANSWER}
     out: dict = {
@@ -246,7 +251,7 @@ def main() -> int:
                           "cases_failed": failed,
                           "all_green": failed == 0 and all(
                               out["instances"][n]["reports_all_green"] for n in out["instances"])}
-    (HERE / "score_round1.json").write_text(
+    out_path.write_text(
         json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
     # ---- 人类可读摘要 ----
@@ -286,7 +291,7 @@ def main() -> int:
                 elif f["kind"] == "extra_key":
                     print(f"      ✗ {f['key']} | 实际结果多出此键（{f['actual_row_count']} 行）")
             if len(rep["failures"]) > 12:
-                print(f"      …（其余 {len(rep['failures']) - 12} 条失败明细见 score_round1.json）")
+                print(f"      …（其余 {len(rep['failures']) - 12} 条失败明细见 {out_path.name}）")
             diag = rep.get("inflation_diagnostic")
             if diag:
                 print(f"      [诊断·不判分] 投影回答案粒度后可加指标：对上 {diag['cells_matched']} 格 / "
@@ -297,7 +302,7 @@ def main() -> int:
     g = out["grand_total"]
     print("\n" + "=" * 88)
     print(f"总计：Case {g['cases_total']} / 通过 {g['cases_passed']} / 失败 {g['cases_failed']}"
-          f"  →  {'100% 通过' if g['all_green'] else '未 100% 通过（失败明细见上与 score_round1.json）'}")
+          f"  →  {'100% 通过' if g['all_green'] else '未 100% 通过（失败明细见上与 ' + out_path.name + '）'}")
     print("=" * 88)
     return 0
 

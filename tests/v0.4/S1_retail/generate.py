@@ -30,7 +30,10 @@ rng = np.random.default_rng(SEED)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]                       # 仓库根
-OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "instances" / "retail" / "data" / "inbox"
+_ARGS = sys.argv[1:]
+DEEP = "--deep" in _ARGS                     # 轮4 加深口径：注入加深混沌并重密封答案
+_POS = [a for a in _ARGS if not a.startswith("--")]
+OUT = Path(_POS[0]) if _POS else ROOT / "instances" / "retail" / "data" / "inbox"
 EXPECTED = HERE / "expected"
 
 MONTHS = [(y, m) for y in (2025, 2026) for m in range(1, 13)
@@ -82,29 +85,45 @@ SEASON = {1: 0.85, 2: 0.88, 3: 0.98, 4: 1.02, 5: 1.06, 6: 0.97,
 
 # ---------------------------------------------------------------- 舍入与 SQL 语义工具
 def d2(x: float) -> float:
-    """replicate SQL round(x, 2)：对 double 的精确值做 HALF_UP。"""
+    """float 路径的 HALF_UP（仅用于数据生成期取值，不用于答案计算）。"""
     return float(Decimal(x).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
-def d4(x: float) -> float:
-    return float(Decimal(x).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP))
+# ---- 答案链路专用：全 Decimal（与引擎 staging 的 DECIMAL 精确算术 + round HALF_UP 对齐）----
+D0 = Decimal("0")
+D1 = Decimal("1")
+_C2 = Decimal("0.01")
+_C4 = Decimal("0.0001")
+
+def dec(v) -> Decimal:
+    """按 CSV 文本语义取 Decimal：pandas to_csv 写 str(float)，引擎 ingest 读同一文本为 DECIMAL，
+    故 Decimal(str(float)) 与引擎入参逐位一致（杜绝 float 中间态的半分位边界分歧）。"""
+    return Decimal(str(v))
+
+def q2(x: Decimal) -> Decimal:
+    """SQL round(x, 2)：DECIMAL 精确值上的 HALF_UP。"""
+    return x.quantize(_C2, rounding=ROUND_HALF_UP)
+
+def q4(x: Decimal) -> Decimal:
+    return x.quantize(_C4, rounding=ROUND_HALF_UP)
 
 def sumsql(values):
-    """SQL sum()：跳过 NULL/NaN（pandas 会把 None 升格为 NaN）；全 NULL/空 → NULL。"""
+    """SQL sum() 语义（Decimal 精确加法）：跳过 NULL/NaN；全 NULL/空 → NULL。"""
     nn = [v for v in values if v is not None and v == v]
-    return math.fsum(nn) if nn else None
+    return sum(nn, D0) if nn else None
 
 def money(values, empty_zero=False):
-    """sum 后按金额 round 2。empty_zero=True 时空组按 0.0（对应派生列 else 0 的语义）。"""
+    """sum 后按金额 round 2（Decimal→float 输出）。empty_zero=True 时空组按 0.0
+    （对应派生列 else 0 的语义）。"""
     s = sumsql(values)
     if s is None:
         return 0.0 if empty_zero else None
-    return d2(s)
+    return float(q2(s))
 
 def ratio(num, den):
-    """nullif 语义：分母 0/缺失 → None。"""
+    """nullif 语义：分母 0/缺失 → None。num/den 为 Decimal（或 int）精确除法后再量化。"""
     if num is None or not den:
         return None
-    return d4(num / den)
+    return float(q4(num / den))
 
 def build_products():
     rows = []
@@ -154,7 +173,7 @@ def take_indices(per_month_rows: dict, quota: list, used: set) -> list:
     return picked
 
 # ---------------------------------------------------------------- 生成销售流水
-def build_sales(products: pd.DataFrame, stock: dict):
+def build_sales(products: pd.DataFrame, stock: dict, deep: bool = False):
     prod_by_code = {r["商品编码"]: r for r in products.to_dict("records")}
     price_base = {code: max(1.99, d2(round(r["标准成本"] * rng.uniform(1.35, 1.75) * 2) / 2) - 0.01)
                   for code, r in prod_by_code.items()}
@@ -214,6 +233,59 @@ def build_sales(products: pd.DataFrame, stock: dict):
         df.at[i, "渠道"] = "门店自提"
     for i in idx_zero:
         df.at[i, "数量"] = 0
+
+    # ---- 轮4 加深注入（--deep；全部改现有行：yellow-保留或合法通过） ----
+    if deep:
+        # R4-6(a) ENUM 尾随空格："门店 "→strip 后合法，组归属不变 → 答案零漂移
+        idx_sp4 = []
+        for mi in range(len(MONTHS)):
+            pool = [i for i in per_month_rows[mi]
+                    if i not in used and df.at[i, "渠道"] in ("门店", "电商")]
+            if pool:
+                i = int(pool[int(rng.integers(0, len(pool)))])
+                used.add(i)
+                idx_sp4.append(i)
+        for i in idx_sp4:
+            df.at[i, "渠道"] = f" {df.at[i, '渠道']} "
+        # R4-6(b) ENUM 繁体变体："門店" → enum yellow、行保留 → 渠道月报新增"門店"组
+        idx_tc4 = []
+        for mi in range(len(MONTHS)):
+            pool = [i for i in per_month_rows[mi]
+                    if i not in used and df.at[i, "渠道"] == "门店"]
+            i = int(pool[int(rng.integers(0, len(pool)))])
+            used.add(i)
+            idx_tc4.append(i)
+        for i in idx_tc4:
+            df.at[i, "渠道"] = "門店"
+        # R4-7 折扣率=1.0 边界：range [0,1] 含边界 → 通过、无契约黄灯；收入 0、毛利=−成本
+        idx_b14 = []
+        for mi, k in enumerate([1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0]):
+            if k == 0:
+                continue
+            pool = [i for i in per_month_rows[mi] if i not in used]
+            i = int(pool[int(rng.integers(0, len(pool)))])
+            used.add(i)
+            idx_b14.append(i)
+        for i in idx_b14:
+            df.at[i, "折扣率"] = 1.0
+        # R4-8 空字符串渠道：CSV 空字段 → NULL 渠道组承接真实销售额（缺失≠enum 违规，命题裁决）
+        idx_ec4 = []
+        for mi, k in enumerate([0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0]):
+            if k == 0:
+                continue
+            pool = [i for i in per_month_rows[mi]
+                    if i not in used and df.at[i, "渠道"] == "门店"]
+            i = int(pool[int(rng.integers(0, len(pool)))])
+            used.add(i)
+            idx_ec4.append(i)
+        for i in idx_ec4:
+            df.at[i, "渠道"] = np.nan
+        DIRTY_STAT.update({
+            "轮4-R4-6a 渠道尾随空格(零漂移)": len(idx_sp4),
+            "轮4-R4-6b 渠道繁体變體(門店→新组)": len(idx_tc4),
+            "轮4-R4-7 折扣率=1.0边界(毛利=−成本)": len(idx_b14),
+            "轮4-R4-8 空字符串渠道(NULL组承接)": len(idx_ec4),
+        })
 
     DIRTY_STAT.update({
         "A1 门店编码首尾空格": len(idx_space),
@@ -351,26 +423,34 @@ def build_ledger(sales, purch, rets, snaps):
     })
     return pd.concat([seg_sales, seg_purch, seg_ret, seg_snap], ignore_index=True)[LEDGER_COLS]
 
-# ---------------------------------------------------------------- 密封答案（纯 pandas 独立重算）
+# ---------------------------------------------------------------- 密封答案（纯 pandas/Decimal 独立重算）
 def truth_sales(sales: pd.DataFrame, products: pd.DataFrame) -> pd.DataFrame:
-    """契约处理后的销售真相（SPEC §7.1 A1/A2/A3/A4/A6/A7 裁决）。"""
-    prod = {r["商品编码"]: (r["品类"], r["标准成本"]) for r in products.to_dict("records")}
+    """契约处理后的销售真相（SPEC §7.1 A1/A2/A3/A4/A6/A7 裁决）。
+
+    全 Decimal 逐行链式：以 CSV 文本语义取值（dec(str(float)) 即引擎 ingest 所见的
+    DECIMAL 入参），quantity×unit_price×(1-discount)、quantity×std_cost 等每一步都是
+    DECIMAL 精确算术，round(…,2) 用 HALF_UP——与引擎 staging 逐行对齐，
+    根除 float64 中间态在半分位边界（x.xx5）与引擎的分歧。
+    """
+    prod = {r["商品编码"]: (r["品类"], dec(r["标准成本"])) for r in products.to_dict("records")}
     region_of = {s[0]: s[3] for s in STORES}
     recs = []
     for r in sales.itertuples(index=False):
-        store = str(r.门店编码).strip()                                # A1
-        qty = int(r.数量)
-        disc = 0.0 if pd.isna(r.折扣率) else float(r.折扣率)            # A3
-        price = None if isinstance(r.单价, str) else float(r.单价)      # A2 千分位→转换失败
-        cat, cost = prod.get(r.商品编码, (None, None))                  # A4 幽灵商品
-        raw_net = qty * (1.0 - disc) * price if price is not None else None
-        net = d2(raw_net) if raw_net is not None else None
-        scost = d2(qty * cost) if cost is not None else None
-        gross = d2(raw_net - qty * cost) \
-            if (raw_net is not None and cost is not None) else None
-        ecomm = (net if r.渠道 == "电商" else 0.0) if net is not None else None
+        store = str(r.门店编码).strip()                                     # A1
+        channel = None if pd.isna(r.渠道) else str(r.渠道).strip()           # strip_strings 清洗所有字符串列
+        qty_d = Decimal(int(r.数量))
+        disc_d = D0 if pd.isna(r.折扣率) else dec(float(r.折扣率))           # A3
+        price_d = None if isinstance(r.单价, str) else dec(float(r.单价))    # A2 文本化→转换失败
+        cat, cost_d = prod.get(r.商品编码, (None, None))                     # A4 幽灵商品
+        net_raw = qty_d * price_d * (D1 - disc_d) if price_d is not None else None
+        net = q2(net_raw) if net_raw is not None else None
+        cost_raw = qty_d * cost_d if cost_d is not None else None
+        scost = q2(cost_raw) if cost_raw is not None else None
+        gross = q2(net_raw - cost_raw) \
+            if (net_raw is not None and cost_raw is not None) else None
+        ecomm = (net if channel == "电商" else D0) if net is not None else None
         recs.append(dict(月份=r.销售日期[:7], 门店=store, 大区=region_of[store],
-                         商品编码=r.商品编码, 品类=cat, 渠道=r.渠道, 数量=qty,
+                         商品编码=r.商品编码, 品类=cat, 渠道=channel, 数量=int(r.数量),
                          净额=net, 成本=scost, 毛利=gross, 电商=ecomm))
     return pd.DataFrame(recs)
 
@@ -380,11 +460,13 @@ def answer_reports(ts, purch, rets, snaps, stores: pd.DataFrame):
 
     purch = purch.copy()
     purch["供应商"] = purch["供应商编码"].map(sup_name)          # SUP-9999 → None
-    purch["采购额"] = [d2(q * p) for q, p in zip(purch["数量"], purch["采购单价"])]
+    purch["采购额"] = [q2(Decimal(int(q)) * dec(p))
+                      for q, p in zip(purch["数量"], purch["采购单价"])]
     purch["月份"] = purch["采购日期"].str[:7]
     purch["大区"] = purch["门店编码"].map({s[0]: s[3] for s in STORES})
     rets = rets.copy()
-    rets["退货额"] = [d2(q * p) for q, p in zip(rets["数量"], rets["退货单价"])]
+    rets["退货额"] = [q2(Decimal(int(q)) * dec(p))
+                      for q, p in zip(rets["数量"], rets["退货单价"])]
     rets["月份"] = rets["退货日期"].str[:7]
     rets["大区"] = rets["门店编码"].map({s[0]: s[3] for s in STORES})
     snaps2 = snaps.copy()
@@ -419,17 +501,20 @@ def answer_reports(ts, purch, rets, snaps, stores: pd.DataFrame):
             p = purch[(purch["月份"] == mk) & (purch["大区"] == rg)]["采购额"]
             r = rets[(rets["月份"] == mk) & (rets["大区"] == rg)]["退货额"]
             rev = sumsql(s["净额"])
+            pv, rv = sumsql(p), sumsql(r)
+            net_pur = q2((pv if pv is not None else D0) - (rv if rv is not None else D0))
             rows.append({"月份": mk, "大区": rg, "销售额": money(s["净额"]),
-                         "净采购": d2((sumsql(p) or 0.0) - (sumsql(r) or 0.0)),
+                         "净采购": float(net_pur),
                          "毛利": money(s["毛利"]),
                          "毛利率": ratio(sumsql(s["毛利"]), rev)})
     ans["region_month"] = {"columns": ["月份", "大区", "销售额", "净采购", "毛利", "毛利率"],
                            "rows": rows}
 
     # 3. category_month --------------------------------------------------
+    cats = sorted({c for c in ts["品类"].dropna().unique()}) + [None]   # GROUP BY 动态取组
     rows = []
     for mk in MONTH_KEYS:
-        for c in ["食品", "百货", "日化", None]:
+        for c in cats:
             sel = ts["品类"].eq(c) if c is not None else ts["品类"].isna()
             s = ts[(ts["月份"] == mk) & sel]
             rev = sumsql(s["净额"])
@@ -441,9 +526,10 @@ def answer_reports(ts, purch, rets, snaps, stores: pd.DataFrame):
 
     # 4. channel_month ---------------------------------------------------
     # 注意：宽表里非销售行（采购/退货/库存）渠道为 NULL，销售额/毛利按 else 0 计 0.0 而非 NULL
+    chans = sorted({c for c in ts["渠道"].dropna().unique()}) + [None]  # GROUP BY 动态取组（轮4 含"門店"）
     rows = []
     for mk in MONTH_KEYS:
-        for ch in ["门店", "电商", "门店自提", None]:
+        for ch in chans:
             sel = ts["渠道"].eq(ch) if ch is not None else ts["渠道"].isna()
             s = ts[(ts["月份"] == mk) & sel]
             if ch is None and len(s) == 0:      # NULL 渠道组只含非销售行 → 指标恒 0/NULL
@@ -474,10 +560,12 @@ def answer_reports(ts, purch, rets, snaps, stores: pd.DataFrame):
     rsup = rets.groupby(rets["供应商编码"].map(sup_name).fillna("__NULL__"))["退货额"].apply(list).to_dict()
     rows = []
     for k in sorted(set(psup) | set(rsup), key=lambda x: (x == "__NULL__", x)):
-        p = sumsql(psup.get(k, [])) or 0.0
-        r = sumsql(rsup.get(k, [])) or 0.0
+        p = sumsql(psup.get(k, []))
+        r = sumsql(rsup.get(k, []))
+        p = p if p is not None else D0
+        r = r if r is not None else D0
         rows.append({"供应商": None if k == "__NULL__" else k,
-                     "采购额": d2(p), "退货额": d2(r), "净采购": d2(p - r)})
+                     "采购额": float(q2(p)), "退货额": float(q2(r)), "净采购": float(q2(p - r))})
     ans["supplier_rank"] = {"columns": ["供应商", "采购额", "退货额", "净采购"], "rows": rows}
 
     return ans
@@ -550,10 +638,10 @@ def main() -> None:
             stock[st[0]].add(p)
 
     print("=" * 64)
-    print("S1 荟品汇零售连锁 · 数据生成（seed =", SEED, "）")
+    print("S1 荟品汇零售连锁 · 数据生成（seed =", SEED, "| 轮4加深 =", DEEP, "）")
     print("=" * 64)
     t0 = datetime.now()
-    sales = build_sales(products, stock)
+    sales = build_sales(products, stock, deep=DEEP)
     purch, rets = build_purchases(products, stock, sales)
     snaps = build_snapshots(products, stock, sales, purch)
     promos = build_promotions()
@@ -583,7 +671,7 @@ def main() -> None:
     ans = answer_reports(ts, purch, rets, snaps, stores)
     sort_answer(ans)
     expect_counts = {"monthly_kpi": 12, "region_month": 36, "category_month": 48,
-                     "channel_month": 48, "store_rank": 8, "supplier_rank": 13}
+                     "channel_month": 60 if DEEP else 48, "store_rank": 8, "supplier_rank": 13}
     for k, n in expect_counts.items():
         assert len(ans[k]["rows"]) == n, f"{k} 行数 {len(ans[k]['rows'])} != {n}"
     ans_file = EXPECTED / "answer.json"

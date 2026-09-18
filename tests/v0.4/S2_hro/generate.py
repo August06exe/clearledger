@@ -32,7 +32,10 @@ rng = np.random.default_rng(SEED)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "instances" / "hro" / "data" / "inbox"
+_ARGS = sys.argv[1:]
+DEEP = "--deep" in _ARGS                     # 轮4 加深口径：注入加深混沌并重密封答案
+_POS = [a for a in _ARGS if not a.startswith("--")]
+OUT = Path(_POS[0]) if _POS else ROOT / "instances" / "hro" / "data" / "inbox"
 EXPECTED = HERE / "expected"
 
 MONTHS = [(y, m) for y in (2025, 2026) for m in range(1, 13)
@@ -303,7 +306,7 @@ def build_ledger(bills, pays, roster):
     return pd.concat([seg_bill, seg_pay, seg_roster], ignore_index=True)[LEDGER_COLS]
 
 # ---------------------------------------------------------------- 密封答案（纯 pandas 独立重算）
-def truth(contracts, bills, pays, roster):
+def truth(contracts, bills, pays, roster, industry_override=None):
     """契约处理后的真相（SPEC §7.1 H1~H7 裁决）。
 
     每行统一携带全部维度键与全部派生列（数值恒定，NULL 以 None 表示、参与比率时按 0 处理）：
@@ -313,6 +316,8 @@ def truth(contracts, bills, pays, roster):
     crec = {}
     cname = {c[0]: c[1] for c in CUSTOMERS}
     cind = {c[0]: c[2] for c in CUSTOMERS}
+    if industry_override:
+        cind.update(industry_override)      # 轮4 深度注入的行业变体（建模 客户.xlsx join 结果）
     clv = {c[0]: c[3] for c in CUSTOMERS}
     for c in contracts.to_dict("records"):
         crec[c["合同号"]] = dict(customer=c["客户编码"], bu=c["签约事业部名称"],
@@ -334,7 +339,10 @@ def truth(contracts, bills, pays, roster):
     for r in bills.itertuples(index=False):
         d = base(r.合同号)
         d["月份"] = r.月份[:7]
-        amt = 0.0 if isinstance(r.账单金额, str) else float(r.账单金额)   # H5 裁决
+        try:
+            amt = float(r.账单金额)   # 合法 decimal 文本（轮4 H4-5 "…​.0"）解析成功；￥/千分位文本 → H5 裁决 0
+        except (TypeError, ValueError):
+            amt = 0.0
         d["收入"], d["毛利额"] = amt, amt
         rows.append(d)
     for r in pays.itertuples(index=False):
@@ -355,7 +363,7 @@ def truth(contracts, bills, pays, roster):
 def build_answer(t: pd.DataFrame):
     BU_NAMES = [b[1] for b in BUS]
     GROUP_NAMES = [g[1] for g in GROUPS]
-    INDUSTRIES = ["金融", "互联网", "制造", "零售", "文体", None]
+    INDUSTRIES = sorted({i for i in t.loc[t["行业"].notna(), "行业"]}) + [None]  # GROUP BY 动态取组（轮4 含"金融业"）
     DIMSETS = [["月份"], ["月份", "事业部"], ["月份", "行业"], ["事业部"], ["行业"],
                ["交付组"], ["客户"], ["合同"]]
 
@@ -505,7 +513,7 @@ def main() -> None:
     cust_df = pd.DataFrame(CUSTOMERS, columns=["客户编码", "客户名称", "行业", "客户级别"])
 
     print("=" * 64)
-    print("S2 睿才人力 · 数据生成（seed =", SEED, "）")
+    print("S2 睿才人力 · 数据生成（seed =", SEED, "| 轮4加深 =", DEEP, "）")
     print("=" * 64)
     t0 = datetime.now()
 
@@ -515,6 +523,50 @@ def main() -> None:
     bills = build_bills(contracts, hc_hist, fees)
     contracts["月服务费"] = [fees[ht] for ht in contracts["合同号"]]
     pays = build_payments(bills)
+
+    # ---- 轮4 加深注入（--deep） ----
+    industry_override = None
+    if DEEP:
+        # H4-6(a) ENUM 尾随空格："金融 " → strip 后合法，组归属不变 → 答案零漂移（改 客户.xlsx）
+        cust_df.loc[cust_df["客户编码"] == "CUST-03", "行业"] = "金融 "
+        industry_override = {"CUST-03": "金融"}
+        # H4-6(b) ENUM 变体："金融业" → enum yellow、行保留 → 行业月报新增"金融业"组（改 客户.xlsx）
+        cust_df.loc[cust_df["客户编码"] == "CUST-07", "行业"] = "金融业"
+        industry_override["CUST-07"] = "金融业"
+        # H4-7 月服务费下界 1000.00：range [1000,100000] 含边界 → 通过、无黄灯；费率不进任何派生 → 零漂移
+        contracts.loc[contracts["合同号"] == "HT-0001", "月服务费"] = 1000.0
+        # H4-5 账单金额小数文本 "…​.0"：合法 decimal 文本 → 必然解析成功、金额同值 → 零漂移
+        idx05 = []
+        for mk in MONTH_KEYS:
+            pool = [i for i in bills.index[(bills["月份"] == FIRST_DAY[mk]) & (bills["tag"] == "normal")]
+                    if i not in idx05]
+            if pool and len(idx05) < 3:
+                idx05.append(int(pool[int(rng.integers(0, len(pool)))]))
+        for i in idx05:
+            bills.at[i, "账单金额"] = f"{float(bills.at[i, '账单金额']):.1f}"
+        # H4-8 required 空合同号：2 行回款合同号清空 → 设计 §4.2 "required 过滤"，行不进宽表
+        cand = [int(i) for i in pays.index[(pays["合同号"] != GHOST_CONTRACT_PAY) & (pays["回款金额"] > 0)]]
+        cand = [cand[j] for j in rng.permutation(len(cand))]
+        idx_h8, seen_mk = [], set()
+        for i in cand:
+            mk = pays.at[i, "月份"]
+            if mk in seen_mk:
+                continue
+            idx_h8.append(i)
+            seen_mk.add(mk)
+            if len(idx_h8) == 2:
+                break
+        DIRTY_STAT["轮4-H4-6a 行业尾随空格(零漂移)"] = 1
+        DIRTY_STAT["轮4-H4-6b 行业ENUM變體(金融业→新组)"] = 1
+        DIRTY_STAT["轮4-H4-7 月服务费下界1000(零漂移)"] = 1
+        DIRTY_STAT["轮4-H4-5 账单金额小数文本(零漂移)"] = len(idx05)
+        DIRTY_STAT["轮4-H4-8 回款空合同号(required过滤)"] = len(idx_h8)
+        pays_out = pays.copy()
+        pays_out.loc[idx_h8, "合同号"] = ""            # inbox 展示脏值（CSV 空字段）
+        pays = pays.drop(idx_h8).reset_index(drop=True)  # 引擎 required 过滤后不进宽表
+    else:
+        pays_out = pays
+    industry_override = industry_override or {}
 
     # H3 幽灵在册：专属员工 EMP99001~99005，5 个指定月份（交付组为真实组，合同匹空）
     ghost_months = ["2025-10", "2025-12", "2026-02", "2026-05", "2026-07"]
@@ -545,13 +597,13 @@ def main() -> None:
     DIRTY_STAT["H13 账单/回款行空交付组基线"] = "结构性"
 
     # ---- 自检 ----
-    t = truth(contracts, bills, pays, roster)
+    t = truth(contracts, bills, pays, roster, industry_override=industry_override)
     t["_tag"] = ["账单"] * len(bills) + ["回款"] * len(pays) + ["在册"] * len(roster)
     sanity(contracts, bills, pays, roster, ledger, t)
 
     # ---- 写 inbox（诱饵先写 + 压旧 mtime）----
     stale = OUT / "回款记录_202607.csv"
-    pays[pays["月份"] <= "2026-07-01"].to_csv(stale, index=False, encoding="utf-8-sig")
+    pays_out[pays_out["月份"] <= "2026-07-01"].to_csv(stale, index=False, encoding="utf-8-sig")
     os.utime(stale, (datetime.now().timestamp() - 30 * 86400,) * 2)
 
     bu_df.to_excel(OUT / "事业部.xlsx", index=False, engine="xlsxwriter")
@@ -562,7 +614,7 @@ def main() -> None:
     roster.to_excel(OUT / "外派花名册_202608.xlsx", index=False, engine="xlsxwriter")
     bills[["月份", "合同号", "账单金额"]].to_csv(OUT / "月度账单_202608.csv",
                                                 index=False, encoding="utf-8-sig")
-    pays.to_csv(OUT / "回款记录_202608.csv", index=False, encoding="utf-8-sig")
+    pays_out.to_csv(OUT / "回款记录_202608.csv", index=False, encoding="utf-8-sig")
     os.utime(OUT / "回款记录_202608.csv", (datetime.now().timestamp(),) * 2)
     ledger.to_csv(OUT / "经营台账_202608.csv", index=False, encoding="utf-8-sig")
 
@@ -570,7 +622,8 @@ def main() -> None:
     ans = build_answer(t)
     sort_answer(ans)
     expect_counts = {"monthly_kpi": 12, "bu_month": 42, "group_rank": 7,
-                     "customer_ar": 25, "industry_month": 66, "contract_ledger": 40}
+                     "customer_ar": 25,
+                     "industry_month": 78 if DEEP else 66, "contract_ledger": 40}
     for k, n in expect_counts.items():
         assert len(ans[k]["rows"]) == n, f"{k} 行数 {len(ans[k]['rows'])} != {n}"
     ans_file = EXPECTED / "answer.json"
