@@ -26,6 +26,16 @@ _state = {"active": False, "run_id": None, "trigger": None, "instance": None}
 FAIL_STATES = {"error", "fail", "runtime error"}
 
 
+def derive_status(node_status: dict[str, str]) -> str:
+    """由各节点状态推导整体红绿灯：red > yellow > green"""
+    states = set(node_status.values())
+    if states & FAIL_STATES:
+        return "red"
+    if "warn" in states:
+        return "yellow"
+    return "green"
+
+
 def status() -> dict:
     return dict(_state)
 
@@ -162,7 +172,6 @@ def _pipeline(instance: str, run_id: str, trigger: str) -> None:
         if results_json is not None:
             nodes_out, states = _summarize_dbt(results_json, {})
             if not fail_reason:
-                from app.services.artifacts import derive_status
                 overall = derive_status(states)
 
         counts = {"total": len(nodes_out)}

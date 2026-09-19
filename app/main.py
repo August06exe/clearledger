@@ -91,6 +91,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=config.APP_NAME, version=config.APP_VERSION, lifespan=lifespan)
 
 
+@app.middleware("http")
+async def no_cache_html(request, call_next):
+    """根治缓存事故：入口 html 禁缓存（否则升级后浏览器拿旧 index.html 引旧 JS，
+    与新 API 字段错位导致页面空白——真实踩坑）；带版本号的 js/css 仍可长缓存"""
+    response = await call_next(request)
+    ct = response.headers.get("content-type", "")
+    if "text/html" in ct:
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
+
+
 def _guard(fn, *args, **kwargs):
     try:
         return fn(*args, **kwargs)
@@ -384,6 +395,8 @@ def api_reports():
     for r in reports:
         out.append({
             "key": r["key"], "title": r["title"], "description": r["title"],
+            "dimension": r["dimension"], "time_dim": r.get("time_dim"),
+            "metrics": r.get("metrics", []),
             "params": ([{"name": r["dimension"], "label": r["dimension"], "type": "select",
                          "options_from": r["dimension"], "default": ""}] +
                        [{"name": f, "label": f, "type": "select", "options_from": f, "default": ""}

@@ -43,31 +43,26 @@ def main() -> int:
         check(f"前端库 {f.split('/')[-1]}", "ok" if p.exists() and p.stat().st_size > 100_000 else "fail",
               f"{p.stat().st_size // 1024} KB" if p.exists() else "缺失（页面会崩，需重新下载到 vendor/）")
 
-    # ---- 2. 数据仓库 ----
-    wh = ROOT / "data" / "warehouse" / "warehouse.duckdb"
-    if not wh.exists():
-        check("数据仓库", "fail", "warehouse.duckdb 不存在（跑一次 重建演示数据.bat 或 ingest+dbt build）")
-    else:
-        wal = wh.with_suffix(".duckdb.wal")
-        try:
-            import duckdb
-            con = duckdb.connect(str(wh), read_only=True)
-            rows = con.execute(
-                "select table_schema, count(*) from information_schema.tables "
-                "where table_schema in ('raw','staging','intermediate','marts') group by 1 order by 1"
-            ).fetchall()
-            latest = con.execute(
-                "select max(month) from marts.mart_kpi_monthly"
-            ).fetchone()[0]
-            con.close()
-            detail = " / ".join(f"{s}:{n}" for s, n in rows)
-            if latest is not None:
-                detail += f"；最新数据月 {latest}"
-            check("数据仓库", "ok" if rows else "warn", f"{wh.stat().st_size // 1024 // 1024} MB，{detail}")
-            if wal.exists():
-                check("WAL 文件", "warn", "存在未 checkpoint 的 .wal——备份时必须连它一起拷（备份数据.bat 已处理）")
-        except Exception as e:
-            check("数据仓库", "fail", f"无法只读打开：{e}（可能跑批进行中或文件损坏）")
+    # ---- 2. 数据仓库（v0.3：每账套独立库）----
+    try:
+        from semantic.loader import list_instances, load_instance as _li
+        for _n in list_instances():
+            _db = (_li(_n).pipeline_dir / _li(_n).db_path).resolve()
+            if not _db.exists():
+                check(f"库[{_n}]", "warn", f"{_db.name} 未建（跑一次该账套的 ingest+build）")
+            else:
+                import duckdb as _dd
+                _con = _dd.connect(str(_db), read_only=True)
+                _rows = _con.execute(
+                    "select table_schema, count(*) from information_schema.tables "
+                    "where table_schema in ('raw','staging','intermediate','marts') group by 1"
+                ).fetchall()
+                _con.close()
+                check(f"库[{_n}]", "ok",
+                      f"{_db.stat().st_size // 1024 // 1024} MB，" +
+                      " / ".join(f"{s}:{c}" for s, c in _rows))
+    except Exception as e:
+        check("数据仓库", "fail", f"实例库检查失败：{e}")
 
     # ---- 3. 投放区 vs 各实例声明的数据源（v0.3 多账套）----
     try:
@@ -94,24 +89,28 @@ def main() -> int:
     except Exception as e:
         check("投放区", "fail", f"sources.yml 解析失败：{e}")
 
-    # ---- 4. 跑批历史 ----
-    hist = ROOT / "data" / "runs" / "history.json"
-    if not hist.exists():
-        check("跑批历史", "warn", "尚无跑批记录（新装属正常，跑一次批即可）")
-    else:
-        try:
-            runs = json.loads(hist.read_text(encoding="utf-8"))
-            last = runs[0] if runs else None
-            if not last:
-                check("跑批历史", "warn", "history.json 为空")
-            else:
-                st = last.get("status")
-                note = {"green": "全绿", "yellow": "黄灯（存在数据质量告警，看 /api/overview 的 warnings 明细）",
-                        "red": "红灯！按手册 §4 排障"}.get(st, st)
-                check("最近跑批", "ok" if st in ("green", "yellow") else "fail",
-                      f"{last.get('finished_at')} · {st} · {note} · 触发:{last.get('trigger')}")
-        except Exception as e:
-            check("跑批历史", "warn", f"history.json 解析失败：{e}")
+    # ---- 4. 跑批历史（v0.3：按账套 history_<inst>.json）----
+    try:
+        hist_files = sorted((ROOT / "data" / "runs").glob("history_*.json"))
+        if not hist_files:
+            check("跑批历史", "warn", "尚无跑批记录（新装属正常，跑一次批即可）")
+        for hf in hist_files:
+            try:
+                runs = json.loads(hf.read_text(encoding="utf-8"))
+                last = runs[0] if runs else None
+                if not last:
+                    check(f"跑批[{hf.stem.split('_', 1)[1]}]", "warn", "history 为空")
+                else:
+                    st = last.get("status")
+                    note = {"green": "全绿", "yellow": "黄灯（数据质量告警，看门户 warnings）",
+                            "red": "红灯！按手册 §4 排障"}.get(st, st)
+                    check(f"跑批[{hf.stem.split('_', 1)[1]}]",
+                          "ok" if st in ("green", "yellow") else "fail",
+                          f"{last.get('finished_at')} · {st} · {note} · 触发:{last.get('trigger')}")
+            except Exception as e:
+                check(f"跑批[{hf.name}]", "warn", f"解析失败：{e}")
+    except Exception as e:
+        check("跑批历史", "warn", f"检查失败：{e}")
 
     # ---- 5. 门户端口 ----
     s = socket.socket()

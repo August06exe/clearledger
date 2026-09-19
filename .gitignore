@@ -21,3 +21,6 @@ nul
 # 实例生成管道的 dbt 构建产物（生成源码 instances/*/pipeline/models 保留入库）
 instances/*/pipeline/target/
 instances/*/pipeline/logs/
+
+# 回收站（退役资产暂存，确认无用后可整体删除）
+_trash/

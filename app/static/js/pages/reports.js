@@ -25,6 +25,12 @@ window.Pages.reports = {
               <div class="t">${r.title}</div>
               <div class="d">${(r.metrics || []).join(' / ')}</div>
             </div>`).join('')}
+          <div class="report-item" style="cursor:default;border:1px dashed var(--border)">
+            <div class="t muted" style="font-weight:600">⚙ 本页报表不是写死的</div>
+            <div class="d">每张报表 = instances/账套/dashboard.yml 里的一行配置
+              （维度 × 指标 × 筛选）。想增删报表、改指标口径，直接对 AI 助手说，
+              或改配置后重新跑批。可视化编辑器在 v0.5 配置工作台。</div>
+          </div>
         </div>
         <div id="report-main" class="card"></div>
       </div>`;
@@ -129,7 +135,12 @@ window.Pages.reports = {
   isTextDim(label) {
     return ['月份', '区域', '行业', '客户等级', '状态', '门店', '城市', '商圈类型', '菜品类别',
       '渠道', '品类', '商品名称', '商品编号', '客户名称', '客户编号', '部门名称', '部门编码',
-      '费用类别', '最近下单'].includes(label);
+      '费用类别', '最近下单', '大区', '供应商', '事业部', '交付组', '合同', '客户',
+      '事项类型', '岗位'].includes(label);
+  },
+
+  isRate(label) {
+    return typeof label === 'string' && (label.includes('率') || label.includes('比') || label.includes('占比'));
   },
 
   fmtCell(label, v, idx) {
