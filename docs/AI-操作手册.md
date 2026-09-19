@@ -110,6 +110,37 @@ for pid in $(netstat -ano | grep ":8620" | grep LISTENING | awk '{print $5}' | s
 ```
 改了任何 `app/` 下 Python 文件都需要重启（uvicorn 未开 --reload，性能考虑）。改 `app/static/` 只需刷新浏览器（记得升版本号）。
 
+### R-10 MCP 接入配方（v0.4：让外部 agent 连明账）
+明账作为 MCP server（stdio）对外提供六个只读工具：账套列表 / 指标目录 / 报表目录 /
+查询报表 / 数据健康诊断（缺什么没导入）/ 单指标口径。全调用审计在 logs/mcp_audit.jsonl。
+
+Claude Code 接入（~/.claude.json 或项目 .mcp.json）：
+```json
+{"mcpServers": {"clearledger": {
+  "command": "<仓库>/.venv/Scripts/python.exe",
+  "args": ["<仓库>/mcp_server.py"]}}}
+```
+ZCode 同理加进 MCP 配置。之后即可对 agent 说：
+"明账里华东上月毛利多少？""这期报表为什么没出？"
+
+HTTP 形态（不支持 MCP 的 agent）：`/api/open/*` + `X-API-Key` 头。
+钥匙登记在 data/openapi_keys.json（不入 git；模板 openapi_keys.example.json，
+key 用 python -c "import secrets;print(secrets.token_urlsafe(32))" 生成）。
+```bash
+curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/reports/monthly_kpi/data?limit=5"
+curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/status"
+```
+安全边界：只读；只能查声明的维度×指标（汇总级出网由架构保证）；全调用留痕。
+
+### R-11 装配线体检（v0.4：新账套接入第一步）
+```bash
+.venv/Scripts/python.exe -m semantic.inspect --instance <新账套名>
+```
+产出 instances/<名>/onboarding/：inspect_report.md（列画像/空值率/键列/
+枚举候选/join 建议）+ config_draft.yml（五配置草案）。审核草案→补指标
+公式与报表→转正五配置→R-01 三步链→红绿灯验收。约定：下划线开头的
+实例目录是测试副本，永不视为正式账套。
+
 ### R-08 更新演示数据
 `重建演示数据.bat` 或分步：`sample_data/generate.py` → `ingest/ingest.py` → cd pipeline && dbt build。
 生成器特性：截止昨天动态生成；**预埋 2026-05 华东断供异常**（所以黄灯是预期，不是 bug）；300 行客户编号带首尾空格（清洗层演示）。
