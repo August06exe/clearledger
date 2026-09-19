@@ -1,0 +1,400 @@
+instance:
+  name: retail
+  title: 荟品汇零售连锁
+  inbox: data/inbox
+  database: ../../../data/warehouse/retail.duckdb
+  tz: Asia/Shanghai
+sources_draft:
+- name: 供应商
+  title: 供应商
+  file_pattern: 供应商.xlsx*.xlsx
+  fields:
+  - cn: 供应商编码
+    map: 供应商编码
+    type: string
+    required: true
+  - cn: 供应商名称
+    map: 供应商名称
+    type: string
+    required: true
+  - cn: 结算方式
+    map: 结算方式
+    type: string
+    enum:
+    - 季结90
+    - 月结30
+    - 月结60
+    - 现结
+    level: yellow
+- name: 促销活动
+  title: 促销活动
+  file_pattern: 促销活动.xlsx*.xlsx
+  fields:
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - HB01
+    - HB02
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 活动名称
+    map: 活动名称
+    type: string
+    enum:
+    - 上海人民广场店 会员日
+    - 北京国贸店 会员日
+    - 南京新街口店 会员日
+    - 厦门中山路店 会员日
+    - 双11 狂欢
+    - 天津滨江道店 会员日
+    - 广州天河店 会员日
+    - 店庆让利
+    - 杭州西湖店 会员日
+    - 深圳福田店 会员日
+    level: yellow
+  - cn: 开始日期
+    map: 开始日期
+    type: date
+  - cn: 结束日期
+    map: 结束日期
+    type: date
+  - cn: 折扣力度
+    map: 折扣力度
+    type: decimal
+- name: 商品
+  title: 商品
+  file_pattern: 商品.xlsx*.xlsx
+  fields:
+  - cn: 商品编码
+    map: 商品编码
+    type: string
+    required: true
+  - cn: 商品名称
+    map: 商品名称
+    type: string
+    required: true
+  - cn: 品类
+    map: 品类
+    type: string
+    enum:
+    - 日化
+    - 百货
+    - 食品
+    level: yellow
+  - cn: 单位
+    map: 单位
+    type: string
+    enum:
+    - 个
+    - 套
+    - 支
+    - 瓶
+    - 盒
+    - 袋
+    level: yellow
+  - cn: 标准成本
+    map: 标准成本
+    type: decimal
+- name: 库存快照
+  title: 库存快照_202608
+  file_pattern: 库存快照*.csv
+  fields:
+  - cn: 快照月份
+    map: 快照月份
+    type: date
+  - cn: 快照日期
+    map: 快照日期
+    type: date
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - HB01
+    - HB02
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 商品编码
+    map: 商品编码
+    type: string
+  - cn: 期末数量
+    map: 期末数量
+    type: decimal
+- name: 进销存台账
+  title: 进销存台账_202608
+  file_pattern: 进销存台账*.csv
+  fields:
+  - cn: 事项类型
+    map: 事项类型
+    type: string
+    enum:
+    - 期末库存
+    - 采购
+    - 采购退货
+    - 销售
+    level: yellow
+  - cn: 单据号
+    map: 单据号
+    type: string
+  - cn: 单据日期
+    map: 单据日期
+    type: date
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - HB01
+    - HB02
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 商品编码
+    map: 商品编码
+    type: string
+  - cn: 供应商编码
+    map: 供应商编码
+    type: string
+  - cn: 渠道
+    map: 渠道
+    type: string
+    enum:
+    - 电商
+    - 门店
+    - 门店自提
+    level: yellow
+  - cn: 数量
+    map: 数量
+    type: decimal
+  - cn: 单价
+    map: 单价
+    type: decimal
+  - cn: 折扣率
+    map: 折扣率
+    type: decimal
+  - cn: 期末数量
+    map: 期末数量
+    type: decimal
+- name: 采购单
+  title: 采购单_202606
+  file_pattern: 采购单*.csv
+  fields:
+  - cn: 采购单号
+    map: 采购单号
+    type: string
+  - cn: 采购日期
+    map: 采购日期
+    type: date
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - HB01
+    - HB02
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 商品编码
+    map: 商品编码
+    type: string
+  - cn: 供应商编码
+    map: 供应商编码
+    type: string
+  - cn: 数量
+    map: 数量
+    type: decimal
+  - cn: 采购单价
+    map: 采购单价
+    type: decimal
+- name: 采购单
+  title: 采购单_202608
+  file_pattern: 采购单*.csv
+  fields:
+  - cn: 采购单号
+    map: 采购单号
+    type: string
+  - cn: 采购日期
+    map: 采购日期
+    type: date
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - HB01
+    - HB02
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 商品编码
+    map: 商品编码
+    type: string
+  - cn: 供应商编码
+    map: 供应商编码
+    type: string
+  - cn: 数量
+    map: 数量
+    type: decimal
+  - cn: 采购单价
+    map: 采购单价
+    type: decimal
+- name: 采购退货
+  title: 采购退货_202608
+  file_pattern: 采购退货*.csv
+  fields:
+  - cn: 退货单号
+    map: 退货单号
+    type: string
+    required: true
+  - cn: 退货日期
+    map: 退货日期
+    type: date
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - HB01
+    - HB02
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 商品编码
+    map: 商品编码
+    type: string
+  - cn: 供应商编码
+    map: 供应商编码
+    type: string
+  - cn: 数量
+    map: 数量
+    type: decimal
+  - cn: 退货单价
+    map: 退货单价
+    type: decimal
+- name: 销售流水
+  title: 销售流水_202608
+  file_pattern: 销售流水*.csv
+  fields:
+  - cn: 流水号
+    map: 流水号
+    type: string
+    required: true
+  - cn: 销售日期
+    map: 销售日期
+    type: date
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - HB01
+    - HB02
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 商品编码
+    map: 商品编码
+    type: string
+  - cn: 渠道
+    map: 渠道
+    type: string
+    enum:
+    - 电商
+    - 门店
+    - 门店自提
+    level: yellow
+  - cn: 数量
+    map: 数量
+    type: decimal
+  - cn: 单价
+    map: 单价
+    type: decimal
+  - cn: 折扣率
+    map: 折扣率
+    type: decimal
+- name: 门店
+  title: 门店
+  file_pattern: 门店.xlsx*.xlsx
+  fields:
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    required: true
+    enum:
+    - HB01
+    - HB02
+    - HB03
+    - HD01
+    - HD02
+    - HD03
+    - HN01
+    - HN02
+    - HN03
+    level: yellow
+  - cn: 门店名称
+    map: 门店名称
+    type: string
+    required: true
+    enum:
+    - 上海人民广场店
+    - 北京国贸店
+    - 北京朝阳店（筹备）
+    - 南京新街口店
+    - 厦门中山路店
+    - 天津滨江道店
+    - 广州天河店
+    - 杭州西湖店
+    - 深圳福田店
+    level: yellow
+  - cn: 城市
+    map: 城市
+    type: string
+    enum:
+    - 上海
+    - 北京
+    - 南京
+    - 厦门
+    - 天津
+    - 广州
+    - 杭州
+    - 深圳
+    level: yellow
+  - cn: 大区
+    map: 大区
+    type: string
+    enum:
+    - 华东
+    - 华北
+    - 华南
+    level: yellow
+  - cn: 开业日期
+    map: 开业日期
+    type: date
+    required: true
+notes: []

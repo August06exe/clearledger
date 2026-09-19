@@ -24,3 +24,6 @@ instances/*/pipeline/logs/
 
 # 回收站（退役资产暂存，确认无用后可整体删除）
 _trash/
+
+# 开放接口 API Key（敏感，不入库；模板见 openapi_keys.example.json）
+data/openapi_keys.json

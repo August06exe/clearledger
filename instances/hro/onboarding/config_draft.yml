@@ -1,0 +1,280 @@
+instance:
+  name: hro
+  title: 睿才人力
+  inbox: data/inbox
+  database: ../../../data/warehouse/hro.duckdb
+  tz: Asia/Shanghai
+sources_draft:
+- name: 事业部
+  title: 事业部
+  file_pattern: 事业部.xlsx*.xlsx
+  fields:
+  - cn: 事业部编码
+    map: 事业部编码
+    type: string
+    required: true
+    enum:
+    - BU-FIN
+    - BU-MFG
+    - BU-NET
+    level: yellow
+  - cn: 事业部名称
+    map: 事业部名称
+    type: string
+    required: true
+    enum:
+    - 互联网事业部
+    - 制造业交付事业部
+    - 金融事业部
+    level: yellow
+  - cn: 事业部负责人
+    map: 事业部负责人
+    type: string
+    required: true
+    enum:
+    - 沈国峰
+    - 陆佳炜
+    - 韩志强
+    level: yellow
+- name: 交付组
+  title: 交付组
+  file_pattern: 交付组.xlsx*.xlsx
+  fields:
+  - cn: 组编码
+    map: 组编码
+    type: string
+    required: true
+    enum:
+    - GR-F01
+    - GR-F02
+    - GR-M01
+    - GR-M02
+    - GR-N01
+    - GR-N02
+    level: yellow
+  - cn: 组名称
+    map: 组名称
+    type: string
+    required: true
+    enum:
+    - 互联网一组
+    - 互联网二组
+    - 制造一组
+    - 制造二组
+    - 金融一组
+    - 金融二组
+    level: yellow
+  - cn: 所属事业部编码
+    map: 所属事业部编码
+    type: string
+    enum:
+    - BU-FIN
+    - BU-MFG
+    - BU-NET
+    level: yellow
+- name: 合同
+  title: 合同
+  file_pattern: 合同.xlsx*.xlsx
+  fields:
+  - cn: 合同号
+    map: 合同号
+    type: string
+    required: true
+  - cn: 客户编码
+    map: 客户编码
+    type: string
+  - cn: 签约事业部编码
+    map: 签约事业部编码
+    type: string
+    enum:
+    - BU-FIN
+    - BU-MFG
+    - BU-NET
+    level: yellow
+  - cn: 签约事业部名称
+    map: 签约事业部名称
+    type: string
+    enum:
+    - 互联网事业部
+    - 制造业交付事业部
+    - 金融事业部
+    level: yellow
+  - cn: 月服务费
+    map: 月服务费
+    type: date
+  - cn: 开始月
+    map: 开始月
+    type: date
+  - cn: 结束月
+    map: 结束月
+    type: date
+- name: 回款记录
+  title: 回款记录_202607
+  file_pattern: 回款记录*.csv
+  fields:
+  - cn: 月份
+    map: 月份
+    type: date
+  - cn: 合同号
+    map: 合同号
+    type: string
+  - cn: 回款金额
+    map: 回款金额
+    type: decimal
+    required: true
+- name: 回款记录
+  title: 回款记录_202608
+  file_pattern: 回款记录*.csv
+  fields:
+  - cn: 月份
+    map: 月份
+    type: date
+  - cn: 合同号
+    map: 合同号
+    type: string
+  - cn: 回款金额
+    map: 回款金额
+    type: decimal
+    required: true
+- name: 外派花名册
+  title: 外派花名册_202608
+  file_pattern: 外派花名册*.xlsx
+  fields:
+  - cn: 员工编号
+    map: 员工编号
+    type: string
+  - cn: 姓名
+    map: 姓名
+    type: string
+  - cn: 月份
+    map: 月份
+    type: date
+  - cn: 交付组编码
+    map: 交付组编码
+    type: string
+    enum:
+    - GR-F01
+    - GR-F02
+    - GR-M01
+    - GR-M02
+    - GR-N01
+    - GR-N02
+    level: yellow
+  - cn: 合同号
+    map: 合同号
+    type: string
+  - cn: 岗位
+    map: 岗位
+    type: string
+    enum:
+    - 客户服务专员
+    - 数据处理专员
+    - 测试工程师
+    - 软件开发工程师
+    - 运维工程师
+    - 项目经理
+    level: yellow
+  - cn: 月薪资成本
+    map: 月薪资成本
+    type: decimal
+- name: 客户
+  title: 客户
+  file_pattern: 客户.xlsx*.xlsx
+  fields:
+  - cn: 客户编码
+    map: 客户编码
+    type: string
+    required: true
+  - cn: 客户名称
+    map: 客户名称
+    type: string
+    required: true
+  - cn: 行业
+    map: 行业
+    type: string
+    enum:
+    - 互联网
+    - 制造
+    - 文体
+    - 金融
+    - 零售
+    level: yellow
+  - cn: 客户级别
+    map: 客户级别
+    type: string
+    enum:
+    - A
+    - B
+    - C
+    - S级
+    level: yellow
+- name: 月度账单
+  title: 月度账单_202608
+  file_pattern: 月度账单*.csv
+  fields:
+  - cn: 月份
+    map: 月份
+    type: date
+  - cn: 合同号
+    map: 合同号
+    type: string
+  - cn: 账单金额
+    map: 账单金额
+    type: decimal
+- name: 经营台账
+  title: 经营台账_202608
+  file_pattern: 经营台账*.csv
+  fields:
+  - cn: 事项类型
+    map: 事项类型
+    type: string
+    enum:
+    - 回款
+    - 在册
+    - 账单
+    level: yellow
+  - cn: 单据号
+    map: 单据号
+    type: string
+    required: true
+  - cn: 单据月份
+    map: 单据月份
+    type: date
+  - cn: 合同号
+    map: 合同号
+    type: string
+  - cn: 交付组编码
+    map: 交付组编码
+    type: string
+    enum:
+    - GR-F01
+    - GR-F02
+    - GR-M01
+    - GR-M02
+    - GR-N01
+    - GR-N02
+    level: yellow
+  - cn: 员工编号
+    map: 员工编号
+    type: string
+  - cn: 姓名
+    map: 姓名
+    type: string
+  - cn: 岗位
+    map: 岗位
+    type: string
+    enum:
+    - 客户服务专员
+    - 数据处理专员
+    - 测试工程师
+    - 软件开发工程师
+    - 运维工程师
+    - 项目经理
+    level: yellow
+  - cn: 月薪资成本
+    map: 月薪资成本
+    type: decimal
+  - cn: 金额
+    map: 金额
+    type: decimal
+notes: []

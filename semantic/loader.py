@@ -174,4 +174,6 @@ def load_instance(name: str) -> Instance:
 
 
 def list_instances() -> list[str]:
-    return sorted(p.parent.name for p in INSTANCES_DIR.glob("*/instance.yml"))
+    """正式账套清单。下划线开头（_t_* / _c2_*）为测试副本约定，永不视为正式账套。"""
+    return sorted(p.parent.name for p in INSTANCES_DIR.glob("*/instance.yml")
+                  if not p.parent.name.startswith("_"))

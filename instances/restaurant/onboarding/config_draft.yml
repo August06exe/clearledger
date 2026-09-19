@@ -1,0 +1,126 @@
+instance:
+  name: restaurant
+  title: 演示连锁餐饮
+  inbox: data/inbox
+  database: ../../../data/warehouse/restaurant.duckdb
+  tz: Asia/Shanghai
+sources_draft:
+- name: dishes
+  title: dishes
+  file_pattern: dishes.xlsx*.xlsx
+  fields:
+  - cn: 菜品编码
+    map: 菜品编码
+    type: string
+    required: true
+  - cn: 菜品名称
+    map: 菜品名称
+    type: string
+    required: true
+  - cn: 菜品类别
+    map: 菜品类别
+    type: string
+    enum:
+    - 主食
+    - 凉菜
+    - 热菜
+    - 甜点
+    - 饮品
+    level: yellow
+  - cn: 标准成本
+    map: 标准成本
+    type: decimal
+- name: orders
+  title: orders
+  file_pattern: orders.csv*.csv
+  fields:
+  - cn: 订单号
+    map: 订单号
+    type: string
+  - cn: 下单时间
+    map: 下单时间
+    type: date
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    enum:
+    - S01
+    - S02
+    - S03
+    - S04
+    - S05
+    - S06
+    - S07
+    - S08
+    level: yellow
+  - cn: 菜品编码
+    map: 菜品编码
+    type: string
+  - cn: 数量
+    map: 数量
+    type: decimal
+  - cn: 单价
+    map: 单价
+    type: decimal
+  - cn: 金额
+    map: 金额
+    type: decimal
+  - cn: 渠道
+    map: 渠道
+    type: string
+    enum:
+    - 堂食
+    - 外卖
+    - 小程序
+    level: yellow
+- name: stores
+  title: stores
+  file_pattern: stores.xlsx*.xlsx
+  fields:
+  - cn: 门店编码
+    map: 门店编码
+    type: string
+    required: true
+    enum:
+    - S01
+    - S02
+    - S03
+    - S04
+    - S05
+    - S06
+    - S07
+    - S08
+    level: yellow
+  - cn: 门店名称
+    map: 门店名称
+    type: string
+    required: true
+    enum:
+    - 万象城店
+    - 国贸店
+    - 天河城店
+    - 张江店
+    - 春熙路店
+    - 望京店
+    - 科韵路店
+    - 静安寺店
+    level: yellow
+  - cn: 城市
+    map: 城市
+    type: string
+    enum:
+    - 上海
+    - 北京
+    - 广州
+    - 成都
+    level: yellow
+  - cn: 商圈类型
+    map: 商圈类型
+    type: string
+    enum:
+    - 交通枢纽
+    - 景区
+    - 社区
+    - 购物中心
+    level: yellow
+notes: []

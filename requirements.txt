@@ -20,3 +20,4 @@ xlsxwriter>=3.2,<4.0
 
 # 字段级血缘 SQL 解析
 sqlglot>=25,<28
+mcp>=1.0

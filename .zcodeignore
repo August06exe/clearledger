@@ -1,0 +1,56 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# 数据与运行时产物（不入库：仓库只放代码与配置）
+data/
+logs/
+
+# dbt 产物
+pipeline/target/
+pipeline/logs/
+pipeline/dbt_packages/
+
+# 系统
+.DS_Store
+Thumbs.db
+nul
+
+# 实例生成管道的 dbt 构建产物（生成源码 instances/*/pipeline/models 保留入库）
+instances/*/pipeline/target/
+instances/*/pipeline/logs/
+
+# 回收站（退役资产暂存，确认无用后可整体删除）
+_trash/
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+node_modules/
+bower_components/
+jspm_packages/
+site-packages/
+venv/
+coverage/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+cdk.out/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）
