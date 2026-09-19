@@ -21,8 +21,8 @@ wide:
       contract: {fanout: red, null_match: yellow, orphan_right: ignore}
       # 黄灯基线：账单/回款行交付组编码为空属预期
   derived:
-    - {name: bill_amt,  expr: "case when entry_type = '账单' then coalesce(amount, 0) else 0 end"}
-    - {name: pay_amt,   expr: "case when entry_type = '回款' then coalesce(amount, 0) else 0 end"}
-    - {name: cost_amt,  expr: "case when entry_type = '在册' then coalesce(salary_cost, 0) else 0 end"}
-    - {name: gross_amt, expr: "case when entry_type = '账单' then coalesce(amount, 0) when entry_type = '在册' then -coalesce(salary_cost, 0) else 0 end"}
+    - {name: bill_amt,  expr: "case when entry_type = '账单' then coalesce(amount, 0) else 0 end", desc: "账单行金额（非账单行记 0）"}
+    - {name: pay_amt,   expr: "case when entry_type = '回款' then coalesce(amount, 0) else 0 end", desc: "回款行金额（非回款行记 0）"}
+    - {name: cost_amt,  expr: "case when entry_type = '在册' then coalesce(salary_cost, 0) else 0 end", desc: "在册行人力成本 = 月薪资成本"}
+    - {name: gross_amt, expr: "case when entry_type = '账单' then coalesce(amount, 0) when entry_type = '在册' then -coalesce(salary_cost, 0) else 0 end", desc: "台账毛利 = 账单金额 − 在册人力成本（同行分录互斥）"}
   drop: [_source_file, _loaded_at]

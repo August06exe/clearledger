@@ -72,6 +72,7 @@ window.Pages.reports = {
       <div class="row spread">
         <h3 style="margin:0">${meta.title}</h3>
         <div class="row">
+          <button id="rp-caliber" class="btn btn-sm">📐 口径</button>
           <button id="rp-query" class="btn btn-primary btn-sm">查询</button>
           <button id="rp-export" class="btn btn-sm">⬇ 导出 Excel</button>
         </div>
@@ -85,7 +86,53 @@ window.Pages.reports = {
     document.getElementById('rp-export').addEventListener('click', () => {
       window.open('/api/reports/' + this.key + '/export?' + this.qs(), '_blank');
     });
+    document.getElementById('rp-caliber').addEventListener('click', () => this.showCaliber(meta));
     this.query();
+  },
+
+  async showCaliber(meta) {
+    let cal;
+    try {
+      cal = await api('/api/caliber');
+    } catch (e) { return; }
+    const metricNames = meta.metrics || [];
+    const metricMap = Object.fromEntries(cal.metrics.map(m => [m.name, m]));
+    const rows = metricNames.map(n => {
+      const m = metricMap[n] || { name: n, expr: '（未在 metrics.yml 中找到）', desc: '' };
+      return `<tr>
+        <td style="white-space:nowrap"><b>${m.name}</b></td>
+        <td style="font-family:Consolas,monospace;font-size:12px;color:#1D4ED8">${(m.expr || '').replace(/</g, '&lt;')}</td>
+        <td>${m.desc || '—'}</td>
+      </tr>`;
+    }).join('');
+    const usedDims = [meta.dimension, meta.time_dim, ...(this.meta && [])]
+      .filter(Boolean).map(d => d).join(' × ');
+    const overlay = App.el(`
+      <div id="modal-overlay">
+        <div class="modal card" style="width:640px;max-height:80vh;overflow:auto">
+          <div class="row spread">
+            <h3 style="margin:0">📐 ${meta.title} · 指标口径</h3>
+            <button class="btn btn-sm" id="cal-close">✕</button>
+          </div>
+          <div class="muted mt8" style="line-height:1.7">
+            账套【${cal.instance.title}】 · 分组维度：${usedDims || '—'}<br>
+            口径唯一出处：<code>instances/${cal.instance.name}/metrics.yml</code>（本页只读展示，改口径=改配置后重跑）
+          </div>
+          <table class="tbl mt16">
+            <thead><tr><th>指标</th><th>计算公式</th><th>业务说明</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="muted mt8" style="line-height:1.6">
+            派生列口径（宽表层，公式中的字段来源）：
+            ${cal.derived.filter(d => metricNames.length === 0 || true).slice(0, 12).map(d =>
+              `<span class="pipe-chip" title="${(d.desc || '').replace(/"/g, '&quot;')}">${d.name}</span>`).join('')}
+            <span class="muted">（悬停查看说明；完整定义见数据字典页）</span>
+          </div>
+        </div>
+      </div>`);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#cal-close').addEventListener('click', () => overlay.remove());
   },
 
   qs() {

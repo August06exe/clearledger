@@ -1,9 +1,9 @@
-# 实例二：指标口径（餐饮口径——营业额/客单数，与销售公司的收入/客户数完全不同名不同义）
+# 实例二：指标口径（唯一出处）——desc 为界面展示的中文口径说明
 version: 1
 metrics:
-  - {name: 营业额,   expr: "sum(amount)"}
-  - {name: 成本额,   expr: "sum(cost_amount)"}
-  - {name: 毛利,     expr: "sum(gross_profit)"}
-  - {name: 毛利率,   expr: "round(sum(gross_profit) / nullif(sum(amount), 0), 4)", format: percent}
-  - {name: 客单数,   expr: "count(distinct order_no)"}
-  - {name: 菜品销量, expr: "sum(quantity)"}
+  - {name: 营业额,   expr: "sum(amount)", desc: "订单金额合计（折前口径，未扣折扣）"}
+  - {name: 成本额,   expr: "sum(cost_amount)", desc: "数量 × 菜品标准成本 的合计"}
+  - {name: 毛利,     expr: "sum(gross_profit)", desc: "营业额 − 成本额"}
+  - {name: 毛利率,   expr: "round(sum(gross_profit) / nullif(sum(amount), 0), 4)", format: percent, desc: "毛利 ÷ 营业额；营业额为 0 时为空"}
+  - {name: 客单数,   expr: "count(distinct order_no)", desc: "去重订单数（一单多菜品行计 1）"}
+  - {name: 菜品销量, expr: "sum(quantity)", desc: "菜品销售数量合计"}

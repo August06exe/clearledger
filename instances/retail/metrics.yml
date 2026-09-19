@@ -1,15 +1,15 @@
 version: 1
 metrics:
-  - {name: 销售额,       expr: "sum(sales_net)"}
-  - {name: 销售成本,     expr: "sum(sales_cost)"}
-  - {name: 毛利,         expr: "sum(gross_profit)"}
-  - {name: 毛利率,       expr: "round(sum(gross_profit) / nullif(sum(sales_net), 0), 4)", format: percent}
-  - {name: 销售数量,     expr: "sum(sales_qty)"}
-  - {name: 销售行数,     expr: "sum(sales_flag)"}
-  - {name: 动销商品数,   expr: "count(distinct case when entry_type = '销售' then product_code end)"}
-  - {name: 采购额,       expr: "sum(purchase_amt)"}
-  - {name: 退货额,       expr: "sum(return_amt)"}
-  - {name: 净采购,       expr: "sum(purchase_amt) - sum(return_amt)"}
-  - {name: 期末库存量,   expr: "sum(stock_qty)"}
-  - {name: 库存周转率,   expr: "round(sum(sales_cost) / nullif(sum(stock_qty), 0), 4)"}
-  - {name: 电商销售占比, expr: "round(sum(ecomm_net) / nullif(sum(sales_net), 0), 4)", format: percent}
+  - {name: 销售额,       expr: "sum(sales_net)", desc: "折后销售合计 = 数量×单价×(1−折扣率)，仅销售行"}
+  - {name: 销售成本,     expr: "sum(sales_cost)", desc: "数量×商品标准成本 合计，仅销售行（标准成本法，SPEC 简化口径）"}
+  - {name: 毛利,         expr: "sum(gross_profit)", desc: "销售额 − 销售成本"}
+  - {name: 毛利率,       expr: "round(sum(gross_profit) / nullif(sum(sales_net), 0), 4)", format: percent, desc: "毛利 ÷ 销售额；销售额为 0 时为空"}
+  - {name: 销售数量,     expr: "sum(sales_qty)", desc: "销售行数量合计"}
+  - {name: 销售行数,     expr: "sum(sales_flag)", desc: "销售行计数"}
+  - {name: 动销商品数,   expr: "count(distinct case when entry_type = '销售' then product_code end)", desc: "有销售记录的去重商品数"}
+  - {name: 采购额,       expr: "sum(purchase_amt)", desc: "采购行 数量×采购单价 合计"}
+  - {name: 退货额,       expr: "sum(return_amt)", desc: "采购退货行 数量×退货单价 合计"}
+  - {name: 净采购,       expr: "sum(purchase_amt) - sum(return_amt)", desc: "采购额 − 退货额"}
+  - {name: 期末库存量,   expr: "sum(stock_qty)", desc: "月末库存快照的期末数量合计（全月快照行）"}
+  - {name: 库存周转率,   expr: "round(sum(sales_cost) / nullif(sum(stock_qty), 0), 4)", desc: "销售成本 ÷ 期末库存量（简化口径，SPEC §5.2）"}
+  - {name: 电商销售占比, expr: "round(sum(ecomm_net) / nullif(sum(sales_net), 0), 4)", format: percent, desc: "电商渠道销售额 ÷ 总销售额"}

@@ -20,13 +20,13 @@ wide:
       contract: {fanout: red, null_match: yellow, orphan_right: ignore}
       # 黄灯基线：销售/库存行供应商编码为空属预期；真黄灯=幽灵供应商 SUP-9999
   derived:
-    - {name: sales_net,    expr: "case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end"}
-    - {name: sales_cost,   expr: "case when entry_type = '销售' then round(quantity * std_cost, 2) else 0 end"}
-    - {name: gross_profit, expr: "case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate) - quantity * std_cost, 2) else 0 end"}
-    - {name: sales_qty,    expr: "case when entry_type = '销售' then quantity else 0 end"}
-    - {name: sales_flag,   expr: "case when entry_type = '销售' then 1 else 0 end"}
-    - {name: ecomm_net,    expr: "case when entry_type = '销售' and channel = '电商' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end"}
-    - {name: purchase_amt, expr: "case when entry_type = '采购' then round(quantity * unit_price, 2) else 0 end"}
-    - {name: return_amt,   expr: "case when entry_type = '采购退货' then round(quantity * unit_price, 2) else 0 end"}
-    - {name: stock_qty,    expr: "case when entry_type = '期末库存' then coalesce(ending_qty, 0) else 0 end"}
+    - {name: sales_net,    expr: "case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end", desc: "销售行折后金额 = 数量×单价×(1−折扣率)"}
+    - {name: sales_cost,   expr: "case when entry_type = '销售' then round(quantity * std_cost, 2) else 0 end", desc: "销售行成本 = 数量×标准成本"}
+    - {name: gross_profit, expr: "case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate) - quantity * std_cost, 2) else 0 end", desc: "销售行毛利 = 折后金额 − 成本"}
+    - {name: sales_qty,    expr: "case when entry_type = '销售' then quantity else 0 end", desc: "销售行数量（非销售行记 0）"}
+    - {name: sales_flag,   expr: "case when entry_type = '销售' then 1 else 0 end", desc: "销售行标记（1=销售行）"}
+    - {name: ecomm_net,    expr: "case when entry_type = '销售' and channel = '电商' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end", desc: "电商渠道销售行折后金额"}
+    - {name: purchase_amt, expr: "case when entry_type = '采购' then round(quantity * unit_price, 2) else 0 end", desc: "采购行金额 = 数量×采购单价"}
+    - {name: return_amt,   expr: "case when entry_type = '采购退货' then round(quantity * unit_price, 2) else 0 end", desc: "退货行金额 = 数量×退货单价"}
+    - {name: stock_qty,    expr: "case when entry_type = '期末库存' then coalesce(ending_qty, 0) else 0 end", desc: "库存快照行期末数量"}
   drop: [_source_file, _loaded_at]

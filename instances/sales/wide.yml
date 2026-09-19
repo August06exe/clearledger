@@ -17,7 +17,7 @@ wide:
       columns: [product_name, category, std_cost]
       contract: {fanout: red, null_match: yellow, orphan_right: ignore}
   derived:
-    - {name: net_amount,   expr: "round(amount * (1 - discount_rate), 2)"}
-    - {name: cost_amount,  expr: "round(quantity * std_cost, 2)"}
-    - {name: gross_profit, expr: "round(amount * (1 - discount_rate) - quantity * std_cost, 2)"}
+    - {name: net_amount,   expr: "round(amount * (1 - discount_rate), 2)", desc: "折后金额 = 订单金额 × (1−折扣率)"}
+    - {name: cost_amount,  expr: "round(quantity * std_cost, 2)",          desc: "成本金额 = 数量 × 商品标准成本"}
+    - {name: gross_profit, expr: "round(amount * (1 - discount_rate) - quantity * std_cost, 2)", desc: "毛利 = 折后金额 − 成本金额"}
   drop: [_source_file, _loaded_at]

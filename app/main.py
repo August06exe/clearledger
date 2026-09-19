@@ -460,6 +460,30 @@ def api_report_export(key: str, request: Request, limit: int | None = None):
                     headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"})
 
 
+# ---------------------------------------------------------------- 口径（界面展示）
+@app.get("/api/caliber")
+def api_caliber():
+    """当前账套的指标/派生列/维度口径——报表页「📐 口径」弹窗的数据源。
+    口径唯一出处：instances/<账套>/metrics.yml 与 wide.yml（本端点只读展示）"""
+    try:
+        inst = load_instance(_inst())
+    except ConfigError as e:
+        raise HTTPException(503, str(e))
+    wide = inst.wide.get("wide", {})
+    return {
+        "instance": {"name": inst.name, "title": inst.title},
+        "metrics": [{"name": m["name"], "expr": m.get("expr", ""),
+                     "desc": m.get("desc", ""), "format": m.get("format")}
+                    for m in inst.metrics],
+        "derived": [{"name": d["name"], "expr": d.get("expr", ""),
+                     "desc": d.get("desc", "")}
+                    for d in wide.get("derived", [])],
+        "dimensions": [{"name": d["name"], "column": d.get("column"),
+                        "type": d.get("type")}
+                       for d in inst.dimensions],
+    }
+
+
 # ---------------------------------------------------------------- 设置
 @app.get("/api/settings")
 def api_settings_get():

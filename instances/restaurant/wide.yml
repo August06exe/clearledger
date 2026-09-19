@@ -16,6 +16,6 @@ wide:
       columns: [store_name, city, biz_type]
       contract: {fanout: red, null_match: yellow, orphan_right: ignore}
   derived:
-    - {name: cost_amount,  expr: "round(quantity * std_cost, 2)"}
-    - {name: gross_profit, expr: "round(amount - quantity * std_cost, 2)"}
+    - {name: cost_amount,  expr: "round(quantity * std_cost, 2)", desc: "成本金额 = 数量 × 菜品标准成本"}
+    - {name: gross_profit, expr: "round(amount - quantity * std_cost, 2)", desc: "毛利 = 订单金额 − 成本金额"}
   drop: [_source_file, _loaded_at]
