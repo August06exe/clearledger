@@ -1,0 +1,21 @@
+{
+ "instances": [
+  {
+   "name": "restaurant",
+   "title": "演示连锁餐饮"
+  },
+  {
+   "name": "retail",
+   "title": "荟品汇零售连锁"
+  },
+  {
+   "name": "hro",
+   "title": "睿才人力"
+  },
+  {
+   "name": "sales",
+   "title": "演示销售公司"
+  }
+ ],
+ "promise": "R-10 账套列表；R-11 约定：下划线开头目录是测试副本，永不视为正式账套"
+}

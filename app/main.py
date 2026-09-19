@@ -106,7 +106,10 @@ async def no_cache_html(request, call_next):
 def _guard(fn, *args, **kwargs):
     try:
         return fn(*args, **kwargs)
-    except (FileNotFoundError, RuntimeError, ConfigError, duckdb.Error, ValueError) as e:
+    except ValueError as e:
+        # 客户端参数非法（如筛选维度名不存在）→ 4xx，不得伪装"服务端不可用"
+        raise HTTPException(400, f"请求参数非法：{e}")
+    except (FileNotFoundError, RuntimeError, ConfigError, duckdb.Error) as e:
         raise HTTPException(503, f"数据暂不可用（可能正在跑批或尚未初始化）：{e}")
 
 
@@ -425,7 +428,8 @@ def api_report_data(key: str, request: Request, limit: int | None = None):
         rep = next(r for r in semantic_query.list_reports(_inst()) if r["key"] == key)
     except StopIteration:
         raise HTTPException(404, f"报表不存在：{key}")
-    filters = {k: v for k, v in request.query_params.items() if k != "limit"}
+    allowed = set(semantic_query.filter_options(_inst(), key).keys())
+    filters = {k: v for k, v in request.query_params.items() if k in allowed}
     rows = _guard(semantic_query.run_report, _inst(), key, filters, limit or 500)
     cols = [(rep["dimension"], rep["dimension"])] + (
         [(rep["time_dim"], rep["time_dim"])] if rep.get("time_dim") else [])
@@ -445,7 +449,8 @@ def api_report_export(key: str, request: Request, limit: int | None = None):
         rep = next(r for r in semantic_query.list_reports(_inst()) if r["key"] == key)
     except StopIteration:
         raise HTTPException(404, f"报表不存在：{key}")
-    filters = {k: v for k, v in request.query_params.items() if k != "limit"}
+    allowed = set(semantic_query.filter_options(_inst(), key).keys())
+    filters = {k: v for k, v in request.query_params.items() if k in allowed}
     rows = _guard(semantic_query.run_report, _inst(), key, filters, limit or 5000)
     cols = [(rep["dimension"], rep["dimension"])] + (
         [(rep["time_dim"], rep["time_dim"])] if rep.get("time_dim") else [])
@@ -630,8 +635,8 @@ def api_open_report_data(key: str, request: Request, limit: int | None = None, i
         rep = next(r for r in semantic_query.list_reports(inst_name) if r["key"] == key)
     except StopIteration:
         raise HTTPException(404, f"报表不存在：{key}")
-    filters = {k: v for k, v in request.query_params.items()
-               if k not in ("limit", "instance")}
+    allowed = set(semantic_query.filter_options(inst_name, key).keys())
+    filters = {k: v for k, v in request.query_params.items() if k in allowed}
     rows = _guard(semantic_query.run_report, inst_name, key, filters, limit or 200)
     _audit_open(request, principal, True, f"report={key} rows={len(rows)}")
     return {"instance": inst_name, "key": key, "rows": rows}

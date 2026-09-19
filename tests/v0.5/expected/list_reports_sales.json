@@ -1,0 +1,55 @@
+{
+ "instance": "sales",
+ "reports": [
+  {
+   "dimension": "月份",
+   "key": "monthly_kpi",
+   "metrics": [
+    "收入",
+    "成本",
+    "毛利",
+    "毛利率"
+   ],
+   "title": "经营月报（公司级）"
+  },
+  {
+   "dimension": "区域",
+   "key": "region_month",
+   "metrics": [
+    "收入",
+    "毛利",
+    "毛利率"
+   ],
+   "title": "区域经营月报"
+  },
+  {
+   "dimension": "行业",
+   "key": "industry_summary",
+   "metrics": [
+    "收入",
+    "毛利",
+    "毛利率",
+    "客户数"
+   ],
+   "title": "行业经营汇总"
+  },
+  {
+   "dimension": "客户等级",
+   "key": "level_month",
+   "metrics": [
+    "收入",
+    "毛利"
+   ],
+   "title": "客户等级月报"
+  },
+  {
+   "dimension": "品类",
+   "key": "category_month",
+   "metrics": [
+    "收入",
+    "毛利"
+   ],
+   "title": "品类月报"
+  }
+ ]
+}

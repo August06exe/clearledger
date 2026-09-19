@@ -1,0 +1,54 @@
+{
+ "instance": "restaurant",
+ "reports": [
+  {
+   "dimension": "月份",
+   "key": "monthly_kpi",
+   "metrics": [
+    "营业额",
+    "毛利",
+    "毛利率",
+    "客单数"
+   ],
+   "title": "经营月报（公司级）"
+  },
+  {
+   "dimension": "渠道",
+   "key": "channel_month",
+   "metrics": [
+    "营业额",
+    "毛利"
+   ],
+   "title": "渠道月报"
+  },
+  {
+   "dimension": "门店",
+   "key": "store_rank",
+   "metrics": [
+    "营业额",
+    "毛利",
+    "客单数",
+    "毛利率"
+   ],
+   "title": "门店经营排行"
+  },
+  {
+   "dimension": "菜品类别",
+   "key": "dish_cat_month",
+   "metrics": [
+    "营业额",
+    "菜品销量"
+   ],
+   "title": "菜类月报"
+  },
+  {
+   "dimension": "城市",
+   "key": "city_month",
+   "metrics": [
+    "营业额",
+    "客单数"
+   ],
+   "title": "城市月报"
+  }
+ ]
+}

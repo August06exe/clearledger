@@ -1,0 +1,185 @@
+{
+ "cases": {
+  "B01_unknown_instance_list_metrics": {
+   "call": "list_metrics(instance='_no_such_instance__')",
+   "identify_all": {
+    "names": [
+     "restaurant",
+     "retail",
+     "hro",
+     "sales"
+    ],
+    "titles": [
+     "演示连锁餐饮",
+     "荟品汇零售连锁",
+     "睿才人力",
+     "演示销售公司"
+    ]
+   },
+   "kind": "mcp_error",
+   "must_error": true,
+   "tool": "list_metrics"
+  },
+  "B02_unknown_report_query": {
+   "call": "query_report(instance='retail', report='_no_such_report__')",
+   "kind": "mcp_error",
+   "must_contain_any": [
+    "monthly_kpi",
+    "region_month",
+    "category_month",
+    "channel_month",
+    "store_rank",
+    "supplier_rank"
+   ],
+   "must_error": true,
+   "tool": "query_report"
+  },
+  "B03_unknown_metric_caliber": {
+   "call": "get_caliber(instance='retail', metric='_no_such_metric__')",
+   "kind": "mcp_error",
+   "must_contain_any": [
+    "销售额",
+    "毛利",
+    "库存周转率"
+   ],
+   "must_error": true,
+   "tool": "get_caliber"
+  },
+  "B04_unknown_filter_dimension": {
+   "basis": "P-08：维度名非法必须报错并列出可用维度（region_month 声明 filters=[城市]）",
+   "call": "query_report(instance='retail', report='region_month', filters={'不存在的维度__': '任意值'})",
+   "kind": "mcp_error",
+   "must_contain_any": [
+    "城市"
+   ],
+   "must_error": true,
+   "tool": "query_report"
+  },
+  "B05_inject_filter_mcp": {
+   "basis": "D14：维度值非法 → 静默回退不过滤；P-08/N-10；行集逐值吻合 = WHERE 语义未被注入改变（等价于'无注入字面量进 SQL'的可观察断言）",
+   "expect_rows": 36,
+   "filter_value": "华东' OR 1=1--",
+   "instance": "retail",
+   "kind": "rows_equal_full",
+   "must_not_contain": [
+    "OR 1=1"
+   ],
+   "report": "region_month",
+   "sealed_ref": "report_rows_retail_region_month.json",
+   "tool": "query_report"
+  },
+  "B06_http_no_key": {
+   "api_key": null,
+   "basis": "R-10：X-API-Key 鉴权",
+   "expect_status": [
+    401,
+    403
+   ],
+   "kind": "http_status",
+   "path": "/api/open/status?instance=retail"
+  },
+  "B07_http_bad_key": {
+   "api_key": "cl-invalid-key-for-test-000",
+   "expect_status": [
+    401,
+    403
+   ],
+   "kind": "http_status",
+   "path": "/api/open/status?instance=retail"
+  },
+  "B08_inject_filter_http": {
+   "basis": "若端点声明了 filter 参数则用该参数注入重试并记录（观察项）；未声明时多余参数必须被静默忽略（200 + 全量 36 行），不得 5xx",
+   "expect_rows": 36,
+   "inject_params": {
+    "filter": "大区:华东' OR 1=1--",
+    "大区": "华东' OR 1=1--"
+   },
+   "kind": "http_rows_equal_full",
+   "must_not_contain": [
+    "OR 1=1"
+   ],
+   "path": "/api/open/reports/region_month/data?instance=retail"
+  },
+  "B09_limit_clamp": {
+   "basis": "§5.4 报表参数白名单/钳制惯例；越界不得崩溃、不得返回超过全量",
+   "http_bad_limit": {
+    "forbid_status": [
+     500,
+     502,
+     503
+    ],
+    "path": "/api/open/reports/monthly_kpi/data?instance=retail&limit=abc"
+   },
+   "http_limit_5": {
+    "basis": "R-10 原文示例 limit=5",
+    "path": "/api/open/reports/monthly_kpi/data?instance=retail&limit=5",
+    "rows_eq": 5
+   },
+   "kind": "limit",
+   "mcp": {
+    "instance": "retail",
+    "limit": 100000,
+    "must_error": false,
+    "report": "monthly_kpi",
+    "rows_le": 12
+   }
+  },
+  "B10_underscore_excluded": {
+   "basis": "R-11：下划线开头实例目录是测试副本，永不视为正式账套",
+   "kind": "list_instances_clean",
+   "probe_dir": "_probe_openapi_tmp"
+  },
+  "B11_audit_jsonl": {
+   "basis": "R-10：全调用审计在 logs/mcp_audit.jsonl",
+   "file": "logs/mcp_audit.jsonl",
+   "kind": "audit",
+   "must_grow": true
+  },
+  "B12_unknown_instance_status": {
+   "call": "get_data_status(instance='_no_such_instance__')",
+   "identify_all": {
+    "names": [
+     "restaurant",
+     "retail",
+     "hro",
+     "sales"
+    ],
+    "titles": [
+     "演示连锁餐饮",
+     "荟品汇零售连锁",
+     "睿才人力",
+     "演示销售公司"
+    ]
+   },
+   "kind": "mcp_error",
+   "must_error": true,
+   "tool": "get_data_status"
+  },
+  "B13_inspect_restaurant_joins": {
+   "arrow_forms": [
+    "orders←菜品编码—dishes",
+    "orders←门店编码—stores"
+   ],
+   "basis": "R-11：inspect 产出 join 建议；restaurant 既有两个可关联键对（orders.菜品编码↔dishes.dish_code、orders.门店编码↔stores.store_code，出处 instances/restaurant/sources.yml），建议清单必须包含这 2 条既有关联",
+   "instance": "restaurant",
+   "kind": "inspect_joins",
+   "must_contain_pairs": [
+    [
+     "orders",
+     "dishes",
+     "菜品编码"
+    ],
+    [
+     "orders",
+     "stores",
+     "门店编码"
+    ]
+   ],
+   "must_mention": [
+    "config_draft"
+   ],
+   "tool": "semantic.inspect (CLI)"
+  }
+ },
+ "note": "每个 Case 的证据由测试 Agent 按 TESTPLAN §5 存入 judge/actual/b_*.json，judge 只对证据做机械断言；错误标记词表见 judge/score.py ERROR_HINT"
+}

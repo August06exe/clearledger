@@ -1,0 +1,21 @@
+{
+ "basis": "无 data/runs/history_sales.json（允许报'无跑批'）；pipeline/target/run_results.json 节点统计={'success': 11, 'pass': 26, 'warn': 0, 'error': 0, 'fail': 0}；承诺：黄=warn、绿=全过、红=退出码非零——灯色不得与之矛盾",
+ "has_history": false,
+ "instance": "sales",
+ "latest": null,
+ "light": {
+  "expect": null,
+  "forbid": [
+   "yellow",
+   "red"
+  ]
+ },
+ "missing_sources_must_be_empty": true,
+ "run_results_facts": {
+  "error": 0,
+  "fail": 0,
+  "pass": 26,
+  "success": 11,
+  "warn": 0
+ }
+}

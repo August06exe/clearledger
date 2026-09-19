@@ -1,0 +1,84 @@
+{
+ "instance": "retail",
+ "metrics": [
+  {
+   "desc": "折后销售合计 = 数量×单价×(1−折扣率)，仅销售行",
+   "expr": "sum(sales_net)",
+   "format": null,
+   "name": "销售额"
+  },
+  {
+   "desc": "数量×商品标准成本 合计，仅销售行（标准成本法，SPEC 简化口径）",
+   "expr": "sum(sales_cost)",
+   "format": null,
+   "name": "销售成本"
+  },
+  {
+   "desc": "销售额 − 销售成本",
+   "expr": "sum(gross_profit)",
+   "format": null,
+   "name": "毛利"
+  },
+  {
+   "desc": "毛利 ÷ 销售额；销售额为 0 时为空",
+   "expr": "round(sum(gross_profit) / nullif(sum(sales_net), 0), 4)",
+   "format": "percent",
+   "name": "毛利率"
+  },
+  {
+   "desc": "销售行数量合计",
+   "expr": "sum(sales_qty)",
+   "format": null,
+   "name": "销售数量"
+  },
+  {
+   "desc": "销售行计数",
+   "expr": "sum(sales_flag)",
+   "format": null,
+   "name": "销售行数"
+  },
+  {
+   "desc": "有销售记录的去重商品数",
+   "expr": "count(distinct case when entry_type = '销售' then product_code end)",
+   "format": null,
+   "name": "动销商品数"
+  },
+  {
+   "desc": "采购行 数量×采购单价 合计",
+   "expr": "sum(purchase_amt)",
+   "format": null,
+   "name": "采购额"
+  },
+  {
+   "desc": "采购退货行 数量×退货单价 合计",
+   "expr": "sum(return_amt)",
+   "format": null,
+   "name": "退货额"
+  },
+  {
+   "desc": "采购额 − 退货额",
+   "expr": "sum(purchase_amt) - sum(return_amt)",
+   "format": null,
+   "name": "净采购"
+  },
+  {
+   "desc": "月末库存快照的期末数量合计（全月快照行）",
+   "expr": "sum(stock_qty)",
+   "format": null,
+   "name": "期末库存量"
+  },
+  {
+   "desc": "销售成本 ÷ 期末库存量（简化口径，SPEC §5.2）",
+   "expr": "round(sum(sales_cost) / nullif(sum(stock_qty), 0), 4)",
+   "format": null,
+   "name": "库存周转率"
+  },
+  {
+   "desc": "电商渠道销售额 ÷ 总销售额",
+   "expr": "round(sum(ecomm_net) / nullif(sum(sales_net), 0), 4)",
+   "format": "percent",
+   "name": "电商销售占比"
+  }
+ ],
+ "source": "instances/retail/metrics.yml"
+}

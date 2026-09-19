@@ -1,0 +1,74 @@
+{
+ "instance": "hro",
+ "reports": [
+  {
+   "dimension": "月份",
+   "key": "monthly_kpi",
+   "metrics": [
+    "服务费收入",
+    "人力成本",
+    "毛利",
+    "毛利率",
+    "回款额",
+    "回款率",
+    "外派人数",
+    "人均产值",
+    "在单客户数"
+   ],
+   "title": "月度经营总览"
+  },
+  {
+   "dimension": "事业部",
+   "key": "bu_month",
+   "metrics": [
+    "服务费收入",
+    "毛利",
+    "毛利率",
+    "外派人数"
+   ],
+   "title": "事业部月报"
+  },
+  {
+   "dimension": "交付组",
+   "key": "group_rank",
+   "metrics": [
+    "外派人数",
+    "人力成本",
+    "人均人力成本"
+   ],
+   "title": "交付组排行"
+  },
+  {
+   "dimension": "客户",
+   "key": "customer_ar",
+   "metrics": [
+    "服务费收入",
+    "回款额",
+    "应收余额",
+    "在单合同数"
+   ],
+   "title": "客户应收榜"
+  },
+  {
+   "dimension": "行业",
+   "key": "industry_month",
+   "metrics": [
+    "服务费收入",
+    "毛利",
+    "外派人数"
+   ],
+   "title": "行业月报"
+  },
+  {
+   "dimension": "合同",
+   "key": "contract_ledger",
+   "metrics": [
+    "服务费收入",
+    "回款额",
+    "应收余额",
+    "外派人数"
+   ],
+   "title": "合同台账"
+  }
+ ]
+}

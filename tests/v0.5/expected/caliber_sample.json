@@ -1,0 +1,53 @@
+{
+ "promise": "get_caliber 单指标口径：expr 一致、desc 非空、format 一致",
+ "samples": [
+  {
+   "desc": "毛利 ÷ 销售额；销售额为 0 时为空",
+   "desc_nonempty": true,
+   "expr": "round(sum(gross_profit) / nullif(sum(sales_net), 0), 4)",
+   "format": "percent",
+   "instance": "retail",
+   "metric": "毛利率"
+  },
+  {
+   "desc": "销售成本 ÷ 期末库存量（简化口径，SPEC §5.2）",
+   "desc_nonempty": true,
+   "expr": "round(sum(sales_cost) / nullif(sum(stock_qty), 0), 4)",
+   "format": null,
+   "instance": "retail",
+   "metric": "库存周转率"
+  },
+  {
+   "desc": "回款额 ÷ 服务费收入；收入为 0 时为空",
+   "desc_nonempty": true,
+   "expr": "round(sum(pay_amt) / nullif(sum(bill_amt), 0), 4)",
+   "format": "percent",
+   "instance": "hro",
+   "metric": "回款率"
+  },
+  {
+   "desc": "服务费收入 ÷ 外派人数",
+   "desc_nonempty": true,
+   "expr": "round(sum(bill_amt) / nullif(count(distinct case when entry_type = '在册' then employee_no end), 0), 2)",
+   "format": null,
+   "instance": "hro",
+   "metric": "人均产值"
+  },
+  {
+   "desc": "订单金额 × (1−折扣率) 的合计；折扣率缺失按 0 处理",
+   "desc_nonempty": true,
+   "expr": "sum(net_amount)",
+   "format": null,
+   "instance": "sales",
+   "metric": "收入"
+  },
+  {
+   "desc": "去重订单数（一单多菜品行计 1）",
+   "desc_nonempty": true,
+   "expr": "count(distinct order_no)",
+   "format": null,
+   "instance": "restaurant",
+   "metric": "客单数"
+  }
+ ]
+}

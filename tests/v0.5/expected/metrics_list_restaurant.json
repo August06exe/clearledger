@@ -1,0 +1,42 @@
+{
+ "instance": "restaurant",
+ "metrics": [
+  {
+   "desc": "订单金额合计（折前口径，未扣折扣）",
+   "expr": "sum(amount)",
+   "format": null,
+   "name": "营业额"
+  },
+  {
+   "desc": "数量 × 菜品标准成本 的合计",
+   "expr": "sum(cost_amount)",
+   "format": null,
+   "name": "成本额"
+  },
+  {
+   "desc": "营业额 − 成本额",
+   "expr": "sum(gross_profit)",
+   "format": null,
+   "name": "毛利"
+  },
+  {
+   "desc": "毛利 ÷ 营业额；营业额为 0 时为空",
+   "expr": "round(sum(gross_profit) / nullif(sum(amount), 0), 4)",
+   "format": "percent",
+   "name": "毛利率"
+  },
+  {
+   "desc": "去重订单数（一单多菜品行计 1）",
+   "expr": "count(distinct order_no)",
+   "format": null,
+   "name": "客单数"
+  },
+  {
+   "desc": "菜品销售数量合计",
+   "expr": "sum(quantity)",
+   "format": null,
+   "name": "菜品销量"
+  }
+ ],
+ "source": "instances/restaurant/metrics.yml"
+}

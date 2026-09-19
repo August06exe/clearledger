@@ -83,7 +83,7 @@ def list_instances() -> str:
             title = load_instance(n).title
         except ConfigError:
             pass
-        out.append({"instance": n, "title": title,
+        out.append({"name": n, "title": title,
                     "status": (run or {}).get("status", "unknown"),
                     "last_run": (run or {}).get("finished_at")})
     _audit("list_instances", {}, f"{len(out)} instances")
@@ -104,7 +104,7 @@ def list_metrics(instance: str = "") -> str:
 
 
 @mcp.tool()
-def query_report(instance: str, report: str, filters: dict | None = None, limit: int = 50) -> str:
+def query_report(instance: str, report: str, filters: dict | None = None, limit: int = 500) -> str:
     """查询一张管理报表：只允许查该账套 dashboard 中已声明的报表，
     筛选值只允许该维度已有值（白名单）。返回汇总级数据（无明细行）。
     报表 key 与筛选维度可用 list_reports 工具查看。"""
@@ -112,7 +112,7 @@ def query_report(instance: str, report: str, filters: dict | None = None, limit:
     reps = {r["key"]: r for r in semantic_query.list_reports(inst_name)}
     if report not in reps:
         raise ValueError(f"报表不存在: {report}（可用: {sorted(reps)}）")
-    rows = semantic_query.run_report(inst_name, report, filters=filters or {}, limit=min(max(int(limit), 1), 500))
+    rows = semantic_query.run_report(inst_name, report, filters=filters or {}, limit=min(max(int(limit), 1), 5000))
     _audit("query_report", {"instance": inst_name, "report": report, "filters": filters or {}},
            f"{len(rows)} rows")
     return json.dumps({"instance": inst_name, "report": report,
@@ -167,7 +167,7 @@ def get_data_status(instance: str = "") -> str:
                  "status": r.get("status", "error")} for r in (ingest_report or {}).get("results", [])]
     out = {
         "instance": inst_name,
-        "last_run": {"status": (last or {}).get("status"), "finished_at": (last or {}).get("finished_at"),
+        "last_run": {"run_id": (last or {}).get("run_id"), "status": (last or {}).get("status"), "finished_at": (last or {}).get("finished_at"),
                      "error": (last or {}).get("error"), "counts": (last or {}).get("counts")},
         "missing_files": missing,            # 声明了但投放区找不到的源 → 这期跑不出的直接原因
         "last_ingest": src_rows,

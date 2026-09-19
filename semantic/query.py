@@ -34,6 +34,7 @@ def list_reports(instance: str) -> list[dict]:
         out.append({
             "key": rep["key"], "title": rep["title"],
             "dimension": rep["dimension"], "time_dim": rep.get("time_dim"),
+            "filters": rep.get("filters") or [],
             "metrics": rep.get("metrics", []), "chart": rep.get("chart", "bar_line"),
         })
     return out
@@ -100,7 +101,7 @@ def build_query(instance: str, report_key: str, filters: dict | None = None,
         sql += " where " + " and ".join(conds)
     if rep.get("time_dim") or inst.dimension(rep["dimension"]).get("type") == "time":
         tcol = f'"{rep.get("time_dim") or rep["dimension"]}"'
-        sql += f" order by {tcol} desc"  # 时间倒序：limit 取最近 N 期
+        sql += f" order by {tcol} desc, 2"  # 时间倒序 + 次级排序键（同月多行时顺序确定）
     sql += f" limit {max(1, min(int(limit), 5000))}"
     return sql, params
 

@@ -1,0 +1,78 @@
+{
+ "instance": "hro",
+ "metrics": [
+  {
+   "desc": "月度账单金额合计（账单行）",
+   "expr": "sum(bill_amt)",
+   "format": null,
+   "name": "服务费收入"
+  },
+  {
+   "desc": "回款记录金额合计（回款行）",
+   "expr": "sum(pay_amt)",
+   "format": null,
+   "name": "回款额"
+  },
+  {
+   "desc": "回款额 ÷ 服务费收入；收入为 0 时为空",
+   "expr": "round(sum(pay_amt) / nullif(sum(bill_amt), 0), 4)",
+   "format": "percent",
+   "name": "回款率"
+  },
+  {
+   "desc": "累计服务费收入 − 累计回款额（全期口径，不做跨月滚存）",
+   "expr": "sum(bill_amt) - sum(pay_amt)",
+   "format": null,
+   "name": "应收余额"
+  },
+  {
+   "desc": "外派在册员工的月薪资成本（工资+社保+公积金合并列）合计",
+   "expr": "sum(cost_amt)",
+   "format": null,
+   "name": "人力成本"
+  },
+  {
+   "desc": "服务费收入 − 人力成本（收入减在册人力口径）",
+   "expr": "sum(gross_amt)",
+   "format": null,
+   "name": "毛利"
+  },
+  {
+   "desc": "毛利 ÷ 服务费收入",
+   "expr": "round(sum(gross_amt) / nullif(sum(bill_amt), 0), 4)",
+   "format": "percent",
+   "name": "毛利率"
+  },
+  {
+   "desc": "去重外派员工数（在册行）",
+   "expr": "count(distinct case when entry_type = '在册' then employee_no end)",
+   "format": null,
+   "name": "外派人数"
+  },
+  {
+   "desc": "服务费收入 ÷ 外派人数",
+   "expr": "round(sum(bill_amt) / nullif(count(distinct case when entry_type = '在册' then employee_no end), 0), 2)",
+   "format": null,
+   "name": "人均产值"
+  },
+  {
+   "desc": "人力成本 ÷ 外派人数",
+   "expr": "round(sum(cost_amt) / nullif(count(distinct case when entry_type = '在册' then employee_no end), 0), 2)",
+   "format": null,
+   "name": "人均人力成本"
+  },
+  {
+   "desc": "有台账记录的去重客户数",
+   "expr": "count(distinct case when entry_type = '账单' then customer_code end)",
+   "format": null,
+   "name": "在单客户数"
+  },
+  {
+   "desc": "有台账记录的去重合同数",
+   "expr": "count(distinct case when entry_type = '账单' then contract_no end)",
+   "format": null,
+   "name": "在单合同数"
+  }
+ ],
+ "source": "instances/hro/metrics.yml"
+}

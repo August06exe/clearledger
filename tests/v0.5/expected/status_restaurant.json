@@ -1,0 +1,27 @@
+{
+ "basis": "data/runs/history_restaurant.json 最新条目 + R-10 数据健康诊断承诺",
+ "has_history": true,
+ "instance": "restaurant",
+ "latest": {
+  "compile_returncode": 0,
+  "counts": {
+   "pass": 18,
+   "success": 9,
+   "total": 27
+  },
+  "dbt_returncode": 0,
+  "finished_at": "2026-09-19T02:30:52",
+  "ingest_ok": true,
+  "run_id": "20260919_023043_c342",
+  "started_at": "2026-09-19T02:30:43",
+  "status": "green",
+  "trigger": "manual"
+ },
+ "light": {
+  "expect": "green",
+  "forbid": [
+   "red"
+  ]
+ },
+ "missing_sources_must_be_empty": true
+}
