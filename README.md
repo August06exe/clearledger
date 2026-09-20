@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/logo_B.svg" width="72" alt="ClearLedger logo" />
+<img src="docs/assets/logo_B.png" width="72" alt="ClearLedger logo" />
 
 # ClearLedger · 明账
 

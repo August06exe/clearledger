@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/logo_B.svg" width="72" alt="明账 logo" />
+<img src="docs/assets/logo_B.png" width="72" alt="明账 logo" />
 
 # 明账 ClearLedger
 
