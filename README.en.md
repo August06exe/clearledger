@@ -18,7 +18,7 @@ lineage-tracked management reports, assembled almost entirely from configuration
 
 English · [中文](README.zh-CN.md)
 
-<img src="docs/assets/hero-banner.png" width="100%" alt="ClearLedger — from messy spreadsheets to governed dashboards" />
+<img src="docs/assets/cover-c.png" width="100%" alt="ClearLedger — from messy spreadsheets to governed dashboards" />
 
 </div>
 
@@ -28,6 +28,48 @@ English · [中文](README.zh-CN.md)
 > **This is a working early-access build (开发中 · 抢鲜体验).** It already runs four live company
 > instances (sales / F&B chain / retail / HRO) with red-yellow-green data governance.
 > See the [Roadmap](#-roadmap) for what's landed and what's next.
+
+## 📸 What it looks like
+
+| Overview | Lineage graph |
+|---|---|
+| ![Overview](docs/assets/screenshot-overview.png) | ![Lineage](docs/assets/screenshot-lineage.png) |
+
+| Reports | Metric caliber popup |
+|---|---|
+| ![Reports](docs/assets/screenshot-reports.png) | ![Caliber](docs/assets/screenshot-caliber.png) |
+
+## 🎯 For everyone who has ever waited on a report
+
+> Monday standup. The boss asks: "Do we have last month's numbers yet?"
+> "Working on it — the sheet is still with finance. I'll chase."
+
+This conversation probably sounds familiar. So will at least one of these:
+
+- 🌙 **The first three days of every month** — a dozen group chats, forty spreadsheets, endless VLOOKUPs, to produce a report that expires next month
+- 📅 **The request you filed half a year ago** — engineering says "next quarter", then "it's not making the priority cut". The business won't wait for the backlog
+- 🚀 **The new venture that just started** — HQ's platform won't reach you for three years, but the boss wants numbers *now*
+- 🧩 **Caliber passed down by word of mouth** — "How is gross margin computed?" "Ask Wang." Wang is on leave; reporting stops
+
+Big company or small, it happens whenever the business runs ahead of the systems. ClearLedger was built for exactly these moments.
+
+<img src="docs/assets/cover-b.png" width="100%" alt="Late at night: one person and one AI, standing up the entire pipeline" />
+
+**A transition period can still be dignified.**
+
+The author's own story: a new project needed reporting; engineering scheduled it a full year out.
+The business couldn't wait — so a BP who can't read code, together with one AI, stood up the whole
+pipeline: ingest → clean → caliber → reports → lineage. Since then, the three days at month-start
+became three minutes.
+
+And it never locks you into the interim: **every caliber, every lineage, every contract lives in
+config files**. When the official platform finally arrives, hand them over as-is — a transition
+that leaves no tech debt behind.
+
+> **When the roadmap won't save you, let the data run first.**
+
+No SQL required. No project approval queue. No ops to babysit. Your AI assistant reads every
+config and fixes what breaks; your only job is deciding what the numbers *should mean*.
 
 ## 📸 What it looks like
 
@@ -59,14 +101,6 @@ That's the pitch:
 
 No SQL required. No project approval queue. No ops to babysit: your AI assistant reads every config,
 fixes what breaks — you only decide what the numbers *should mean*.
-
-## ✨ Understand it in three minutes
-
-<img src="docs/assets/promo-card1.png" width="100%" alt="Feature 1: drop files in, the pipeline does the rest (CN)" />
-
-<img src="docs/assets/promo-card2.png" width="100%" alt="Feature 2: new company = six config blocks (CN)" />
-
-<img src="docs/assets/promo-card3.png" width="100%" alt="Feature 3: every number introduces itself (CN)" />
 
 ## ⚙️ Architecture
 
