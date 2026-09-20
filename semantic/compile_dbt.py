@@ -326,6 +326,31 @@ def contract_test_meta(inst) -> list[dict]:
     return out
 
 
+
+
+def gen_mart_yml(inst, rep: dict) -> str:
+    """mart 模型的列元数据（维度 + 指标），供数据字典/字段级血缘/分层面板消费。
+    分层 mart 的 carry 列是内部实现细节，不进文档（对用户暴露的是维度×指标）。"""
+    def esc(t: str) -> str:
+        return str(t).replace('"', "'")
+    cols = []
+    if rep.get("time_dim"):
+        td = inst.dimension(rep["time_dim"])
+        cols.append((td["name"], f"时间维度（{td.get('grain', 'month')}）"))
+    d = inst.dimension(rep["dimension"])
+    cols.append((d["name"], "分组维度"))
+    for m in rep.get("metrics", []):
+        cols.append((m, inst.metric(m).get("desc", "")))
+    lines = [f"# 生成物：报表模型列元数据（{rep['title']}）", "version: 2", "",
+             "models:", f"  - name: mart_{rep['key']}",
+             f"    description: {esc(rep['title'])}（维度 × 指标汇总）", "    columns:"]
+    for name, desc in cols:
+        lines.append(f'      - name: "{name}"')
+        if desc:
+            lines.append(f"        description: {esc(desc)}")
+    return "\n".join(lines) + "\n"
+
+
 def gen_project_files(inst) -> dict[str, str]:
     n = inst.name
     project_yml = f"""# 生成物：由 semantic.compile_dbt 从 instances/{n}/ 五配置生成，勿手改
@@ -396,6 +421,7 @@ def compile_instance(inst) -> dict:
     ctx = _report_graph(inst)
     for rep in inst.dashboard.get("reports", []):
         files[f"models/marts/mart_{rep['key']}.sql"] = gen_mart_model(inst, rep, ctx)
+        files[f"models/marts/mart_{rep['key']}.yml"] = gen_mart_yml(inst, rep)
 
     # 匹配契约测试元数据（跑批收获进 raw.contract_report 统一账本）
     files["contract_tests.json"] = json.dumps(contract_test_meta(inst), ensure_ascii=False, indent=1)

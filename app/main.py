@@ -291,6 +291,19 @@ def api_lineage_columns(name: str):
         for dep_uid, dn in {**m.get("nodes", {}), **m.get("sources", {})}.items():
             if dn.get("name") in upstream:
                 schema_map[dn["name"]] = {c: "UNKNOWN" for c in (dn.get("columns") or {})}
+        # 兜底：manifest 无列信息（生成管道的 source 不带 columns）时从库内实查，
+        # 否则 SQLGlot 无 schema 可依，字段级血缘全列解析失败（v0.3 迁移遗留）
+        try:
+            _con0 = duckdb.connect(str((load_instance(name_).pipeline_dir / load_instance(name_).db_path).resolve()), read_only=True)
+            _rows0 = _con0.execute(
+                "select table_schema, table_name, column_name from information_schema.columns "
+                "where table_schema in ('raw','staging','intermediate','marts')").fetchall()
+            _con0.close()
+            for _s, _t, _c in _rows0:
+                if _t in upstream:
+                    schema_map.setdefault(_t, {})[_c] = "UNKNOWN"
+        except Exception:
+            pass
         for entry in cols_out:
             try:
                 root = sg(entry["column"], simplified, schema=schema_map, dialect="duckdb")
