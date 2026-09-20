@@ -51,7 +51,11 @@ def read_file(path: Path, encodings: list[str], sheet: int | None = None) -> pd.
             raise EmptyDataError(f"{path.name} 是 0 字节文件")
         for enc in encodings:
             try:
-                return pd.read_csv(path, encoding=enc, dtype=str)
+                # keep_default_na=False：'N/A'/'NA' 等字符串不得被 pandas 静默当缺失——
+                # 那会让类型违规变成"缺失"而漏记（R2 归因）；空串在此统一归一为 NaN，
+                # 交由字段契约（required/missing）显式处理
+                df = pd.read_csv(path, encoding=enc, dtype=str, keep_default_na=False)
+                return df.replace("", pd.NA)
             except UnicodeDecodeError as e:
                 last_err = e
         raise RuntimeError(f"编码尝试全部失败 {[enc for enc in encodings]}: {path.name}（{last_err}）")
