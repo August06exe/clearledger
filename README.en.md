@@ -62,7 +62,6 @@ ClearLedger exists for exactly this spot:
 
 The approach: standardize the engineering work into six config files — sources, wide table, dimensions, metrics, dashboard, permissions. All plain-text YAML that agents can read and edit directly, and so can you. A new project swaps six configs and runs; the engine doesn't change a line. Day to day, you drop files, define calibers, and watch the lights; building pipelines, editing configs, fixing errors — that's the agent's job. Calibers have a single source of truth, data has lineage, ingestion has contracts. None of the engineering discipline is missing; it just doesn't need your hands.
 
-<img src="docs/assets/cover-b.png" width="100%" alt="Late at night: one person and one agent, standing up the whole pipeline" />
 
 If you:
 
@@ -99,7 +98,6 @@ This conversation probably sounds familiar. So will at least one of these:
 
 Big company or small, it happens whenever the business runs ahead of the systems. ClearLedger was built for exactly these moments.
 
-<img src="docs/assets/cover-b.png" width="100%" alt="Late at night: one person and one AI, standing up the entire pipeline" />
 
 **A transition period can still be dignified.**
 
