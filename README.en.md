@@ -163,6 +163,50 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 
 > On first open, the portal shows a banner explaining how to plug your agent in (also always available under the "AI 接入" page in the left nav).
 
+## 📖 How you use it: a day with ClearLedger
+
+Once it's running, only three things are yours — everything else is the agent's.
+
+**① Drop files (monthly or daily)**
+
+Drop the Excel/CSV exports from your business systems into the instance inbox
+`instances/<instance>/data/inbox/`. Monthly filename drift
+(`sales_detail_2026-09.xlsx` → `…2026-10…`) is fine — the entry-archive discovery
+patterns absorb it. Missing files or format drift get caught by field contracts at
+ingest and logged, never silently loaded.
+
+**② Run the pipeline, watch the lights**
+
+Hit "▶ 立即跑批" (run now) in the portal, or switch to a daily schedule with ⏰
+(missed runs catch up on boot). Then read the traffic light:
+
+| Light | Meaning | What you do |
+|---|---|---|
+| 🟢 green | all passed, reports are out | use them |
+| 🟡 yellow | warnings (e.g. null-match lists) | open "跑批历史" for details; fix the data or hand it to the agent |
+| 🔴 red | run failed | paste the symptom to your agent — with AGENTS.md it knows how to fix it |
+
+**③ Read the reports**
+
+The "管理报表" page serves dimension × metric tables with filters, instance
+switching, and one-click Excel export. Any number you don't understand — click the
+metric name and a **plain-language caliber note** pops up. Calibers live in the
+system, not in people's heads. The "数据血缘" page traces every number back to its
+source tables and columns.
+
+**Want something changed? Ask the agent.**
+
+| You want | You say |
+|---|---|
+| change/add a metric | "Edit instances/sales/metrics.yml: gross margin should be … then recompile and rerun" |
+| add a report | "Add a Region × Gross Margin monthly table to dashboard.yml" |
+| onboard a new company | "Read R-11 in docs/AI-操作手册.md and draft the six configs for the files in the inbox" |
+
+The guardrails hold regardless: calibers live only in `metrics.yml`, reports read
+the marts layer only, every batch passes three contracts — however the agent
+tinkers, numbers can't quietly go wrong. Full recipes in
+[docs/AI-操作手册.md](docs/AI-操作手册.md).
+
 ## 🔌 Connect your AI agent
 
 ClearLedger ships an MCP server (stdio, read-only, fully audited). Four tools your agent gets:
