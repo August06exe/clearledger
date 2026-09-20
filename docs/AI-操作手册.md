@@ -101,7 +101,7 @@ curl -s -X POST http://127.0.0.1:8620/api/settings -H "Content-Type: application
 ### R-06 备份 / 恢复 / 迁移新机器
 - 备份：跑 `备份数据.bat`（PowerShell 时间戳，连 .wal 一起，失败显式报错）
 - 恢复：把 warehouse.duckdb 拷回 `data/warehouse/` 即可
-- 迁移：整个目录拷走（含 .venv 可作废重建）→ 新机 `git clone` 或拷贝 → 双击 `启动明账.bat`（首次自动建 venv 装依赖）→ `重建演示数据.bat`（若要演示数据）
+- 迁移：整个目录拷走（含 .venv 可作废重建）→ 新机 `git clone` 或拷贝 → 双击 `启动明账.exe`（首次自动建 venv 装依赖+演示数据+首跑，见 R-12）
 
 ### R-07 重启门户（Windows）
 ```bash
@@ -141,8 +141,15 @@ curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/status"
 公式与报表→转正五配置→R-01 三步链→红绿灯验收。约定：下划线开头的
 实例目录是测试副本，永不视为正式账套。
 
+### R-12 启动器 exe 与首开 AI 提醒（v0.4）
+
+- **双击 `启动明账.exe`**（仓库根目录，PyInstaller 单文件）：自动走完 点火指南 Step 1~6（venv→依赖→演示数据→首跑→门户→开浏览器）；已初始化过的环境秒开。杀端口、等就绪、`--smoke` 无头自测都在 `ops/launcher.py`。
+- **改了 launcher.py 要重打包**：命令在 `ops/launcher.py` 文件头 docstring（pyinstaller + ico 生成），产物 `启动明账.exe` 提交仓库。
+- **首开 AI 提醒横幅**：新克隆首次打开门户会提示"明账是 AI-Native 的、如何让 agent 介入"，可勾选"下次不再提醒"（持久化在 `data/settings.json` 的 `ai_banner`）。随时在门户左侧「AI 接入」页查看指引/重开提醒。
+- 退役资产：`启动明账.bat`、`重建演示数据.bat`（功能已并入 exe，git 历史可找回）；`备份数据.bat` 保留。
+
 ### R-08 更新演示数据
-`重建演示数据.bat` 或分步：`sample_data/generate.py` → `ingest/ingest.py` → cd pipeline && dbt build。
+启动器 **`启动明账.exe`** 的「重建演示数据」按钮，或分步：`sample_data/generate.py` → `semantic.ingest_run` → `semantic.compile_dbt` → cd pipeline && dbt build（详见 docs/AI-点火指南.md Step 3/4）。
 生成器特性：截止昨天动态生成；**预埋 2026-05 华东断供异常**（所以黄灯是预期，不是 bug）；300 行客户编号带首尾空格（清洗层演示）。
 
 ### R-09 语义层实例操作（v0.3 配置驱动，推荐路径）

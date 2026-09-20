@@ -119,7 +119,7 @@ def main() -> int:
         s.connect(("127.0.0.1", 8620))
         check("门户端口 8620", "ok", "门户在运行")
     except Exception:
-        check("门户端口 8620", "warn", "门户未运行（双击 启动明账.bat，或手册 R-07）")
+        check("门户端口 8620", "warn", "门户未运行（双击 启动明账.exe，或手册 R-07/R-12）")
     finally:
         s.close()
 

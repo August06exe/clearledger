@@ -501,6 +501,8 @@ def api_settings_patch(payload: dict = Body(...)):
     patch = {}
     if "schedule_enabled" in payload:
         patch["schedule_enabled"] = bool(payload["schedule_enabled"])
+    if "ai_banner" in payload:
+        patch["ai_banner"] = bool(payload["ai_banner"])
     try:
         if "hour" in payload:
             patch["schedule_hour"] = int(payload["hour"])

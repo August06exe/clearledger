@@ -27,3 +27,11 @@ _trash/
 
 # 开放接口 API Key（敏感，不入库；模板见 openapi_keys.example.json）
 data/openapi_keys.json
+
+# PyInstaller 打包产物（成品 exe 直接提交根目录，中间物不入库）
+build/
+dist/
+*.spec
+
+# 门户静态目录不放内容图（图片统一在 docs/assets，预览用副本不入库）
+app/static/*.png

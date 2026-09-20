@@ -122,13 +122,32 @@ Swap company = swap configs. The engine's `git diff` must be zero — that's the
 
 ## 🚀 Quick start
 
+ClearLedger is AI-native: building and maintaining configs and pipelines is designed to be an agent's job. Three ways to ignite, from easiest to hardcore (all need Python 3.11+ on the machine):
+
+**Option 1: hand it to your AI agent (recommended)**
+
+Point any coding agent (ZCode / Claude Code / Cursor…) at the repo root and say:
+
+> Read docs/AI-点火指南.md and get me up and running.
+
+It walks itself through: environment bootstrap → demo data → first pipeline run → portal acceptance, with checkpoints along the way. This is the intended usage — swapping in real data, changing calibers, fixing errors later, all go through the agent too.
+
+**Option 2: double-click `启动明账.exe` (Windows)**
+
+A GUI bootstrap window does the same thing and opens `http://127.0.0.1:8620` in your browser. First run takes ~10–25 minutes (dependency download); afterwards it's seconds. Some antivirus tools false-flag single-file exes — allow it; the source is this very repo.
+
+**Option 3: bare commands**
+
+<details>
+<summary>Do it manually (equivalent to what the agent does)</summary>
+
 ```bash
 git clone https://github.com/August06exe/clearledger.git
 cd clearledger
 python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt   # Windows
 # or: python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt # Linux/macOS
 
-# generate demo data for two live instances (retail & F&B chain) and run the full pipeline
+# generate demo data for two live instances (sales & F&B chain) and run the full pipeline
 .venv/Scripts/python sample_data/generate.py
 .venv/Scripts/python sample_data/generate_restaurant.py
 .venv/Scripts/python -m semantic.ingest_run  --instance sales
@@ -140,7 +159,9 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 # open http://127.0.0.1:8620
 ```
 
-> On Windows, double-click **`启动明账.bat`** — it does all of the above and opens your browser.
+</details>
+
+> On first open, the portal shows a banner explaining how to plug your agent in (also always available under the "AI 接入" page in the left nav).
 
 ## 🔌 Connect your AI agent
 

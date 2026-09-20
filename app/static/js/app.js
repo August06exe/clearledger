@@ -54,6 +54,7 @@ const ICON_SVG = {
   dictionary: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
   reports: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
   runs: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  ai: '<rect x="5" y="8" width="14" height="10" rx="2"/><circle cx="9.5" cy="13" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.1" fill="currentColor" stroke="none"/><path d="M12 8V5.5"/><circle cx="12" cy="4" r="1"/><path d="M9 18v2M15 18v2"/>',
 };
 const icon = (name) =>
   `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_SVG[name] || ''}</svg>`;
@@ -70,6 +71,7 @@ const App = {
     { key: 'dictionary', label: '数据字典' },
     { key: 'reports', label: '管理报表' },
     { key: 'runs', label: '跑批历史' },
+    { key: 'ai', label: 'AI 接入' },
   ],
 
   init() {
@@ -87,7 +89,35 @@ const App = {
     });
     this.refreshSys();
     this.sysTimer = setInterval(() => this.refreshSys(), 60_000);
+    this.maybeAiBanner();
     this.route();
+  },
+
+  // ---------- 首开 AI 接入提醒横幅（开关在 AI 接入页） ----------
+  async maybeAiBanner() {
+    if (document.getElementById('ai-banner')) return;
+    let s = {};
+    try { s = await api('/api/settings'); } catch (_) { return; }
+    if (s.ai_banner === false) return;
+    const banner = this.el(`
+      <div id="ai-banner">
+        <span class="ai-banner-ico">🤖</span>
+        <div class="ai-banner-text">
+          <b>明账是 AI-Native 的</b>——配置与管道的搭建维护，都交给 agent 伺候。
+          <a href="#/ai">看看如何让你的 agent 介入 →</a>
+        </div>
+        <label class="ai-banner-check" title="保存后，下次打开门户不再显示">
+          <input type="checkbox" id="ai-banner-off">下次不再提醒
+        </label>
+        <button class="ai-banner-x" id="ai-banner-close" title="本次关闭">×</button>
+      </div>`);
+    document.getElementById('main').prepend(banner);
+    banner.querySelector('#ai-banner-off').addEventListener('change', async e => {
+      try {
+        await api('/api/settings', { method: 'POST', body: JSON.stringify({ ai_banner: !e.target.checked }) });
+      } catch (_) { e.target.checked = !e.target.checked; }
+    });
+    banner.querySelector('#ai-banner-close').addEventListener('click', () => banner.remove());
   },
 
   async refreshInstances(selected) {

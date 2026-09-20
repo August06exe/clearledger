@@ -118,6 +118,25 @@ flowchart TD
 
 ## 🚀 快速开始
 
+明账是 AI-Native 的：配置与管道的搭建维护，本来就设计为交给 agent 做。三种点火方式，从省心到硬核（都需要本机装有 Python 3.11+）：
+
+**方式一：交给你的 AI agent（推荐）**
+
+把仓库交给任意 coding agent（ZCode / Claude Code / Cursor…），在仓库根目录对它说：
+
+> 读取 docs/AI-点火指南.md，把我跑起来。
+
+它会自己走完：环境自举 → 演示数据 → 首次跑批 → 门户验收，每步有检查点。这也是本项目的正确用法——之后换真实数据、改口径、修报错，同样都交给它。
+
+**方式二：双击 `启动明账.exe`（Windows）**
+
+图形引导窗自动完成同样的事，最后打开浏览器 `http://127.0.0.1:8620`。首次约 10–25 分钟（下载依赖），之后秒开。个别杀软可能对单文件 exe 误报，放行即可——源码就是本仓库，可自行审查。
+
+**方式三：裸命令**
+
+<details>
+<summary>手动执行（等价于 agent 做的事）</summary>
+
 ```bash
 git clone https://github.com/August06exe/clearledger.git
 cd clearledger
@@ -135,7 +154,9 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 # 浏览器打开 http://127.0.0.1:8620
 ```
 
-> Windows 用户直接双击 **`启动明账.bat`**——以上全部自动完成并打开浏览器。
+</details>
+
+> 门户打开后，首屏横幅会提示如何让你的 agent 介入（也可在左侧「AI 接入」页随时查看）。
 
 ## 🔌 让你的 AI agent 连上来
 

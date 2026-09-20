@@ -16,9 +16,10 @@
 ## 必读文件（按顺序）
 
 1. **docs/AI-操作手册.md** — 系统地图、状态资产清单、操作配方、故障 playbook、你的自动化 SOP
-2. docs/指标口径.md — 业务口径基础域定义（各账套口径以各自 instances/<账套>/metrics.yml 为唯一出处）
-3. docs/待确认与决策.md — 所有已拍板决策与红线（D1~D15），不要推翻已有决策
-4. docs/迭代日志.md — 历史教训库（前人踩过的坑，按时间组织；手册里按症状重新组织过）
+2. **docs/AI-点火指南.md** — 新环境自举 playbook（全新克隆 → 门户可访问，含验收清单与首跑故障）
+3. docs/指标口径.md — 业务口径基础域定义（各账套口径以各自 instances/<账套>/metrics.yml 为唯一出处）
+4. docs/待确认与决策.md — 所有已拍板决策与红线（D1~D15），不要推翻已有决策
+5. docs/迭代日志.md — 历史教训库（前人踩过的坑，按时间组织；手册里按症状重新组织过）
 
 ## 红线（违反 = 事故）
 
@@ -54,7 +55,7 @@ for pid in $(netstat -ano | grep ":8620" | grep LISTENING | awk '{print $5}' | s
 
 ## 你被指派任务时的第一动作
 
-1. `ops/doctor.py --json` 看系统健康
+1. `ops/doctor.py --json` 看系统健康；若环境根本没初始化（无 .venv / 门户起不来）→ 先按 docs/AI-点火指南.md 自举
 2. 打开 docs/AI-操作手册.md 找对应"操作配方"章节——大部分任务有现成配方，照配方做
 3. 配方没有的：先读相关模块 docstring，再动手；改完跑 doctor + 触发一次跑批验证
 4. 提交到 develop 分支（main 只在人类验收后合并）；commit message 用中文、说清 why

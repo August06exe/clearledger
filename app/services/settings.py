@@ -16,6 +16,7 @@ DEFAULTS = {
     "schedule_enabled": config.SCHEDULE_ENABLED_DEFAULT,
     "schedule_hour": config.SCHEDULE_HOUR,
     "schedule_minute": config.SCHEDULE_MINUTE,
+    "ai_banner": True,                        # 首开 AI 接入提醒横幅（AI 接入页可关）
 }
 
 
@@ -26,6 +27,7 @@ def load() -> dict:
         data = {}
     merged = {**DEFAULTS, **{k: data.get(k, v) for k, v in DEFAULTS.items()}}
     merged["schedule_enabled"] = bool(merged["schedule_enabled"])
+    merged["ai_banner"] = bool(merged["ai_banner"])
     for key, hi in (("schedule_hour", 23), ("schedule_minute", 59)):
         try:
             merged[key] = max(0, min(hi, int(merged[key])))
