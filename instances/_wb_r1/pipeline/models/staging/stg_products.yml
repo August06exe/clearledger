@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_products
+    description: 商品（清洗层，由字段契约生成）
+    columns:
+      - name: product_code
+        description: 商品编码（string）
+        data_tests:
+          - not_null
+      - name: product_name
+        description: 商品名称（string）
+      - name: category
+        description: 品类（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['食品', '百货', '日化']
+              config:
+                severity: warn
+      - name: unit
+        description: 单位（string）
+      - name: std_cost
+        description: 标准成本（decimal）

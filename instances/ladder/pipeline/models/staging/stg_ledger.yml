@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: stg_ledger
+    description: 项目月度台账（清洗层，由字段契约生成）
+    columns:
+      - name: period
+        description: 期间（date）
+        data_tests:
+          - not_null
+      - name: project_code
+        description: 项目编码（string）
+        data_tests:
+          - not_null
+      - name: revenue_amt
+        description: 收入额（decimal）
+      - name: amort_rev
+        description: 摊销收入（decimal）
+      - name: subsidy
+        description: 政府补助（decimal）
+      - name: salary
+        description: 工资奖金（decimal）
+      - name: social_ins
+        description: 社保公积金（decimal）
+      - name: recruit_fee
+        description: 招聘费（decimal）
+      - name: travel_fee
+        description: 商旅费（decimal）
+      - name: expense_fee
+        description: 费用报销（decimal）
+      - name: platform_fee
+        description: 平台管理费（decimal）
+      - name: levy
+        description: 残保金（decimal）
+      - name: group_fee
+        description: 集团费用分摊（decimal）
+      - name: customer_code
+        description: 客户编码（string）
+      - name: industry_code
+        description: 行业编码（string）
+      - name: cost_center_code
+        description: 成本中心编码（string）
+      - name: policy_code
+        description: 政策编码（string）
+      - name: group_key
+        description: 集团键（string）
+        data_tests:
+          - not_null

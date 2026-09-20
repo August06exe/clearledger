@@ -188,29 +188,114 @@ def _dim_expr(dim: dict, col: str) -> str:
     return f"{col} as \"{dim['name']}\""
 
 
-def gen_mart_model(inst, rep: dict) -> str:
+_SQL_KW = {"sum", "count", "distinct", "round", "nullif", "coalesce", "null", "cast",
+           "as", "date_trunc", "abs", "min", "max", "avg", "case", "when", "then",
+           "else", "end", "and", "or", "not", "in", "true", "false"}
+
+
+def _report_graph(inst):
+    """报表 index / base→children / 各报表所需维度(含后代传导) / 各报表子树指标 token 集合"""
+    import re
+    reps = {r["key"]: r for r in inst.dashboard.get("reports", [])}
+    children = {}
+    for r in reps.values():
+        if r.get("base"):
+            children.setdefault(r["base"], []).append(r["key"])
+
+    def required_dims(key):
+        rep = reps[key]
+        out = []
+        if rep.get("time_dim"):
+            out.append(rep["time_dim"])
+        out.append(rep["dimension"])
+        for c in children.get(key, []):
+            for d in required_dims(c):
+                if d not in out:
+                    out.append(d)
+        return out
+
+    def subtree_tokens(key):
+        out = set()
+        stack = [key]
+        while stack:
+            k = stack.pop()
+            for m in reps[k].get("metrics", []):
+                expr = inst.metric(m)["expr"]
+                out |= set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", expr)) - _SQL_KW
+            stack.extend(children.get(k, []))
+        return out
+
+    req = {k: required_dims(k) for k in reps}
+    tok = {k: subtree_tokens(k) for k in reps}
+    return reps, children, req, tok
+
+
+def gen_mart_model(inst, rep: dict, ctx=None) -> str:
+    """报表汇总模型统一生成器。
+
+    - 无 base：从 int_wide 直出（与历史路径字节级等价——无后代时逐字符一致）；
+    - 有 base：从上级 mart 卷聚合，支撑利润阶梯式级联；
+    - 有后代（被分层引用）：分组维度并入后代传导维度，并携带后代指标 expr
+      引用的全部可加列（sum(col) as col），使下层同口径 expr 可逐字复用。
+    """
+    import re
     wide = inst.wide["wide"]["name"]
     dim = inst.dimension(rep["dimension"])
     has_time = bool(rep.get("time_dim"))
     time_dim = inst.dimension(rep["time_dim"]) if has_time else dim if dim.get("type") == "time" else None
 
-    # 粒度=时间×维度（设计 §4.2：marts 为 dimension × metrics 分组汇总；
-    # 筛选维度不并入分组——筛选在查询层对汇总表 SELECT 白名单过滤，评审轮1 阻断1 裁决）
+    base_key = rep.get("base")
+    ctx = ctx or _report_graph(inst)
+    reps, children, req, tok = ctx
+    key = rep["key"]
+
     group_cols = []
-    if time_dim is not None and has_time:
-        group_cols.append(_dim_expr(time_dim, time_dim["column"]))
-    group_cols.append(_dim_expr(dim, dim["column"]))
+    if base_key:
+        # 上级 mart 的实际输出列 = 其维度 + 其指标别名 + 其 carry（全部子树 token 并集）
+        base_carry = set()
+        for c in children.get(base_key, []):
+            base_carry |= tok[c]
+        base_cols = (set(req[base_key]) | set(reps[base_key].get("metrics", [])) | base_carry)
+        for dn in req[key]:
+            if dn not in base_cols:
+                raise ConfigError(f"[{inst.name}] 分层报表 {key} 的维度 [{dn}] 不在上级报表 {base_key} 的粒度中")
+            group_cols.append(f'    "{dn}"')
+    else:
+        # 无 base：从宽表直出，但后代传导维度同样并入分组（如部门需在项目层预挂）
+        for dn in req[key]:
+            d = inst.dimension(dn)
+            if dn == rep.get("time_dim") and has_time:
+                group_cols.append(_dim_expr(time_dim, time_dim["column"]))
+            else:
+                group_cols.append(_dim_expr(d, d["column"]))
+
     metrics = [f"    {inst.metric(m)['expr']} as \"{m}\"" for m in rep.get("metrics", [])]
 
+    carry_lines = []
+    child_tokens = set()
+    for c in children.get(key, []):
+        child_tokens |= tok[c]
+    own_out = set(req[key]) | set(rep.get("metrics", []))
+    # 注意：本级输出 ≠ 上级输出——上级 carry 的列本级仍须重带（sum 可加，逐层重聚合）
+    for col in sorted(child_tokens - own_out):
+        if base_key and col not in base_cols:
+            raise ConfigError(f"[{inst.name}] 分层报表 {key} 的后代引用列 [{col}] 不在上级报表 {base_key} 输出中")
+        carry_lines.append(f'    sum("{col}") as "{col}"')
+
     where = ""
-    if rep.get("full_period_only") and time_dim is not None:
+    if not base_key and rep.get("full_period_only") and time_dim is not None:
         grain = time_dim.get("grain", "month")
         where = f"\nwhere date_trunc('{grain}', {time_dim['column']}) < date_trunc('{grain}', current_date)"
 
     group_by = ", ".join(str(i + 1) for i in range(len(group_cols)))
-    return (f"-- 生成物：报表汇总模型（{rep['title']} = 维度×指标）\n"
-            f"select\n" + ",\n".join(group_cols + metrics) +
-            f"\nfrom {{{{ ref('int_{wide}') }}}}{where}\ngroup by {group_by}\n")
+    src = (f"{{{{ ref('mart_{base_key}') }}}}" if base_key
+           else f"{{{{ ref('int_{wide}') }}}}")
+    head = (f"-- 生成物：分层报表模型（{rep['title']} ← {base_key}）\n" if base_key
+            else f"-- 生成物：报表汇总模型（{rep['title']} = 维度×指标）\n")
+    out = (head + f"select\n" + ",\n".join(group_cols + metrics + carry_lines)
+           + f"\nfrom {src}{where}")
+    out += f"\ngroup by {group_by}" if group_by else ""
+    return out + "\n"
 
 
 def gen_project_files(inst) -> dict[str, str]:
@@ -279,9 +364,10 @@ def compile_instance(inst) -> dict:
         for fname, content in gen_range_tests(src):
             files[f"tests/{fname}"] = content
 
-    # marts
+    # marts（统一生成器：无 base 无后代的报表与旧路径字节级等价；分层/被分层报表自动升级）
+    ctx = _report_graph(inst)
     for rep in inst.dashboard.get("reports", []):
-        files[f"models/marts/mart_{rep['key']}.sql"] = gen_mart_model(inst, rep)
+        files[f"models/marts/mart_{rep['key']}.sql"] = gen_mart_model(inst, rep, ctx)
 
     # diff 摘要（AI-Native：生成物变更可审计）
     changed, unchanged = [], 0

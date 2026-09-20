@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_cost_centers
+    description: 成本中心（清洗层，由字段契约生成）
+    columns:
+      - name: cost_center_code
+        description: 成本中心编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: cost_center_name
+        description: 成本中心（string）
+        data_tests:
+          - not_null

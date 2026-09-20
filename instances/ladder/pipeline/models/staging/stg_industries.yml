@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_industries
+    description: 行业字典（清洗层，由字段契约生成）
+    columns:
+      - name: industry_code
+        description: 行业编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: industry_name
+        description: 行业（string）
+        data_tests:
+          - not_null

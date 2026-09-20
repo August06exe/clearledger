@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_projects
+    description: 项目主数据（清洗层，由字段契约生成）
+    columns:
+      - name: project_code
+        description: 项目编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: project_name
+        description: 项目名称（string）
+        data_tests:
+          - not_null
+      - name: dept_code
+        description: 一级部门编码（string）
+        data_tests:
+          - not_null
+      - name: project_manager
+        description: 项目经理（string）

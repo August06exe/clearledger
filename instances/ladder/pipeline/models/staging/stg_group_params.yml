@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: stg_group_params
+    description: 集团参数（清洗层，由字段契约生成）
+    columns:
+      - name: group_key
+        description: 集团键（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: group_name
+        description: 集团名称（string）
+        data_tests:
+          - not_null
+      - name: budget_rate
+        description: 预算汇率（decimal）

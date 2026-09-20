@@ -1,0 +1,162 @@
+{
+  "assumptions_applied": {
+    "pending.items": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A6",
+      "A7",
+      "A8",
+      "A9"
+    ],
+    "rows.raw": [
+      "A5"
+    ],
+    "rows.wide_ledger": [
+      "A2",
+      "A3",
+      "A4",
+      "A9"
+    ]
+  },
+  "impact": {
+    "dimensions": {
+      "供应商": [
+        "supplier_rank"
+      ],
+      "品类": [
+        "category_month"
+      ],
+      "商品": [],
+      "城市": [
+        "region_month",
+        "store_rank"
+      ],
+      "大区": [
+        "region_month",
+        "store_rank"
+      ],
+      "月份": [
+        "category_month",
+        "channel_month",
+        "monthly_kpi",
+        "region_month"
+      ],
+      "渠道": [
+        "channel_month"
+      ],
+      "门店": [
+        "store_rank"
+      ]
+    },
+    "metrics": {
+      "期末库存量": [
+        "store_rank"
+      ],
+      "毛利": [
+        "channel_month",
+        "monthly_kpi",
+        "region_month",
+        "store_rank"
+      ],
+      "毛利率": [
+        "category_month",
+        "monthly_kpi"
+      ],
+      "电商销售占比": [],
+      "采购额": [
+        "supplier_rank"
+      ],
+      "销售成本": [
+        "category_month"
+      ],
+      "销售额": [
+        "category_month",
+        "channel_month",
+        "monthly_kpi",
+        "region_month",
+        "store_rank"
+      ]
+    }
+  },
+  "instance": "_wb_r1",
+  "pending": {
+    "items": [
+      {
+        "cnt": 3,
+        "field": "channel",
+        "level": "yellow",
+        "rule": "enum",
+        "source": "fact_ledger"
+      },
+      {
+        "cnt": 2,
+        "field": "doc_no",
+        "level": "yellow",
+        "rule": "required",
+        "source": "fact_ledger"
+      },
+      {
+        "cnt": 2,
+        "field": "quantity",
+        "level": "yellow",
+        "rule": "range",
+        "source": "fact_ledger"
+      },
+      {
+        "cnt": 1,
+        "field": "unit_price",
+        "level": "yellow",
+        "rule": "type",
+        "source": "fact_ledger"
+      },
+      {
+        "cnt": 1,
+        "field": "category",
+        "level": "yellow",
+        "rule": "enum",
+        "source": "products"
+      },
+      {
+        "cnt": 1,
+        "field": "ending_qty",
+        "level": "yellow",
+        "rule": "range",
+        "source": "stock_snapshot"
+      },
+      {
+        "cnt": 4,
+        "field": "store_code",
+        "level": "yellow",
+        "rule": "fanout",
+        "source": "wide_ledger"
+      },
+      {
+        "cnt": 29,
+        "field": "supplier_code",
+        "level": "yellow",
+        "rule": "null_match",
+        "source": "wide_ledger"
+      }
+    ],
+    "projection": "(source, field, rule, level, cnt)，集合无序比对；sample 仅要求非空"
+  },
+  "rows": {
+    "files": {
+      "fact_ledger": 49,
+      "products": 12,
+      "stock_snapshot": 21,
+      "stores": 6,
+      "suppliers": 5
+    },
+    "raw": {
+      "raw.fact_ledger": 49,
+      "raw.products": 12,
+      "raw.stock_snapshot": 21,
+      "raw.stores": 6,
+      "raw.suppliers": 5
+    },
+    "wide_ledger": 50
+  }
+}

@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: stg_subsidy_policies
+    description: 补助政策（清洗层，由字段契约生成）
+    columns:
+      - name: policy_code
+        description: 政策编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: policy_name
+        description: 政策名称（string）
+        data_tests:
+          - not_null
+      - name: subsidy_type
+        description: 补助类型（string）

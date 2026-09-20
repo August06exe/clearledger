@@ -181,6 +181,25 @@ def load_instance_dir(d: Path, name: str) -> Instance:
             if td.get("type") != "time":
                 raise ConfigError(f"[{name}] 报表 {rep['key']} 的 time_dim [{rep['time_dim']}] 不是时间维度")
 
+    # 报表分层（base）：上级存在、无环、深度 ≤6、分层报表不声明 filters
+    base_of = {r["key"]: r.get("base") for r in inst.dashboard.get("reports", []) if r.get("base")}
+    keys = {r["key"] for r in inst.dashboard.get("reports", [])}
+    for k, b in base_of.items():
+        if b not in keys:
+            raise ConfigError(f"[{name}] 报表 {k} 的 base [{b}] 不存在")
+        rep = next(r for r in inst.dashboard.get("reports", []) if r["key"] == k)
+        if rep.get("filters"):
+            raise ConfigError(f"[{name}] 分层报表 {k} 不支持 filters（筛选维度固定为分组/时间维度）")
+    for k in base_of:
+        seen, cur = set(), k
+        while cur in base_of:
+            if cur in seen:
+                raise ConfigError(f"[{name}] 报表分层出现环: {k}")
+            seen.add(cur)
+            cur = base_of[cur]
+        if len(seen) > 6:
+            raise ConfigError(f"[{name}] 报表 {k} 分层深度超过 6 层")
+
     return inst
 
 

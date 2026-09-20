@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_stores
+    description: 门店（清洗层，由字段契约生成）
+    columns:
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: store_name
+        description: 门店名称（string）
+      - name: city
+        description: 城市（string）
+      - name: region_name
+        description: 大区（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['华东', '华北', '华南']
+              config:
+                severity: warn
+      - name: open_date
+        description: 开业日期（date）

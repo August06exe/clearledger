@@ -1,0 +1,73 @@
+# 实例：集团经营核算·利润阶梯 —— 看板（base=报表分层：L1→L2→L3→L4→L5 级联 + L2.5 并行分支）
+version: 1
+
+reports:
+  # ── L1 收入层（宽表直出）───────────────────────────────
+  - key: revenue_project
+    title: L1 项目收入月报
+    dimension: 项目
+    time_dim: 月份
+    metrics: [收入, 摊销收入, 政府补助]
+    chart: bar_line
+    full_period_only: true
+
+  # ── L2 人力成本/毛利层（base=L1）────────────────────────
+  - key: margin_project
+    title: L2 项目毛利月报
+    base: revenue_project
+    dimension: 项目
+    time_dim: 月份
+    metrics: [工资奖金, 社保公积金, 招聘费, 人力成本, 毛利, 毛利率]
+    chart: bar_line
+
+  # ── L2.5 期间费用并行分支（base=L1）──────────────────────
+  - key: fee_project
+    title: L2.5 项目费用月报
+    base: revenue_project
+    dimension: 项目
+    time_dim: 月份
+    metrics: [商旅费, 费用报销, 平台管理费, 残保金, 期间费用合计]
+    chart: stack_bar
+
+  # ── L3 责任贡献层（base=L2）────────────────────────────
+  - key: contribution_project
+    title: L3 项目贡献月报
+    base: margin_project
+    dimension: 项目
+    time_dim: 月份
+    metrics: [责任贡献, 贡献率]
+    chart: bar_line
+
+  # ── L4 部门层（base=L3，维度上卷到一级部门）────────────────
+  - key: contribution_dept
+    title: L4 部门贡献月报
+    base: contribution_project
+    dimension: 一级部门
+    time_dim: 月份
+    metrics: [责任贡献, 贡献率]
+    chart: stack_bar
+
+  # ── L5 集团层（base=L4；单值不下钻，仅月份粒度）──────────────
+  - key: group_pnl
+    title: L5 集团净利月报
+    base: contribution_dept
+    dimension: 月份
+    metrics: [集团净利, 净利率]
+    chart: bar_line
+
+  # ── 侧挂分析报表（宽表直出，与主链并行）───────────────────
+  - key: dept_cost
+    title: 部门人力成本月报
+    dimension: 一级部门
+    time_dim: 月份
+    metrics: [人力成本]
+    chart: stack_bar
+    full_period_only: true
+
+  - key: industry_margin
+    title: 行业毛利月报
+    dimension: 行业
+    time_dim: 月份
+    metrics: [收入, 毛利, 毛利率]
+    chart: stack_bar
+    full_period_only: true

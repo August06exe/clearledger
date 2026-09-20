@@ -1,0 +1,42 @@
+# 实例：集团经营核算·利润阶梯 —— 宽表装配（有序左联 + 链式键：dept_code 来自上一跳 projects）
+version: 1
+
+wide:
+  name: ledger_wide
+  main: ledger
+  joins:
+    - table: projects
+      keys: {left: project_code, right: project_code}
+      how: left
+      columns: [project_name, dept_code]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: org
+      keys: {left: dept_code, right: dept_code}     # 链式键：dept_code 来自上一跳
+      how: left
+      columns: [dept_name]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: customers
+      keys: {left: customer_code, right: customer_code}
+      how: left
+      columns: [customer_name]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: industries
+      keys: {left: industry_code, right: industry_code}
+      how: left
+      columns: [industry_name]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: cost_centers
+      keys: {left: cost_center_code, right: cost_center_code}
+      how: left
+      columns: [cost_center_name]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: subsidy_policies
+      keys: {left: policy_code, right: policy_code}
+      how: left
+      columns: [policy_name, subsidy_type]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}
+    - table: group_params
+      keys: {left: group_key, right: group_key}     # 集团单值参数 1:1 挂接
+      how: left
+      columns: [group_name, budget_rate]
+      contract: {fanout: red, null_match: yellow, orphan_right: ignore}

@@ -1,0 +1,6 @@
+-- 生成物：报表汇总模型（供应商采购排行 = 维度×指标）
+select
+supplier_name as "供应商",
+    sum(purchase_amt) as "采购额"
+from {{ ref('int_wide_ledger') }}
+group by 1

@@ -49,7 +49,7 @@ window.Pages.lineage = {
             radius: 8,
             shadowBlur: 4, shadowColor: 'rgba(15,30,60,.08)',
           },
-          labelCfg: { style: { fontSize: 12.5, fill: '#1F2937' } },
+          labelCfg: { style: { fontSize: 13.5, fill: '#1F2937' } },
         };
       }),
       edges: g.edges.map((e, i) => ({ id: 'e' + i, source: e.source, target: e.target })),

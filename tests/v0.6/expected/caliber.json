@@ -1,0 +1,56 @@
+{
+  "round": 1,
+  "instance": "_wb_r1",
+  "basis": "docs/设计-v0.5-配置工作台.md §3/§4/§6 + docs/待确认与决策.md D15（数据契约三层）",
+  "comparisons": {
+    "pending.items": {
+      "class": "set_of_tuples",
+      "tuple_fields": ["source", "field", "rule", "level", "cnt"],
+      "tolerance": "cnt 整数精确；source/field/rule/level 文本精确；集合无序比对（引擎声明按 (source,field,rule) 升序返回，比对不依赖顺序）",
+      "aux_checks": [
+        {
+          "field": "sample",
+          "class": "nonempty_text",
+          "scope": "actual 返回的每个 item",
+          "note": "设计 §3.5：sample 为信息性文本，只要求非空字符串，不做逐字节比对"
+        }
+      ],
+      "excluded_volatile": ["latest_run.run_id", "latest_run.finished_at", "latest_run.light", "note", "items[].sample 的具体内容"]
+    },
+    "impact": {
+      "class": "json_exact",
+      "note": "metrics/dimensions 两张映射：dict[str, list[str]]；报表 key 列表按升序（设计 §3.6）；对象键序无关（sort_keys 规范化后比较）；未被引用者必须出现且映射为空数组"
+    },
+    "rows": {
+      "class": "int_exact",
+      "keys": ["rows.files.*", "rows.raw.*", "rows.wide_ledger"],
+      "note": "rows.raw 的镜像语义见假设 A5；rows.wide_ledger 见 A2/A3/A4/A9"
+    },
+    "behaviors": {
+      "class": "json_structure",
+      "note": "每条 {id, expect, observed, evidence}；expect 以 TESTPLAN 各 Case 声明的结构为准（本文件不含数值答案）；观察证据须含命令与退出码于 provenance_round1.json"
+    },
+    "mr": {
+      "class": "json_structure",
+      "note": "只记观察不记期望；等值/守恒判定内含于观察（a/b 两侧对照）"
+    },
+    "mutations": {
+      "class": "caught_or_survived",
+      "note": "{id: MUT-M<n>, expect: \"caught\", observed: \"caught|survived\", evidence}；kill 率 = caught/(caught+survived)，闸门要求 3/3"
+    }
+  },
+  "assumptions": {
+    "A1": "contract_report.level = 配置声明的级别字面量（yellow/red）；设计 §3.5 示例中的 \"pending\" 视为示意值",
+    "A2": "软违规（enum/range/unique/null_match/fanout）记录不剔行，行照常入库/入宽表",
+    "A3": "类型不可强转 → 记 rule=type 一行且该行被剔除",
+    "A4": "required 空值 → 记 rule=required 一行且该行被剔除",
+    "A5": "raw 层为源文件镜像（AI-操作手册红线：原始层只增不改）：raw 行数 = 文件数据行数",
+    "A6": "missing=default 为缺失策略而非违规：补默认值、零契约行",
+    "A7": "空值跳过 enum/range 检查（retail 真实基线佐证：海量空供应商编码未产生枚举/范围契约行）",
+    "A8": "join 契约行记在宽表名下（source=wide.name=wide_ledger），field=左表键列名",
+    "A9": "fanout 物理扩行：cnt=受影响左表行数；宽表行数 = 保留主表行数 + 扩行数"
+  },
+  "attribution_note": "引擎实测与本答案分歧时的归因指引（归因权在评审）：pending.items 的 rule/level 词表分歧 → spec↔engine 词表分歧（A1）；cnt 分歧 → A2~A7/A9 之一；rows.raw 分歧 → A5；rows.wide_ledger 分歧 → A3/A4/A9；join 行的 source 归属分歧 → A8。命题方不为对齐引擎而改答案。",
+  "volatile_fields_excluded": ["mtime", "run_id", "finished_at", "ts", "_loaded_at", "items[].sample 内容"],
+  "seal_protocol": "manifest.sha256 覆盖 answer.json / caliber.json / oracle.py；manifest 自身 sha256 即申报哈希；重密封须申报新哈希并保留旧哈希档案"
+}

@@ -52,9 +52,11 @@ def filter_options(instance: str, report_key: str) -> dict[str, list]:
         dim_names = [rep["dimension"]] + list(rep.get("filters", []))
         if rep.get("time_dim"):
             dim_names.append(rep["time_dim"])
+        layered = bool(rep.get("base"))
         for dn in dim_names:
             dim = inst.dimension(dn)
-            in_mart = not (rep.get("filters") and dn in rep["filters"])
+            # 分层报表：全部维度都在本层 mart 输出中（编译期已保证）
+            in_mart = layered or not (rep.get("filters") and dn in rep["filters"])
             table = f"marts.mart_{report_key}" if in_mart else f"intermediate.int_{wide['name']}"
             col = f'"{dim["name"]}"' if in_mart else f'"{dim["column"]}"'
             try:

@@ -1,0 +1,43 @@
+# 测试实例 _wb_r1 —— 报表声明（六张报表覆盖 dimension/time_dim/filters 三类引用 + 未引用指标/维度）
+# 由 tests/v0.6/generate.py 生成：请勿手改，重建请重跑生成器。
+version: 1
+reports:
+  - key: monthly_kpi
+    title: 月度经营总览
+    dimension: 月份
+    metrics: [销售额, 毛利, 毛利率]
+    chart: bar_line
+    full_period_only: true
+  - key: region_month
+    title: 大区月报
+    dimension: 大区
+    time_dim: 月份
+    metrics: [销售额, 毛利]
+    filters: [城市]
+    chart: stack_bar
+    full_period_only: true
+  - key: category_month
+    title: 品类月报
+    dimension: 品类
+    time_dim: 月份
+    metrics: [销售额, 销售成本, 毛利率]
+    chart: stack_bar
+    full_period_only: true
+  - key: channel_month
+    title: 渠道月报
+    dimension: 渠道
+    time_dim: 月份
+    metrics: [销售额, 毛利]
+    chart: stack_bar
+    full_period_only: true
+  - key: store_rank
+    title: 门店排行
+    dimension: 门店
+    metrics: [销售额, 毛利, 期末库存量]
+    filters: [大区, 城市]
+    chart: hbar
+  - key: supplier_rank
+    title: 供应商采购排行
+    dimension: 供应商
+    metrics: [采购额]
+    chart: hbar

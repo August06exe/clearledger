@@ -1,0 +1,11 @@
+# 测试实例 _wb_r1 —— 指标口径唯一出处（电商销售占比 有意不被任何报表引用 → impact 应映射 []）
+# 由 tests/v0.6/generate.py 生成：请勿手改，重建请重跑生成器。
+version: 1
+metrics:
+  - {name: 销售额,       expr: "sum(sales_net)", desc: "折后销售合计 = 数量×单价×(1−折扣率)，仅销售行"}
+  - {name: 销售成本,     expr: "sum(sales_cost)", desc: "数量×商品标准成本 合计，仅销售行"}
+  - {name: 毛利,         expr: "sum(gross_profit)", desc: "销售额 − 销售成本"}
+  - {name: 毛利率,       expr: "round(sum(gross_profit) / nullif(sum(sales_net), 0), 4)", format: percent, desc: "毛利 ÷ 销售额；销售额为 0 时为空"}
+  - {name: 采购额,       expr: "sum(purchase_amt)", desc: "采购行 数量×采购单价 合计"}
+  - {name: 期末库存量,   expr: "sum(stock_qty)", desc: "期末库存行数量合计"}
+  - {name: 电商销售占比, expr: "round(sum(ecomm_net) / nullif(sum(sales_net), 0), 4)", format: percent, desc: "电商渠道销售额 ÷ 总销售额"}

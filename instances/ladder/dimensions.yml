@@ -1,0 +1,10 @@
+# 实例：集团经营核算·利润阶梯 —— 维度声明（零业务预设，随配置而生）
+version: 1
+
+dimensions:
+  - {name: 月份,    column: period,        type: time, grain: month}
+  - {name: 项目,    column: project_name,  type: string}
+  - {name: 一级部门, column: dept_name,    type: string}
+  - {name: 客户,    column: customer_name, type: string}
+  - {name: 行业,    column: industry_name, type: string}
+  - {name: 成本中心, column: cost_center_name, type: string}

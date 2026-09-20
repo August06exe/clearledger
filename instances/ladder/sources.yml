@@ -1,0 +1,132 @@
+# 实例：集团经营核算·利润阶梯 —— 入口档案 + 字段契约
+# 数据故事：集团按"项目×月"台账核算，人力成本/费用从数据集成层预聚合入账（真实做法），
+#          维表（项目/组织/客户/行业/成本中心/集团参数/补助政策）按编码关联。
+version: 1
+
+sources:
+  - name: ledger
+    title: 项目月度台账
+    discover:
+      patterns: ["项目月度台账*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 期间,       map: period,      type: date,    required: true}
+      - {cn: 项目编码,   map: project_code, type: string, required: true}
+      - {cn: 收入额,     map: revenue_amt, type: decimal}
+      - {cn: 摊销收入,   map: amort_rev,   type: decimal}
+      - {cn: 政府补助,   map: subsidy,     type: decimal}
+      - {cn: 工资奖金,   map: salary,      type: decimal}
+      - {cn: 社保公积金, map: social_ins,  type: decimal}
+      - {cn: 招聘费,     map: recruit_fee, type: decimal}
+      - {cn: 商旅费,     map: travel_fee,  type: decimal}
+      - {cn: 费用报销,   map: expense_fee, type: decimal}
+      - {cn: 平台管理费, map: platform_fee, type: decimal}
+      - {cn: 残保金,     map: levy,        type: decimal}
+      - {cn: 集团费用分摊, map: group_fee, type: decimal}
+      - {cn: 客户编码,   map: customer_code, type: string}
+      - {cn: 行业编码,   map: industry_code, type: string}
+      - {cn: 成本中心编码, map: cost_center_code, type: string}
+      - {cn: 政策编码,   map: policy_code, type: string}
+      - {cn: 集团键,     map: group_key,   type: string, required: true}
+    problems:
+      file_missing: red
+      header_changed: red
+      empty_file: red
+      row_drop_ratio: {max: 0.01, level: yellow}
+      type_coerce_ratio: {max: 0.005, level: yellow}
+
+  - name: projects
+    title: 项目主数据
+    discover:
+      patterns: ["项目主数据*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 项目编码, map: project_code, type: string, required: true, unique: true}
+      - {cn: 项目名称, map: project_name, type: string, required: true}
+      - {cn: 一级部门编码, map: dept_code, type: string, required: true}
+      - {cn: 项目经理, map: project_manager, type: string}
+    problems:
+      file_missing: red
+      header_changed: red
+
+  - name: org
+    title: 组织架构
+    discover:
+      patterns: ["组织架构_集团*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 一级部门编码, map: dept_code, type: string, required: true, unique: true}
+      - {cn: 一级部门, map: dept_name, type: string, required: true}
+    problems:
+      file_missing: red
+      header_changed: red
+
+  - name: customers
+    title: 客户主数据
+    discover:
+      patterns: ["客户主数据*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 客户编码, map: customer_code, type: string, required: true, unique: true}
+      - {cn: 客户名称, map: customer_name, type: string, required: true}
+    problems:
+      file_missing: red
+      header_changed: red
+
+  - name: industries
+    title: 行业字典
+    discover:
+      patterns: ["行业字典*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 行业编码, map: industry_code, type: string, required: true, unique: true}
+      - {cn: 行业, map: industry_name, type: string, required: true}
+    problems:
+      file_missing: red
+      header_changed: red
+
+  - name: cost_centers
+    title: 成本中心
+    discover:
+      patterns: ["成本中心*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 成本中心编码, map: cost_center_code, type: string, required: true, unique: true}
+      - {cn: 成本中心, map: cost_center_name, type: string, required: true}
+    problems:
+      file_missing: red
+      header_changed: red
+
+  - name: group_params
+    title: 集团参数
+    discover:
+      patterns: ["集团参数*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 集团键, map: group_key, type: string, required: true, unique: true}
+      - {cn: 集团名称, map: group_name, type: string, required: true}
+      - {cn: 预算汇率, map: budget_rate, type: decimal}
+    problems:
+      file_missing: red
+      header_changed: red
+
+  - name: subsidy_policies
+    title: 补助政策
+    discover:
+      patterns: ["补助政策*.csv"]
+      encodings: [utf-8-sig, gbk]
+    clean: [trim_columns, strip_strings]
+    fields:
+      - {cn: 政策编码, map: policy_code, type: string, required: true, unique: true}
+      - {cn: 政策名称, map: policy_name, type: string, required: true}
+      - {cn: 补助类型, map: subsidy_type, type: string}
+    problems:
+      file_missing: red
+      header_changed: red

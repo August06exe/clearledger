@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: 原始层（实例摄取写入，含契约校验后的规整数据）
+    tables:
+      - name: fact_ledger
+        description: 进销存台账
+      - name: stock_snapshot
+        description: 库存快照
+      - name: stores
+        description: 门店
+      - name: products
+        description: 商品
+      - name: suppliers
+        description: 供应商

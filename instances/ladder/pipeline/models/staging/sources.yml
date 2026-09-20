@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: 原始层（实例摄取写入，含契约校验后的规整数据）
+    tables:
+      - name: ledger
+        description: 项目月度台账
+      - name: projects
+        description: 项目主数据
+      - name: org
+        description: 组织架构
+      - name: customers
+        description: 客户主数据
+      - name: industries
+        description: 行业字典
+      - name: cost_centers
+        description: 成本中心
+      - name: group_params
+        description: 集团参数
+      - name: subsidy_policies
+        description: 补助政策

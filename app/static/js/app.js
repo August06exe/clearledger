@@ -77,7 +77,7 @@ const App = {
     { key: 'ai', label: 'AI 接入' },
   ],
 
-  init() {
+  async init() {
     document.getElementById('foot-version').textContent = '早航版 · 私有化部署';
     this.buildNav();
     window.addEventListener('hashchange', () => this.route());
@@ -92,7 +92,7 @@ const App = {
     });
     this.refreshSys();
     this.sysTimer = setInterval(() => this.refreshSys(), 60_000);
-    this.loadAliases();
+    await this.loadAliases();   // 先于首路由：血缘/字典首屏即中文（竞态修复）
     this.maybeAiBanner();
     this.route();
   },

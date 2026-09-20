@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: stg_stock_snapshot
+    description: 库存快照（清洗层，由字段契约生成）
+    columns:
+      - name: snap_month
+        description: 快照月份（string）
+      - name: snap_date
+        description: 快照日期（date）
+        data_tests:
+          - not_null
+      - name: store_code
+        description: 门店编码（string）
+        data_tests:
+          - not_null
+      - name: product_code
+        description: 商品编码（string）
+        data_tests:
+          - not_null
+      - name: ending_qty
+        description: 期末数量（integer）
+        data_tests:
+          - not_null

@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: stg_suppliers
+    description: 供应商（清洗层，由字段契约生成）
+    columns:
+      - name: supplier_code
+        description: 供应商编码（string）
+        data_tests:
+          - not_null
+      - name: supplier_name
+        description: 供应商名称（string）
+      - name: settle_type
+        description: 结算方式（string）
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['月结30', '月结60', '现结']
+              config:
+                severity: warn

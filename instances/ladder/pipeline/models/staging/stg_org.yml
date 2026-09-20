@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: stg_org
+    description: 组织架构（清洗层，由字段契约生成）
+    columns:
+      - name: dept_code
+        description: 一级部门编码（string）
+        data_tests:
+          - not_null
+          - unique
+      - name: dept_name
+        description: 一级部门（string）
+        data_tests:
+          - not_null

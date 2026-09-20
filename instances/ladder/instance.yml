@@ -1,0 +1,8 @@
+# 实例：集团经营核算·利润阶梯（演示）—— L1→L5 报表分层级联
+version: 1
+
+name: ladder
+title: 集团经营核算·利润阶梯（演示）
+inbox: data/inbox
+database: ../../../data/warehouse/ladder.duckdb
+tz: Asia/Shanghai
