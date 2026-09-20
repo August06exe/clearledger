@@ -149,6 +149,15 @@ curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/status"
 - 退役资产：`启动明账.bat`、`重建演示数据.bat`（功能已并入 exe，git 历史可找回）；`备份数据.bat` 保留。
 - **界面中文化别名层**（v0.4 收官）：`app/services/aliases.py` 从六份配置自动推导技术名→中文（源/清洗表←sources.title，宽表←主源标题，报表←dashboard.title，字段←cn/维度名），经 `/api/aliases` 供前端 `App.alias()/falias()` 用。改配置标题即自动生效，别名层只做展示不改数据层命名。
 
+### R-13 配置工作台（v0.5：改配置的两条等价路）
+
+- **门户路**：左侧「配置工作台」→ 选块 → 改 YAML → 「校验」（引擎全套交叉校验，零落盘）→ 「保存」（旧文件自动备份到 `onboarding/config_history/<block>.prev.yml`）→ 需要生效就「保存并重建」（触发三步链，trigger=workbench）。
+- **agent 路**：直接改 `instances/<账套>/*.yml` → 重跑 compile_dbt + dbt build（与以前完全一样）。两条路等价：工作台的"保存并重建"就是 agent 路的自动化。
+- **挂起队列**：工作台「挂起队列」页 = 最近一次 run 的契约违规清单（raw.contract_report 稳定投影）。处理：修数据重投 → 重新跑批；或放宽字段契约 level 后保存并重建。
+- **影响预览**：保存 metrics/dashboard 时响应带 affected_reports（哪些报表引用了草稿里的指标/被改动）；也可单独 GET `/api/config/<账套>/impact`。
+- **回滚**：单步回滚用 `config_history/<block>.prev.yml` 覆回去再重建；跨版本回滚靠 git。
+- API 契约全文：`docs/设计-v0.5-配置工作台.md`。红线不因工作台改变：models 是生成物禁手改，口径唯一出处仍是 metrics.yml。
+
 ### R-08 更新演示数据
 启动器 **`启动明账.exe`** 的「重建演示数据」按钮，或分步：`sample_data/generate.py` → `semantic.ingest_run` → `semantic.compile_dbt` → cd pipeline && dbt build（详见 docs/AI-点火指南.md Step 3/4）。
 生成器特性：截止昨天动态生成；**预埋 2026-05 华东断供异常**（所以黄灯是预期，不是 bug）；300 行客户编号带首尾空格（清洗层演示）。

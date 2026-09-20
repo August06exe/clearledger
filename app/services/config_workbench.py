@@ -26,7 +26,7 @@ BLOCK_FILES: dict[str, str] = {
 
 _BACKUP_RELPATH = Path("onboarding") / "config_history"
 
-_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_\-]*$")
+_NAME_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_\-]*$")  # 允许 _ 前缀（测试副本约定），禁 . / \ 等
 
 
 class WorkbenchError(Exception):
@@ -212,8 +212,8 @@ def pending_items(instance: str) -> dict:
              for r in rows]
     latest_run = None
     if rows:
-        # 契约表的 run_id 是摄取 ID：只有当它来自门户三步链时才能对上跑批历史（灯色/完成时间）；
-        # CLI 直接摄取的 run 没有历史记录，light/finished_at 诚实留空
+        # 链内跑批把 dbt run_id 传给了 ingest（--run-id），契约行与跑批历史同 ID 精确对齐；
+        # CLI 直跑的摄取没有历史记录，light/finished_at 诚实留空
         ingest_run_id = rows[0][0]
         light = finished = None
         try:

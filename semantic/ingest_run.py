@@ -240,6 +240,8 @@ def ingest_source(con, inst, src: dict, inbox: Path, run_id: str,
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--instance", required=True)
+    ap.add_argument("--run-id", default=None,
+                    help="外部运行身份（门户跑批链传入，使 raw.contract_report 可与跑批历史精确对齐）")
     args = ap.parse_args()
 
     try:
@@ -264,7 +266,7 @@ def main() -> int:
         print(f"[fail] 仓库被占用: {last}", file=sys.stderr)
         return 1
 
-    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
     violations: list[dict] = []
     problems: list[dict] = []
     results: list[dict] = []

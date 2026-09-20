@@ -125,7 +125,8 @@ def _pipeline(instance: str, run_id: str, trigger: str) -> None:
         with open(log_path, "a", encoding="utf-8") as log:
             log.write(f"===== 账套[{instance}] 跑批 {run_id}（触发：{trigger}）{started} =====\n")
             # 1) 语义摄取（入口档案+字段契约）
-            ingest_rc = run_cmd([config.PYTHON, "-m", "semantic.ingest_run", "--instance", instance],
+            ingest_rc = run_cmd([config.PYTHON, "-m", "semantic.ingest_run", "--instance", instance,
+                                 "--run-id", run_id],
                                 config.ROOT, log)
             ingest_ok = ingest_rc == 0
             try:
