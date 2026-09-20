@@ -156,8 +156,9 @@ def _pipeline(instance: str, run_id: str, trigger: str) -> None:
                                 config.RUNS_DIR.mkdir(parents=True, exist_ok=True)
                                 (config.RUNS_DIR / f"{run_id}_run_results.json").write_text(
                                     json.dumps(results_json, ensure_ascii=False), encoding="utf-8")
-                        except Exception:
-                            pass
+                                _harvest_match_contracts(inst, run_id, results_json, log)
+                        except Exception as e:
+                            log.write(f"[warn] 契约收获异常（不影响灯色）：{type(e).__name__}: {e}\n")
 
         # 红绿灯总判定（红灯语义：任一环节退出码非零，或 dbt 无本轮新鲜产物）
         overall = "green"
@@ -212,6 +213,48 @@ def _pipeline(instance: str, run_id: str, trigger: str) -> None:
             pass
         with _state_lock:
             _state.update(active=False, run_id=None, instance=None)
+
+
+def _harvest_match_contracts(inst, run_id: str, results_json: dict, log) -> None:
+    """匹配契约违规收获进统一账本（raw.contract_report）。
+
+    编译期 sidecar pipeline/contract_tests.json 声明匹配契约测试 ↔ 契约元数据；
+    跑批后按 run_results 测试结果换算：fail/error→红灯行、warn→黄灯行、pass→不记。
+    行的 run_id 与本链一致——挂起队列（/api/config/<账套>/pending）由此覆盖匹配契约。
+    收获失败不抛出（治理数据缺失不影响灯色与报表）。
+    """
+    import duckdb
+
+    sidecar = inst.pipeline_dir / "contract_tests.json"
+    if not sidecar.exists():
+        return
+    metas = {m["test"]: m for m in json.loads(sidecar.read_text(encoding="utf-8"))}
+    rows = []
+    for r in results_json.get("results", []):
+        uid = r.get("unique_id", "")
+        name = uid.split(".")[-1] if uid.startswith("test.") else ""
+        if name not in metas:
+            continue
+        st = r.get("status")
+        if st == "pass":
+            continue
+        m = metas[name]
+        level = "red" if st in ("fail", "error", "runtime error") else "yellow"
+        rows.append((run_id, datetime.now(), m["wide"], m["field"], m["rule"], level,
+                     int(r.get("failures") or 0),
+                     str(r.get("message") or f"匹配契约 {m['rule']} 命中 {m['field']}")[:200]))
+    if not rows:
+        return
+    db = (inst.pipeline_dir / inst.db_path).resolve()
+    con = duckdb.connect(str(db))
+    try:
+        con.execute("""create table if not exists raw.contract_report (
+            run_id varchar, ts timestamp, source varchar, field varchar,
+            rule varchar, level varchar, cnt bigint, sample varchar)""")
+        con.executemany("insert into raw.contract_report values (?,?,?,?,?,?,?,?)", rows)
+    finally:
+        con.close()
+    log.write(f"[契约收获] 匹配契约违规 {len(rows)} 行 → raw.contract_report（run_id={run_id}）\n")
 
 
 def trigger_run(instance: str, trigger: str = "manual") -> str | None:

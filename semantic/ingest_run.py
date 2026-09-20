@@ -96,74 +96,91 @@ def _check_range(series, rng):
 
 def validate_and_transform(df: pd.DataFrame, fields: list[dict], source_name: str,
                            violations: list[dict]) -> pd.DataFrame:
-    """逐字段契约校验 + 类型化。前置条件：df 已按字段契约 rename 为英文列名（map）。
-    违规记录进 violations（不阻断，按级别汇总定级）；类型化同步完成（date/integer/decimal）。"""
+    """逐字段契约校验 + 类型化（两阶段语义 v2，2026-09-21 评审归因后重构）：
+
+    阶段一：在**原始帧**上逐字段独立检测全部违规并留痕（先记录后动作）——
+            消灭"required 先剔行掩盖同 row 后续违规"的顺序依赖（R1 归因）；
+    阶段二：统一执行剔行（required）→ 缺失填充 → 类型化列替换。
+
+    规则词表（契约违规统一账本，与字段契约术语一一对应）：
+    type / required / range / enum / format / unique（+匹配契约 fanout/null_match/orphan_right
+    由跑批收获阶段写入）。sample 一律非空（设计 §3.5）。
+    """
+    drop_mask = pd.Series(False, index=df.index)
+
     for f in fields:
         col, typ = f["map"], f.get("type", "string")
         level = f.get("level", "yellow")
         if col not in df.columns:
             continue  # 表头级问题已在 header_changed 处理
-
         s = df[col]
-        # 类型化 + 转换失败统计
+
+        # ---- 阶段一：类型化检测（原帧）----
         if typ == "date":
             t = pd.to_datetime(s, errors="coerce")
             bad = int(t.isna().sum() - s.isna().sum())
+            bad_vals = s[t.isna() & s.notna()]
         elif typ in ("integer", "decimal"):
             t = pd.to_numeric(s, errors="coerce")
             bad = int(t.isna().sum() - s.isna().sum())
+            bad_vals = s[t.isna() & s.notna()]
         else:
             t = s
             bad = 0
+            bad_vals = pd.Series(dtype=object)
         if bad:
-            violations.append({"source": source_name, "field": col, "rule": "type_coerce",
+            violations.append({"source": source_name, "field": col, "rule": "type",
                                "level": level, "count": bad,
-                               "sample": str(s[t.isna()].dropna().iloc[:3].tolist())})
-            df[col] = t
-        else:
-            df[col] = t
+                               "sample": str(bad_vals.iloc[:3].tolist()) or f"{col} 含 {bad} 个不可解析值"})
 
-        cur = df[col]
-        # required：缺失行剔除（计数留痕）
+        # ---- 阶段一：required（原帧统计，剔行动作延后统一执行）----
         if f.get("required"):
-            n = int(cur.isna().sum())
+            n = int(s.isna().sum())
             if n:
-                violations.append({"source": source_name, "field": col, "rule": "required_missing_dropped",
-                                   "level": level, "count": n, "sample": ""})
-                df = df[cur.notna()]
-                cur = df[col]
-        # 缺失策略
-        if f.get("missing") == "default" and "default" in f:
-            df[col] = cur.fillna(f["default"])
-            cur = df[col]
-        # range
+                violations.append({"source": source_name, "field": col, "rule": "required",
+                                   "level": level, "count": n,
+                                   "sample": f"必填列 {col} 有 {n} 行为空，已剔除"})
+                drop_mask |= s.isna()
+
+        # ---- 阶段一：range / enum / format / unique（原帧判定）----
         if f.get("range") and typ in ("integer", "decimal"):
-            mask = _check_range(cur, f["range"])
+            mask = _check_range(s, f["range"])
             if mask.any():
                 violations.append({"source": source_name, "field": col, "rule": "range",
                                    "level": level, "count": int(mask.sum()),
-                                   "sample": str(cur[mask].iloc[:3].tolist())})
-        # enum
+                                   "sample": str(s[mask].iloc[:3].tolist())})
         if f.get("enum"):
-            mask = cur.notna() & (~cur.isin(f["enum"]))
+            mask = s.notna() & (~s.isin(f["enum"]))
             if mask.any():
                 violations.append({"source": source_name, "field": col, "rule": "enum",
                                    "level": level, "count": int(mask.sum()),
-                                   "sample": str(sorted(set(cur[mask].dropna()))[:5])})
-        # format 正则
+                                   "sample": str(sorted(set(s[mask].dropna()))[:5])})
         if f.get("format"):
-            mask = cur.notna() & (~cur.astype(str).str.match(f["format"]))
+            mask = s.notna() & (~s.astype(str).str.match(f["format"]))
             if mask.any():
                 violations.append({"source": source_name, "field": col, "rule": "format",
                                    "level": level, "count": int(mask.sum()),
-                                   "sample": str(cur[mask].iloc[:3].tolist())})
-        # unique（唯一键冲突 = 数据损坏，恒 red——双计收入风险）
+                                   "sample": str(s[mask].iloc[:3].tolist())})
         if f.get("unique"):
-            dup = int(cur.duplicated(keep=False).sum())
+            dup = int(s.duplicated(keep=False).sum())
             if dup:
                 violations.append({"source": source_name, "field": col, "rule": "unique",
                                    "level": "red", "count": dup,
-                                   "sample": str(cur[cur.duplicated(keep=False)].unique()[:3].tolist())})
+                                   "sample": str(s[s.duplicated(keep=False)].unique()[:3].tolist())})
+
+    # ---- 阶段二：类型化替换 + 统一剔行 + 缺失填充 ----
+    for f in fields:
+        col, typ = f["map"], f.get("type", "string")
+        if col not in df.columns:
+            continue
+        if typ == "date":
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+        elif typ in ("integer", "decimal"):
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+        if f.get("missing") == "default" and "default" in f:
+            df[col] = df[col].fillna(f["default"])
+    if drop_mask.any():
+        df = df[~drop_mask]
     return df
 
 
@@ -226,7 +243,7 @@ def ingest_source(con, inst, src: dict, inbox: Path, run_id: str,
     coerce_cfg = src.get("problems", {}).get("type_coerce_ratio")
     if coerce_cfg:
         n_bad = sum(v["count"] for v in violations
-                    if v["source"] == name and v["rule"] == "type_coerce")
+                    if v["source"] == name and v["rule"] == "type")
         if raw_rows and n_bad / raw_rows > coerce_cfg["max"]:
             problem("type_coerce_ratio", coerce_cfg.get("level", "yellow"),
                     f"类型转换失败 {n_bad}/{raw_rows} 超过阈值 {coerce_cfg['max']:.1%}")

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -298,6 +299,33 @@ def gen_mart_model(inst, rep: dict, ctx=None) -> str:
     return out + "\n"
 
 
+
+
+def contract_test_meta(inst) -> list[dict]:
+    """匹配契约测试的元数据清单（跑批收获进 raw.contract_report 用）：
+    test=测试名（去 .sql）、wide=宽表声明名、field=join 左键、rule、level（red/yellow）"""
+    wide = inst.wide["wide"]
+    main = wide["main"]
+    out = []
+    for j in wide.get("joins", []):
+        c = j.get("contract", {})
+        tbl, on = j["table"], j["keys"]
+        if c.get("fanout", "red") != "ignore":
+            out.append({"test": f"match_{tbl}_fanout", "wide": wide["name"],
+                        "table": tbl, "field": on["left"], "rule": "fanout",
+                        "level": "red" if c.get("fanout") == "red" else "yellow"})
+        if c.get("null_match", "yellow") != "ignore":
+            out.append({"test": f"match_{tbl}_null_match", "wide": wide["name"],
+                        "table": tbl, "field": on["left"], "rule": "null_match",
+                        "level": "red" if c.get("null_match") == "red" else "yellow"})
+        orphan = c.get("orphan_right", "ignore")
+        if orphan not in ("ignore",):
+            out.append({"test": f"match_{tbl}_orphan_right", "wide": wide["name"],
+                        "table": tbl, "field": on["left"], "rule": "orphan_right",
+                        "level": "yellow"})
+    return out
+
+
 def gen_project_files(inst) -> dict[str, str]:
     n = inst.name
     project_yml = f"""# 生成物：由 semantic.compile_dbt 从 instances/{n}/ 五配置生成，勿手改
@@ -368,6 +396,9 @@ def compile_instance(inst) -> dict:
     ctx = _report_graph(inst)
     for rep in inst.dashboard.get("reports", []):
         files[f"models/marts/mart_{rep['key']}.sql"] = gen_mart_model(inst, rep, ctx)
+
+    # 匹配契约测试元数据（跑批收获进 raw.contract_report 统一账本）
+    files["contract_tests.json"] = json.dumps(contract_test_meta(inst), ensure_ascii=False, indent=1)
 
     # diff 摘要（AI-Native：生成物变更可审计）
     changed, unchanged = [], 0
