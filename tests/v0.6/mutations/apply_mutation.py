@@ -44,12 +44,16 @@ def main() -> int:
 
     target = dest / m["file"]
     text = target.read_text(encoding="utf-8")
-    old, new = m["old"], m["new"]
-    n = text.count(old)
-    if n != 1:
-        print(f"[{mid}] 注入失败：旧串命中 {n} 次（应为 1）。实现可能已变化，需更新 MUTATIONS.json。")
-        return 1
-    target.write_text(text.replace(old, new), encoding="utf-8")
+    pairs = [(m["old"], m["new"])]
+    if m.get("old2"):
+        pairs.append((m["old2"], m["new2"]))
+    for old, new in pairs:
+        n = text.count(old)
+        if n != 1:
+            print(f"[{mid}] 注入失败：旧串命中 {n} 次（应为 1）。实现可能已变化，需更新 MUTATIONS.json。")
+            return 1
+        text = text.replace(old, new)
+    target.write_text(text, encoding="utf-8")
     print(f"[{mid}] 已注入：{m['desc']}")
     print(f"[{mid}] 副本位置: {dest}")
     print(f"[{mid}] 启动: cd \"{dest}\" && \"{REPO}/.venv/Scripts/python.exe\" -m uvicorn app.main:app --port 8630")

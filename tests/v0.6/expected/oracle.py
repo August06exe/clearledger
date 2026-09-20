@@ -1,32 +1,30 @@
 # -*- coding: utf-8 -*-
-"""独立口径 oracle —— tests/v0.6 密封答案计算器。
+"""独立口径 oracle —— tests/v0.6 密封答案计算器（**v2，R2 重密封版**）。
 
 纪律（tri-agent-testing oracle-grader.md 第一节）：
   - 绝不 import 被测系统任何模块（semantic/ app/ ops/ 一概不碰）；
   - 只用 pandas + PyYAML + 标准库，从 instances/_wb_r1/ 的 CSV 与 YAML 现算；
   - 确定性：无随机、无时间戳，重复运行 answer.json 逐字节一致；
   - 契约语义依据：docs/设计-v0.5-配置工作台.md §3.5/§3.6 + docs/待确认与决策.md D15
-    （数据契约三层：入口档案/字段契约/匹配契约，级别由配置定级）。
+    + R1 判分归因裁定（2026-09-21，六条引擎侧修复/裁定，见 assumptions）。
+
+R2 语义变更（相对 v1，依据 R1 裁定）：
+  1. 契约校验两阶段 v2：先在原始帧全量记录违规、后统一剔行——type 行不再被剔行逻辑吞掉；
+  2. type 违规行保留（置 NULL 交由 missing 策略），不剔除；
+  3. required 违规行在摄取层剔除（"入库即干净字段"）；
+  4. raw 行数 = 文件数据行数 − 该源 required 剔行数（v1 的"raw=文件镜像"作废）；
+  5. 匹配契约行写入 contract_report：source = wide.yml 声明名（本实例 wide_ledger），
+     field = join 左键；cnt = dbt 测试 failures 数——null_match 测试为 select distinct，
+     cnt = 去重后未匹配左键值数（空串算一个值，幽灵键算一个值）；fanout cnt = 去重后
+     重复右键数；
+  6. join 物理扩行语义不变：宽表行数 = 保留主表行数 + 扇出扩行数。
 
 运行（仓库根目录）：
     .venv/Scripts/python.exe tests/v0.6/expected/oracle.py
 输出：本文件同目录 answer.json（UTF-8、LF、ensure_ascii=False、sort_keys）。
-
-与引擎可能分歧的假设（逐条同步记录在 caliber.json 的 assumptions，判分归因用）：
-  A1 level 字面量：contract_report.level = 配置声明的级别字符串（yellow/red）；
-     设计文档 §3.5 示例中的 "pending" 视为示意值。
-  A2 软违规（enum/range/unique/null_match/fanout）记录不剔行，行照常入库/入宽表。
-  A3 类型不可强转 → 记 rule=type 一行且该行被剔除。
-  A4 required 空值 → 记 rule=required 一行且该行被剔除。
-  A5 raw 层为源文件镜像（手册红线"原始层只增不改"）：raw 行数 = 文件数据行数。
-  A6 missing=default 为缺失策略而非违规：补默认值、不产生契约行。
-  A7 空值跳过 enum/range 检查（retail 真实基线佐证：海量空供应商编码未产生枚举/范围行）。
-  A8 join 契约行记在宽表名下（source=wide.name），field=左表键列名。
-  A9 fanout 物理扩行：cnt=受影响的左表行数；宽表行数 = 保留主表行数 + 扩行数。
 """
 from __future__ import annotations
 
-import csv
 import json
 import sys
 from pathlib import Path
@@ -38,13 +36,24 @@ REPO = Path(__file__).resolve().parents[3]
 INST = REPO / "instances" / "_wb_r1"
 OUT = Path(__file__).resolve().parent / "answer.json"
 
+ANSWER_VERSION = 2
+
 
 def load_source_csv(sname: str, src_cfg: dict) -> pd.DataFrame:
-    """按 discover.patterns 读唯一命中文件（dtype=str、空串不转 NaN，保真镜像口径）。"""
+    """按 discover.patterns 读唯一命中文件（dtype=str、空串不转 NaN，保真口径）。"""
     hits = sorted(INST.glob("data/inbox/" + src_cfg["discover"]["patterns"][0]))
     if len(hits) != 1:
         raise SystemExit(f"源 {sname} 命中 {len(hits)} 个文件，基线约定单文件")
     return pd.read_csv(hits[0], dtype=str, keep_default_na=False, encoding="utf-8-sig")
+
+
+def apply_column_map(df: pd.DataFrame, fields: list, sname: str) -> pd.DataFrame:
+    """入口档案列映射：中文表头 cn → 英文字段 map（独立实现）。"""
+    cn2map = {f["cn"]: f["map"] for f in fields}
+    missing = [c for c in cn2map if c not in df.columns]
+    if missing:
+        raise SystemExit(f"{sname}: 表头缺列 {missing}（header_changed 应为 red，基线不播种）")
+    return df.rename(columns=cn2map)
 
 
 def coercible(v: str, typ: str) -> bool:
@@ -58,19 +67,13 @@ def coercible(v: str, typ: str) -> bool:
     return True  # decimal/string
 
 
-def apply_column_map(df: pd.DataFrame, fields: list, sname: str) -> pd.DataFrame:
-    """入口档案列映射：中文表头 cn → 英文字段 map（独立实现）。"""
-    cn2map = {f["cn"]: f["map"] for f in fields}
-    missing = [c for c in cn2map if c not in df.columns]
-    if missing:
-        raise SystemExit(f"{sname}: 表头缺列 {missing}（header_changed 应为 red，基线不播种）")
-    return df.rename(columns=cn2map)
+def field_contract_rows(sname: str, df: pd.DataFrame, fields: list) -> tuple[list[dict], pd.DataFrame, int]:
+    """字段契约逐条评估（两阶段 v2：原始帧全量记录 → 统一剔行）。
 
-
-def field_contract_rows(sname: str, df: pd.DataFrame, fields: list) -> list[dict]:
-    """字段契约逐条评估 → 稳定投影行（A2 软违规不剔行、A3/A4 剔行、A6 缺失策略零行、A7 空值跳过）。
-
-    入参 df 已应用列映射。
+    - required 空值：记录 rule=required，该行剔除（裁定 3）；
+    - type 不可强转：记录 rule=type，行保留置 NULL（裁定 2）；
+    - enum/range/missing 策略同 v1（软记录不剔行 / 空值跳过 / 缺失默认零行）。
+    返回 (投影行, 剔行后保留帧, required 剔行数)。
     """
     out: list[dict] = []
     drop_mask = pd.Series(False, index=df.index)
@@ -84,16 +87,16 @@ def field_contract_rows(sname: str, df: pd.DataFrame, fields: list) -> list[dict
             n = int((s == "").sum())
             if n:
                 out.append(dict(source=sname, field=col, rule="required", level=f["level"], cnt=n))
-                drop_mask |= s == ""                                   # A4
+                drop_mask |= s == ""                                    # 剔行（裁定 3）
         if "enum" in f:
             allowed = set(map(str, f["enum"]))
-            bad = nonempty & ~s.isin(allowed)                          # A7
+            bad = nonempty & ~s.isin(allowed)                           # 空值跳过（A7）
             n = int(bad.sum())
             if n:
                 out.append(dict(source=sname, field=col, rule="enum", level=f.get("level", "yellow"), cnt=n))
         if "range" in f:
             lo, hi = f["range"]
-            num = pd.to_numeric(s.where(nonempty), errors="coerce")    # A7：空值跳过
+            num = pd.to_numeric(s.where(nonempty), errors="coerce")
             bad = nonempty & num.notna() & ((num < lo) | (num > hi))
             n = int(bad.sum())
             if n:
@@ -105,11 +108,14 @@ def field_contract_rows(sname: str, df: pd.DataFrame, fields: list) -> list[dict
                 n = int(bad.sum())
                 if n:
                     out.append(dict(source=sname, field=col, rule="type", level=f["level"], cnt=n))
-                    drop_mask |= bad                                    # A3
-        # missing=default（A6）：缺失策略，补默认值，零契约行 —— 显式不产出
-        # unique：本账套未声明（SCD 形态 + 右表键重复属 join 扇出语义），通用实现略
-    kept = df[~drop_mask]
-    return out, kept
+                    # v2：type 行保留置 NULL（裁定 2），不再进 drop_mask
+        # missing=default（A6）：缺失策略补默认值，零契约行 —— 显式不产出
+        # unique：本账套未声明（右表键重复属 join 扇出语义），不产出
+    required_drops = 0
+    for f in fields:
+        if f.get("required") and f.get("level") and f["map"] in df.columns:
+            required_drops += int((df[f["map"]].str.strip() == "").sum())
+    return out, df[~drop_mask], required_drops
 
 
 def main() -> int:
@@ -122,6 +128,7 @@ def main() -> int:
     srcs = {s["name"]: s for s in cfg["sources"]["sources"]}
     dfs: dict[str, pd.DataFrame] = {}
     file_rows: dict[str, int] = {}
+    raw_rows: dict[str, int] = {}
     proj: list[dict] = []
     kept_main: pd.DataFrame | None = None
 
@@ -130,29 +137,34 @@ def main() -> int:
         df = apply_column_map(df, srcs[sname]["fields"], sname)
         dfs[sname] = df
         file_rows[sname] = int(len(df))
-        rows, kept = field_contract_rows(sname, df, srcs[sname]["fields"])
+        rows, kept, req_drops = field_contract_rows(sname, df, srcs[sname]["fields"])
         proj += rows
+        raw_rows[sname] = int(len(df)) - req_drops                    # 裁定 4：raw = 文件 − required 剔行
         if sname == "fact_ledger":
             kept_main = kept
 
-    # ---- 匹配契约（A8/A9）：独立模拟 left join 的扇出与匹空 ----
+    # ---- 匹配契约（裁定 5）：cnt = dbt failures = 去重键数 ----
     wide = cfg["wide"]["wide"]
+    wide_name = wide["name"]
     extra = 0
     for j in wide["joins"]:
         right = dfs[j["table"]]
         lkey, rkey = j["keys"]["left"], j["keys"]["right"]
         dup_keys = set(right[rkey][right[rkey].duplicated()])
-        if dup_keys:                                   # fanout：受影响左行数（A9）
-            n = int(kept_main[lkey].isin(dup_keys).sum())
-            if n:
-                proj.append(dict(source=wide["name"], field=lkey, rule="fanout",
-                                 level=j["contract"]["fanout"], cnt=n))
-            extra += n
-        nulls = int((kept_main[lkey].str.strip() == "").sum())   # null_match：空键左行数（A2）
-        if nulls:
-            proj.append(dict(source=wide["name"], field=lkey, rule="null_match",
-                             level=j["contract"]["null_match"], cnt=nulls))
-        # orphan_right: ignore —— 右表孤儿零行（A2 族：配置定级 ignore，不产出）
+        if dup_keys:                                   # fanout：去重后重复右键数
+            n = len(dup_keys)
+            proj.append(dict(source=wide_name, field=lkey, rule="fanout",
+                             level=j["contract"]["fanout"], cnt=n))
+            left_rows = int(kept_main[lkey].isin(dup_keys).sum())
+            extra += left_rows                          # 物理扩行仍按受影响左行数
+        right_keys = set(right[rkey])
+        lv = kept_main[lkey].str.strip()
+        unmatched = kept_main[lkey][(lv == "") | ~lv.isin(right_keys)]
+        if len(unmatched):                              # null_match：去重后未匹配左键值数
+            n = int(unmatched.nunique())
+            proj.append(dict(source=wide_name, field=lkey, rule="null_match",
+                             level=j["contract"]["null_match"], cnt=n))
+        # orphan_right: ignore —— 右表孤儿不产出
     wide_rows = int(len(kept_main)) + extra
 
     proj.sort(key=lambda r: (r["source"], r["field"], r["rule"]))
@@ -173,6 +185,7 @@ def main() -> int:
         impact_dims[d] = sorted(keys)
 
     answer = {
+        "answer_version": ANSWER_VERSION,
         "instance": "_wb_r1",
         "pending": {
             "projection": "(source, field, rule, level, cnt)，集合无序比对；sample 仅要求非空",
@@ -181,21 +194,21 @@ def main() -> int:
         "impact": {"metrics": impact_metrics, "dimensions": impact_dims},
         "rows": {
             "files": file_rows,
-            "raw": {f"raw.{k}": v for k, v in file_rows.items()},   # A5 镜像
-            "wide_ledger": wide_rows,                                # A9
+            "raw": {f"raw.{k}": v for k, v in raw_rows.items()},     # 裁定 4
+            "wide_ledger": wide_rows,                                 # 裁定 4/5 + 物理扩行
         },
         "assumptions_applied": {
-            "pending.items": ["A1", "A2", "A3", "A4", "A6", "A7", "A8", "A9"],
-            "rows.raw": ["A5"],
-            "rows.wide_ledger": ["A2", "A3", "A4", "A9"],
+            "pending.items": ["A1", "A2", "A3v2", "A4", "A6", "A7", "A8", "A9v2"],
+            "rows.raw": ["A4", "A5v2"],
+            "rows.wide_ledger": ["A3v2", "A4", "A9v2"],
         },
     }
     OUT.write_text(json.dumps(answer, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
                    encoding="utf-8", newline="\n")
-    print(f"[OK] answer.json -> {OUT}")
+    print(f"[OK] answer.json (v{ANSWER_VERSION}) -> {OUT}")
     for r in proj:
         print("   ", r)
-    print(f"    rows: files={file_rows} wide={wide_rows}")
+    print(f"    rows: files={file_rows} raw={raw_rows} wide={wide_rows}")
     return 0
 
 

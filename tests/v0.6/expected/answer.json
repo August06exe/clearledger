@@ -1,23 +1,24 @@
 {
+  "answer_version": 2,
   "assumptions_applied": {
     "pending.items": [
       "A1",
       "A2",
-      "A3",
+      "A3v2",
       "A4",
       "A6",
       "A7",
       "A8",
-      "A9"
+      "A9v2"
     ],
     "rows.raw": [
-      "A5"
+      "A4",
+      "A5v2"
     ],
     "rows.wide_ledger": [
-      "A2",
-      "A3",
+      "A3v2",
       "A4",
-      "A9"
+      "A9v2"
     ]
   },
   "impact": {
@@ -126,14 +127,14 @@
         "source": "stock_snapshot"
       },
       {
-        "cnt": 4,
+        "cnt": 1,
         "field": "store_code",
         "level": "yellow",
         "rule": "fanout",
         "source": "wide_ledger"
       },
       {
-        "cnt": 29,
+        "cnt": 2,
         "field": "supplier_code",
         "level": "yellow",
         "rule": "null_match",
@@ -144,19 +145,19 @@
   },
   "rows": {
     "files": {
-      "fact_ledger": 49,
+      "fact_ledger": 50,
       "products": 12,
       "stock_snapshot": 21,
       "stores": 6,
       "suppliers": 5
     },
     "raw": {
-      "raw.fact_ledger": 49,
+      "raw.fact_ledger": 48,
       "raw.products": 12,
       "raw.stock_snapshot": 21,
       "raw.stores": 6,
       "raw.suppliers": 5
     },
-    "wide_ledger": 50
+    "wide_ledger": 52
   }
 }

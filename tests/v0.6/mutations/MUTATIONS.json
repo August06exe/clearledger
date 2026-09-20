@@ -18,6 +18,29 @@
     "bug_class": "路径穿越——设计§7 M3：非白名单 block 与越界实例必须 404",
     "file": "app/services/config_workbench.py",
     "old": "    if not isinstance(instance, str) or not _NAME_RE.match(instance or \"\"):\n        raise WorkbenchError(f\"实例名不合法: {instance!r}\")\n    root = Path(__file__).resolve().parents[2] / \"instances\"\n    d = (root / instance).resolve()\n    if root.resolve() not in d.parents or not d.is_dir():\n        raise WorkbenchError(f\"实例不存在: {instance}\")\n    return d",
-    "new": "    root = Path(__file__).resolve().parents[2] / \"instances\"\n    return root / instance"
+    "new": "    root = Path(__file__).resolve().parents[2] / \"instances\"\n    return root / instance",
+    "old2": "def block_file(block: str) -> str:\n    if block not in BLOCK_FILES:\n        raise WorkbenchError(f\"未知配置块: {block}\")\n    return BLOCK_FILES[block]",
+    "new2": "def block_file(block: str) -> str:\n    return f\"{block}.yml\""
+  },
+  "M4": {
+    "desc": "备份跳过（save 成功但不写 config_history 备份）",
+    "bug_class": "备份跳过——R2 加深 M4：B-03 backup_exists + backup_bytes_equal 判据",
+    "file": "app/services/config_workbench.py",
+    "old": "    backup_dir = d / _BACKUP_RELPATH\n    backup_dir.mkdir(parents=True, exist_ok=True)\n    backup = backup_dir / f\"{block}.prev.yml\"\n    if target.exists():\n        shutil.copyfile(target, backup)",
+    "new": "    backup_dir = d / _BACKUP_RELPATH\n    backup = backup_dir / f\"{block}.prev.yml\""
+  },
+  "M5": {
+    "desc": "别名层清空（/api/aliases 返回空映射）",
+    "bug_class": "别名层清空——R2 加深 M5：B-10 非空 + 覆盖当前账套报表 title 判据",
+    "file": "app/services/aliases.py",
+    "old": "    return {\"nodes\": nodes, \"fields\": fields}",
+    "new": "    return {\"nodes\": {}, \"fields\": {}}"
+  },
+  "M6": {
+    "desc": "查询筛选白名单旁路（非法筛选值直接进查询，D14 回退失效）",
+    "bug_class": "查询白名单旁路——R2 加深 M6：B-11 非法筛选值行集必须等于无筛选行集判据",
+    "file": "semantic/query.py",
+    "old": "        if val not in opts[dim_name]:\n            continue",
+    "new": "        # MUT-M6: 白名单旁路（非法值不再回退）"
   }
 }

@@ -1,10 +1,14 @@
-# SPEC — v0.6 验收场景圣经（测试实例 `_wb_r1`）
+# SPEC — v0.6 验收场景圣经（测试实例 `_wb_r1`）【R2 版，随 2026-09-21 归因裁定重密封】
 
 > **密封伴侣文档：测试 Agent 不读本文。** 测试 Agent 的唯一指令来源是 [TESTPLAN.md](TESTPLAN.md)；
 > 本文供评审、判分者与修复者使用，包含播种清单的预期规则/级别/计数（答案相邻信息）。
 > 命题依据：[设计-v0.5-配置工作台.md](../docs/设计-v0.5-配置工作台.md)（API 契约唯一出处）、
-> [待确认与决策.md](../docs/待确认与决策.md) D15（数据契约三层）、现有账套配置写法（retail 形态）。
+> [待确认与决策.md](../docs/待确认与决策.md) D15（数据契约三层）、现有账套配置写法（retail 形态）、
+> **R1 判分归因裁定（2026-09-21）：两阶段校验 v2 / type 行保留 / required 行摄取层剔除 /
+> raw=文件−required 剔行 / 匹配契约行 cnt=dbt failures（distinct 键数）**。
 > 配置与数据的**唯一真相源**是 [generate.py](generate.py)（幂等生成器）；本文引用其常量，手改本文无效。
+> R2 变更摘要：台账新增 V10 幽灵供应商行（文件 49→50 行）；V6/V7 计数改 distinct 键数口径；
+> raw/wide 行数口径改判（见 §4.3 与 §8）。
 
 ## 1. 实例总览
 
@@ -14,7 +18,7 @@
 | 域形态 | 零售进销存（镜像 `instances/retail/` 的契约词汇，规模最小化） |
 | 目录 | `instances/_wb_r1/`（六份 yml + `data/inbox/` 五个 CSV） |
 | 独立库 | `data/warehouse/_wb_r1.duckdb`（`data/` 不入 git；由三步链的 ingest 创建/全量覆盖） |
-| 规模 | 5 个数据源、inbox 共 **93 数据行**（49+21+6+12+5），三步链秒级 |
+| 规模 | 5 个数据源、inbox 共 **94 数据行**（50+21+6+12+5），三步链秒级 |
 | 灯色预期 | 三步链退出码全 0（播种违规全部 yellow 级，不触发红灯退出）；run 终态=成功；灯允许绿/黄（黄若出现来自 dbt 测试 warn 机制，与契约黄行是两条不同机制，皆非失败） |
 
 数据流：`generate.py` → `semantic.ingest_run --instance _wb_r1` → `semantic.compile_dbt --instance _wb_r1` → dbt build（命令全文见 TESTPLAN §2）。
@@ -192,13 +196,13 @@ reports:
 
 | 文件（patterns 命中） | 列名 | 数据行数 |
 |---|---|---|
-| `台账_202608.csv`（台账_\*.csv） | 事项类型, 单据号, 单据日期, 门店编码, 商品编码, 供应商编码, 渠道, 数量, 单价, 折扣率, 期末数量 | 49 |
+| `台账_202608.csv`（台账_\*.csv） | 事项类型, 单据号, 单据日期, 门店编码, 商品编码, 供应商编码, 渠道, 数量, 单价, 折扣率, 期末数量 | 50 |
 | `库存快照_202608.csv`（库存快照_\*.csv） | 快照月份, 快照日期, 门店编码, 商品编码, 期末数量 | 21 |
 | `门店_202608.csv`（门店_\*.csv） | 门店编码, 门店名称, 城市, 大区, 开业日期 | 6 |
 | `商品_202608.csv`（商品_\*.csv） | 商品编码, 商品名称, 品类, 单位, 标准成本 | 12 |
 | `供应商_202608.csv`（供应商_\*.csv） | 供应商编码, 供应商名称, 结算方式 | 5 |
 
-台账 49 行构成：销售 29（21 干净 + 3 行 S05 供应商回填 + 3 行 V1 + 1 行 V3 + 1 行 V4a）+ 采购 11（8 干净 + 2 行 V2 + 1 行 V4b）+ 采购退货 4 + 期末库存 5（期末数量回填，供应商/渠道/数量/单价/折扣率留空）。行内单据号唯一可 grep（`SZ-`/`PO-`/`RT-`/`QM-` 前缀）。
+台账 50 行构成：销售 29（21 干净 + 3 行 S05 供应商回填 + 3 行 V1 + 1 行 V3 + 1 行 V4a）+ 采购 12（8 干净 + 2 行 V2 + 1 行 V4b + 1 行 V10 幽灵供应商）+ 采购退货 4 + 期末库存 5（期末数量回填，供应商/渠道/数量/单价/折扣率留空）。行内单据号唯一可 grep（`SZ-`/`PO-`/`RT-`/`QM-` 前缀）。
 
 ## 4. 故意播种的契约违规清单（数据层播种，配置本身合法）
 
@@ -206,20 +210,23 @@ reports:
 
 ### 4.1 正向播种（预期产生契约行）
 
+违规行号 = **数据行号（不含表头）**，可用单据号 grep 定位。行彼此不相交（一行只触发一类违规）。计数口径为 **R1 裁定后的 dbt failures 语义**（去重键数，见 §8 A9v2）。
+
 | id | 文件:行 | 播种值 | 触发契约 | 预期 rule | 预期 level | 预期 cnt | 下游效应 |
 |---|---|---|---|---|---|---|---|
 | V1 | 台账:26,27,28 | 渠道=`团购` | fact_ledger.channel enum [门店,电商] | enum | yellow | 3 | 行保留 |
 | V2 | 台账:33 | 数量=`2000` | fact_ledger.quantity range [1,999] | range | yellow | 2 | 行保留（与 ：39 合计 cnt=2） |
 | V2 | 台账:39 | 数量=`0` | 同上 | range | yellow | （并入上行） | 行保留 |
-| V3 | 台账:14（SZ-2607-014） | 单价=`N/A` | fact_ledger.unit_price type decimal 不可强转 | type | yellow | 1 | **该行被剔**（假设 A3） |
-| V4 | 台账:29（空单据号销售行） | 单据号=空 | fact_ledger.doc_no required | required | yellow | 2 | **该行被剔**（假设 A4；与 :40 合计 cnt=2） |
-| V4 | 台账:40（空单据号采购行） | 单据号=空 | 同上 | required | yellow | （并入上行） | **该行被剔** |
-| V6 | 台账（29 行） | 供应商编码=空的销售行 24 + 期末库存行 5 | wide_ledger×suppliers join null_match | null_match | yellow | 29 | 行保留、匹配为空 |
-| V7 | 门店:5,6 | S05 两行（社区五店/社区五店二号） | wide_ledger×stores join 右键重复 fanout | fanout | yellow | 4 | 受影响台账左行=13,24,25,49 四行，**宽表物理扩 4 行**（假设 A9） |
+| V3 | 台账:14（SZ-2607-014） | 单价=`N/A` | fact_ledger.unit_price type decimal 不可强转 | type | yellow | 1 | **行保留置 NULL**（裁定：type 不剔行，A3v2） |
+| V4 | 台账:29（空单据号销售行） | 单据号=空 | fact_ledger.doc_no required | required | yellow | 2 | **该行被摄取层剔除**（裁定：入库即干净字段，A4；与 ：40 合计 cnt=2） |
+| V4 | 台账:40（空单据号采购行） | 单据号=空 | 同上 | required | yellow | （并入上行） | **该行被摄取层剔除** |
+| V6 | 台账（多行） | 供应商编码=空的销售行 24 + 期末库存行 5；供应商编码=`SUP-999` 幽灵行 1（台账:41，PO-2608-007） | wide_ledger×suppliers join null_match | null_match | yellow | **2** | 未匹配**去重值** = {空串, SUP-999}（distinct 语义，A9v2；行数口径会是 30，行数≠cnt 正是变异体判别点） |
+| V7 | 门店:5,6 | S05 两行（社区五店/社区五店二号） | wide_ledger×stores join 右键重复 fanout | fanout | yellow | **1** | 重复**右键去重数** = {S05}（A9v2）；受影响左行 = 台账:13,24,25,50 四行，**宽表物理扩 4 行** |
 | V8 | 库存快照:21 | 期末数量=`-5` | stock_snapshot.ending_qty range [0,100000] | range | yellow | 1 | 行保留 |
 | V9 | 商品:12（FP009） | 品类=`生鲜` | products.category enum [食品,百货,日化] | enum | yellow | 1 | 行保留 |
+| V10 | 台账:41（PO-2608-007） | 供应商编码=`SUP-999`（不在供应商档案） | wide_ledger×suppliers join null_match（未匹配左键值） | null_match | yellow | （并入 V6 的 2） | 行保留；R2 新增，佐证 distinct 口径与 retail"幽灵供应商真黄灯"先例 |
 
-**预期契约行合计：8 条 (source, field, rule, level, cnt) 投影** —— fact_ledger×4（channel/enum=3、doc_no/required=2、quantity/range=2、unit_price/type=1）、products×1（category/enum=1）、stock_snapshot×1（ending_qty/range=1）、wide_ledger×2（store_code/fanout=4、supplier_code/null_match=29）。全部 level=yellow（假设 A1）。
+**预期契约行合计：8 条 (source, field, rule, level, cnt) 投影** —— fact_ledger×4（channel/enum=3、doc_no/required=2、quantity/range=2、unit_price/type=1）、products×1（category/enum=1）、stock_snapshot×1（ending_qty/range=1）、wide_ledger×2（store_code/fanout=1、supplier_code/null_match=2）。全部 level=yellow（假设 A1）。匹配契约行 source=wide.yml 声明名（裁定 4；A8：`_wb_r1` 声明名为 `wide_ledger`）。
 
 ### 4.2 反向播种（预期**零**契约行——投影完备性的对照面）
 
@@ -228,17 +235,18 @@ reports:
 | N1 | 折扣率空 ×6（台账:2,4,9,11,16,18） | `missing: default, default: 0` 补 0，**无契约行**（假设 A6）；下游金额按 0 折扣计算 |
 | N2 | FP009（生鲜行）不被任何台账行引用 | `orphan_right: ignore`，**无契约行** |
 | N3 | 期末库存行渠道/数量/单价为空、采购行供应商回填 | 空值跳过 enum/range（假设 A7），**无契约行** |
-| N4 | 五文件齐全、表头逐列一致、无空文件；剔行 3/49 ≈ 6%（problems 未配置 row_drop_ratio 条款） | problems 类条款全不触发，**无 field="-" 行** |
+| N4 | 五文件齐全、表头逐列一致、无空文件 | problems 类条款全不触发，**无 field="-" 行**（R2 起不再配置 row_drop_ratio 条款，剔行仅 required 2 行） |
 | N5 | entry_type 全部合法、供应商 S05 行大区=华东、结算方式全合法 | 合法值不产生行 |
+| N6 | V3 类型行的其余字段全部合法；V4 两行的其余字段全部合法 | 两阶段 v2 下同 row 多违规互不掩盖——本项目各行单违规，投影不因两阶段而增行 |
 
-### 4.3 行数口径（W 类对数用，语义见假设 A5/A9）
+### 4.3 行数口径（W 类对数用，语义见 §8 假设 A3v2/A4/A5v2/A9v2）
 
 | 口径 | 值 |
 |---|---|
-| 文件数据行 | 台账 49 / 快照 21 / 门店 6 / 商品 12 / 供应商 5（合计 93） |
-| raw 各源表（镜像假设 A5） | 同文件行数 |
-| 剔行（A3+A4） | 3 行（台账 :14、:29、:40）→ 保留 46 |
-| 宽表 wide_ledger（A9） | 46 + 4（V7 扩行）= **50** |
+| 文件数据行 | 台账 50 / 快照 21 / 门店 6 / 商品 12 / 供应商 5（合计 94） |
+| raw 各源表（裁定：文件 − required 剔行） | 台账 **48**（50 − 2）/ 快照 21 / 门店 6 / 商品 12 / 供应商 5 |
+| 剔行（仅 required，A4） | 2 行（台账 :29、:40）；type 行 **保留**（:14 置 NULL）→ 宽表基数 48 |
+| 宽表 wide_ledger（A9v2） | 48 + 4（V7 扇出扩行：台账 :13,24,25,50）= **52** |
 
 ## 5. 影响预览的推导规则（设计 §3.6，纯配置）
 
@@ -274,16 +282,16 @@ rm -rf instances/_wb_r1
 (cd instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors)
 ```
 
-## 8. 独立口径假设（与 caliber.json 逐字同步；引擎分歧时归因指引）
+## 8. 独立口径假设 v2（与 caliber.json 逐字同步；引擎分歧时归因指引）
 
-- **A1** contract_report.level = 配置声明的级别字面量（yellow/red）；设计 §3.5 示例中的 "pending" 视为示意值。
+- **A1** contract_report.level = 配置级别经 severity 映射（warn→yellow / error→red）；本账套全部播种为 yellow。
 - **A2** 软违规（enum/range/unique/null_match/fanout）记录不剔行。
-- **A3** 类型不可强转 → 记 rule=type 且剔行。
-- **A4** required 空值 → 记 rule=required 且剔行。
-- **A5** raw 层为源文件镜像（手册红线"原始层只增不改"），raw 行数 = 文件数据行数。
+- **A3v2** type 不可强转 → 记 rule=type 且**行保留**（置 NULL 交由 missing 策略）——R1 裁定 2，v1 的"剔行"作废。
+- **A4** required 空值 → 记 rule=required 且该行**摄取层剔除**（入库即干净字段）——R1 裁定 5。
+- **A5v2** raw 行数 = 文件数据行数 − 该源 required 剔行数（raw.fact_ledger=48）——R1 裁定 5，v1 "raw=文件镜像"作废。
 - **A6** missing=default 补默认值、零契约行。
 - **A7** 空值跳过 enum/range（retail 真实基线佐证：海量空供应商编码未产生枚举/范围行）。
-- **A8** join 契约行 source=宽表名（wide_ledger），field=左表键列名。
-- **A9** fanout 物理扩行：cnt=受影响左行数；宽表行数 = 保留主表行数 + 扩行数。
+- **A8** 匹配契约行 source = wide.yml 声明名：`_wb_r1` 声明 `name: wide_ledger`；R1 归因反馈括注的 `ledger_wide` 是 **ladder 账套**的声明名——契约以各自声明名为准，本答案取 `wide_ledger`。
+- **A9v2** 匹配契约 cnt = dbt 测试 failures 数（R1 裁定 4）：fanout = 去重后重复右键数（→1）；null_match = 去重后未匹配左键值数（空串与 SUP-999 → 2，**不是行数 30**）；join 物理扩行语义不变 → 宽表行数 = 保留主表行数 48 + 受扇出影响左行数 4 = 52。
 
-归因原则：**命题方不为对齐引擎而改答案**。词表分歧（rule/level 命名）→ spec↔engine 分歧归评审；计数分歧 → 对应假设条目；`rows.raw` → A5；`rows.wide_ledger` → A3/A4/A9；join 行归属 → A8。
+归因原则：**命题方不为对齐引擎而改答案**。cnt 粒度分歧 → A9v2；source 归属分歧 → A8；`rows.raw` 分歧 → A5v2/A4；`rows.wide_ledger` 分歧 → A3v2/A9v2；rule/level 词表分歧 → spec↔engine 词表分歧。
