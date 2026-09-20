@@ -1,59 +1,179 @@
-# 明账 ClearLedger
+<div align="center">
 
-> 每个数字，表里如一。
-> AI Native 的管理报表数据底座：数据投放 → 自动摄取 → 口径管道 → 血缘/字典/红绿灯 → 管理报表门户。
+<img src="docs/assets/logo_B.svg" width="72" alt="ClearLedger logo" />
 
-## 这是什么
+# ClearLedger · 明账
 
-一套跑在你自己电脑上的**私有化报表生产系统**：
+**Every number, traceable to its source. · 每个数字，表里如一。**
 
+An AI-Native reporting data platform — turn messy Excel/CSV drops into governed,
+lineage-tracked management reports, assembled almost entirely from configuration.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-2563EB.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Early_Access-F59E0B.svg)](#-roadmap)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://python.org)
+[![Engine](https://img.shields.io/badge/Engine-DuckDB%20%2B%20dbt-8B5CF6.svg)](#-architecture)
+[![MCP](https://img.shields.io/badge/MCP-Read_Only-0D9488.svg)](#-connect-your-ai-agent)
+[![Docs](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-DC2626.svg)](README.zh-CN.md)
+
+[English](README.md) · [中文](README.zh-CN.md)
+
+<img src="docs/assets/hero-banner.png" width="100%" alt="ClearLedger — from messy spreadsheets to governed dashboards" />
+
+</div>
+
+---
+
+> [!NOTE]
+> **This is a working early-access build (开发中 · 抢鲜体验).** It already runs four live company
+> instances (sales / F&B chain / retail / HRO) with red-yellow-green data governance, and is under
+> an adversarial three-agent test protocol with a 3-consecutive-100% gate. See the
+> [Roadmap](#-roadmap) for what's landed and what's next.
+
+## 📸 What it looks like
+
+| Overview | Lineage graph |
+|---|---|
+| ![Overview](docs/assets/screenshot-overview.png) | ![Lineage](docs/assets/screenshot-lineage.png) |
+
+| Reports | Metric caliber popup |
+|---|---|
+| ![Reports](docs/assets/screenshot-reports.png) | ![Caliber](docs/assets/screenshot-caliber.png) |
+
+## 🤔 Why
+
+Management reporting in most companies is still a human relay race: export from business systems,
+massage in Excel, pass around, merge, pray. The result is slow, opaque ("how was this number even
+computed?"), fragile (one person on leave = reporting stops), and **unrepeatable** — every company
+rebuilds the same wheel.
+
+ClearLedger replaces that relay with an AI-assembled, config-driven pipeline:
+
+- **Drop Excel/CSV files into an inbox** → they are cleaned, contract-checked, and loaded automatically
+- **Every metric has exactly one definition** (a YAML config, not SQL buried in someone's spreadsheet)
+- **Every number is traceable** — click any field and walk its lineage back to the source column
+- **Traffic-light governance** — 🟢 pass · 🟡 data-quality warning (with AI-attributed cause) · 🔴 pipeline
+  failure (downstream blocked, reports explicitly marked *stale*, never silently old)
+- **Your AI agent can plug in** — ClearLedger ships an [MCP server](#-connect-your-ai-agent) so Claude
+  Code, Codex, Hermes, or any MCP client can query metrics and diagnose data health in natural language
+
+## ⚙️ Architecture
+
+```mermaid
+flowchart LR
+    A["📥 Excel / CSV inbox<br/>(per-instance drop zone)"] -->|"ingest<br/>+ field contracts"| B[("🦆 DuckDB<br/>raw · one file per company")]
+    B -->|"compile<br/>(configs → dbt project)"| C["🔧 dbt pipeline<br/>staging → intermediate → marts"]
+    C --> D["📊 Semantic layer<br/>metrics.yml = single source of caliber"]
+    D --> E["🖥 Unified portal<br/>reports · lineage · dictionary · traffic lights"]
+    F["🧩 SIX config blocks<br/>sources · wide · dimensions · metrics · dashboard · permissions"] -.->|drive| A
+    F -.->|drive| C
+    F -.->|drive| D
+    F -.->|drive| E
+    G["🤖 AI assembly line<br/>reads files → drafts configs → human reviews"] -.-> F
+    H["🔌 MCP server<br/>(read-only, audited)"] --> E
 ```
-data/inbox/ 投放区        pipeline/ 口径管道(dbt)       app/ 门户(浏览器访问)
-  Excel/CSV  ──摄取──▶  DuckDB 仓库  ──三层管道──▶  报表 / 血缘蜘蛛网 / 红绿灯 / 数据字典
+
+The engine (`semantic/`) contains **zero business logic**. Everything company-specific lives in
+**six config blocks** per instance — the engine is generic, the assembly is done by AI.
+
+## 🧱 The six building blocks
+
+| Block | File | What it controls |
+|---|---|---|
+| ① Sources | `sources.yml` | File discovery patterns, cleaning pipeline, field contracts (type / range / enum / missing policy), problem severity levels |
+| ② Wide table | `wide.yml` | Declarative joins (ordered left-joins with match contracts: fanout / null-match / orphan) + derived columns |
+| ③ Dimensions | `dimensions.yml` | Which columns become sliceable dimensions (drill-down, filters, grouping — zero presets) |
+| ④ Metrics | `metrics.yml` | The single source of caliber: each metric = one formula + one Chinese/English description shown in the UI |
+| ⑤ Dashboard | `dashboard.yml` | Reports = dimension × metrics × filters × chart type |
+| ⑥ Permissions | `permissions.yml` | *(planned v0.7)* Row/column-level access, unified principal for humans and API keys |
+
+**Three data contracts** run on every batch: entry档案 (file-name patterns that survive monthly renames,
+ordered cleaning primitives, severity per problem class), field contracts (validated on ingest, violations
+logged to `raw.contract_report`), and match contracts (fan-out → red test, null-match → warn + list).
+
+Swap company = swap configs. The engine's `git diff` must be zero — that's the acceptance gate.
+
+## 🚀 Quick start
+
+```bash
+git clone https://github.com/August06exe/clearledger.git
+cd clearledger
+python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt   # Windows
+# or: python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt # Linux/macOS
+
+# generate demo data for two live instances (retail & F&B chain) and run the full pipeline
+.venv/Scripts/python sample_data/generate.py
+.venv/Scripts/python sample_data/generate_restaurant.py
+.venv/Scripts/python -m semantic.ingest_run  --instance sales
+.venv/Scripts/python -m semantic.compile_dbt --instance sales
+cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir . && cd ../../..
+
+# start the portal
+.venv/Scripts/python -m uvicorn app.main:app --host 127.0.0.1 --port 8620
+# open http://127.0.0.1:8620
 ```
 
-- **跑批模式可开关**：默认**完全手动**（点"▶ 立即跑批"才跑）；想要 T+1 自动出数，点顶栏"⏰ 跑批设置"开启每日定时（时间自选、错过自动补跑）
-- **红绿灯**：🟢 成功 · 🟡 数据质量告警（附告警原因） · 🔴 失败（自动拦截下游，报表标记过期）
-- **血缘蜘蛛网图**：任何一张表，谁产生它、它喂给谁，点击看字段级来源
-- **数据字典**：每张表、每个字段的业务含义，随管道自动更新
-- **管理报表**：经营月报 / 区域月报 / 客户汇总 / 商品销售 / 部门费用，一键导出 Excel
+> On Windows, double-click **`启动明账.bat`** — it does all of the above and opens your browser.
 
-## 快速开始（三步）
+## 🔌 Connect your AI agent
 
-1. 双击 **`启动明账.bat`**（首次运行自动装环境，等 2~5 分钟）
-2. 浏览器自动打开 `http://127.0.0.1:8620`
-3. 点右上角 **"▶ 立即跑批"**，等它变绿，开始看数
+ClearLedger ships an MCP server (stdio, read-only, fully audited). Four tools your agent gets:
+**metric catalog** (with human-readable caliber), **report query** (declared dimensions × metrics only —
+row-level data is architecturally unreachable), **data health diagnosis** ("what's missing this period?"),
+and **caliber lookup**.
 
-> 没有真实数据？双击 **`重建演示数据.bat`** 生成一套 18 个月的仿真经营数据（含一个故意埋的数据异常，用来演示黄灯）。
+```json
+{ "mcpServers": { "clearledger": {
+    "command": "C:/path/to/clearledger/.venv/Scripts/python.exe",
+    "args": ["C:/path/to/clearledger/mcp_server.py"] } } }
+```
 
-## 目录导览
+Prefer plain HTTP? Enable `data/openapi_keys.json` (see `openapi_keys.example.json`) and call
+`/api/open/*` with an `X-API-Key` header. Every call is audit-logged.
 
-| 目录 | 内容 |
-|------|------|
-| `app/` | 门户后端（FastAPI）+ 前端（原生 JS + ECharts + AntV G6） |
-| `pipeline/` | dbt 三层管道：staging 清洗 → intermediate 加工 → marts 报表层 |
-| `ingest/` | 数据摄取：`sources.yml` 声明数据源和清洗规则 |
-| `sample_data/` | 演示数据生成器 |
-| `data/inbox/` | **数据投放区**：把新的 Excel/CSV 放进来（格式见 `ingest/sources.yml`） |
-| `docs/` | 路线图、指标口径、验收指南、设计决策、迭代日志 |
+## 🧪 How we test it (no self-grading allowed)
 
-## 日常使用
+Every release passes an adversarial **three-agent protocol**:
 
-- **看报表**：浏览器打开门户 → 管理报表
-- **放新数据**：把文件放进 `data/inbox/` → 点"立即跑批"→ 红绿灯告诉你结果
-- **备份数据**：双击 `备份数据.bat`（数据本质是 `data/warehouse/warehouse.duckdb` 一个文件）
-- **出错了**：跑批历史页能看到失败节点和日志末尾；把报错贴给 AI 助手（ZCode）即可
+| Agent | Knows the code? | Knows the answers? | Memory |
+|---|---|---|---|
+| 🔮 Question Setter | ❌ forbidden | ✅ computes sealed answers independently (pure pandas, never via the engine) | kept across rounds |
+| 🧪 Test Runner | ❌ forbidden | ❌ **forbidden — sealed until scoring** | ❌ **fresh spawn every round (first-strike kill)** |
+| ⚖️ Reviewer | ✅ | ✅ at scoring time | kept, but every verdict must cite mechanical evidence |
 
-## AI-Native 维护模式（本项目第一性原则）
+Answers are sealed with SHA256 manifests; numeric scoring is done by a frozen diff script
+(tolerance 0.01 / 1e-6) — never by an LLM grading numbers. The gate: **3 consecutive rounds at
+100%**, with the question-setter deepening the chaos every round. Last gate: **357 → 381 → 357,
+all 100%**. See [tests/v0.4/](tests/v0.4) for sealed answers, generators, and judge scripts.
 
-这套系统的第一读者和第一操作者是 **AI**，人类只做验收与拍板。为此配备：
+## 📍 Roadmap
 
-- **[AGENTS.md](AGENTS.md)** — 任何 AI agent 接管本仓库的入口（30 秒认知 + 红线 + 快速命令）
-- **[docs/AI-操作手册.md](docs/AI-操作手册.md)** — 详尽操作圣经：系统地图、状态资产清单、8 个操作配方、故障 playbook、agent 自动化 SOP、历史教训 TOP8
-- **`ops/doctor.py`** — 系统自检（人类表格 / `--json` 机器可读），AI 动手前的第一条命令
+| Version | Codename | Theme | Status |
+|---|---|---|---|
+| v0.1 | First bucket | End-to-end minimal loop | ✅ shipped |
+| v0.2 | Visible | Unified portal: lineage / traffic lights / dictionary / reports | ✅ shipped |
+| v0.3 | Generic blocks | Six configs + semantic engine + multi-instance + account switching | ✅ shipped |
+| v0.4 | AI assembly line | Onboarding inspector + open MCP read-only interface | 🔨 in progress |
+| v0.5 | Config workbench | Visual management & editing for configs and contracts | ⏳ planned |
+| v0.6 | Complex rules | Allocation / restatement / reconciliation engines | ⏳ planned |
+| v0.7 | Multi-user & permissions | Sixth block: permissions.yml, unified portal (hide-only ACL) | ⏳ planned |
+| v1.0 | GA | Production hardening + always-on AI self-audit | ⏳ planned |
 
-## 技术栈
+Full narrative roadmap (investor edition, CN): [docs/产品路线图-投资人版.md](docs/产品路线图-投资人版.md)
 
-DuckDB（嵌入式分析引擎）· dbt（口径管道与测试）· FastAPI（门户后端）
-原生 JS + ECharts + AntV G6（门户前端）· APScheduler（每日调度）
-全开源、全本地，无外部服务依赖，数据不出内网。
+## 🤝 Contributing
+
+Early days — the codebase is being shaped fast. Issues and ideas are welcome; please read
+[AGENTS.md](AGENTS.md) (our AI-Native engineering charter) and the
+[AI operations manual](docs/AI-操作手册.md) first: they explain the architecture, the red lines
+(single-source caliber, sealed-answer discipline), and the operational recipes.
+
+## 📄 License
+
+[MIT](LICENSE) — use it, fork it, build your business on it.
+
+---
+
+<div align="center">
+<sub>Built by a human who can't read code, with an AI who reads everything. · 一个不写代码的人，和一个读所有代码的 AI。</sub>
+</div>
