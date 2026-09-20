@@ -50,6 +50,10 @@
 
 它的做法是把工程活儿标准化成六份配置文件：数据源、宽表、维度、指标、看板、权限。全部是纯文本 YAML，agent 可以直接读、直接改，人也可以。新项目来了，换六份配置就能跑，引擎一行不动。日常你丢文件、定口径、看红绿灯；搭管道、改配置、修报错，都是 agent 的事。口径有唯一出处，数据有血缘，进库有契约，工程上的规矩一条没少，只是不用你亲手伺候。
 
+<div align="center">
+<img src="docs/assets/flow-governance.png" width="96%" alt="每批数据的必经之路：投放、三层契约校验、跑批、红绿灯、报表" />
+<sub>每批数据的必经之路：投放 → 三层契约 → 跑批 → 红绿灯。灯色就是治理本身。</sub>
+</div>
 
 如果你：
 
@@ -93,6 +97,11 @@ flowchart LR
 
 ## 🧱 六块积木
 
+<div align="center">
+<img src="docs/assets/info-blocks-v5.png" width="96%" alt="六份配置，一台引擎：文件进，口径与报表出" />
+<sub>六份纯文本配置，一台通用引擎——换公司换配置，引擎一行不动。</sub>
+</div>
+
 | 积木 | 文件 | 管什么 |
 |---|---|---|
 | ① 数据源 | `sources.yml` | 文件发现模式（扛月度改名）、清洗管道、字段契约（类型/范围/枚举/缺失策略）、问题定级 |
@@ -133,6 +142,11 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 明账内置 MCP 服务（stdio、只读、全程审计）。你的 agent 获得六个工具：
 **指标目录**（含中文口径）、**报表查询**（只能查已声明的维度×指标——明细行在架构上就摸不到）、
 **数据健康诊断**（"这期报表为什么没出？"）、**口径查询**。
+
+<div align="center">
+<img src="docs/assets/flow-agent-qa.png" width="92%" alt="agent 通过 MCP 只读问数，答案自带口径" />
+<sub>agent 只读问数，只能查声明的维度 × 指标，答案自带口径——全程审计留痕。</sub>
+</div>
 
 ```json
 { "mcpServers": { "clearledger": {

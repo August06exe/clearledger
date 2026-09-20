@@ -14,9 +14,9 @@ lineage-tracked management reports, assembled almost entirely from configuration
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://python.org)
 [![Engine](https://img.shields.io/badge/Engine-DuckDB%20%2B%20dbt-8B5CF6.svg)](#-architecture)
 [![MCP](https://img.shields.io/badge/MCP-Read_Only-0D9488.svg)](#-connect-your-ai-agent)
-[![Docs](https://img.shields.io/badge/%E6%96%87%E6%A1%A3-%E4%B8%AD%E6%96%87-DC2626.svg)](README.zh-CN.md)
+[![Docs](https://img.shields.io/badge/README-中文-DC2626.svg)](README.md)
 
-English · [中文](README.zh-CN.md)
+English · [中文](README.md)
 
 <img src="docs/assets/cover-c.png" width="100%" alt="ClearLedger — from messy spreadsheets to governed dashboards" />
 
@@ -74,77 +74,10 @@ give ClearLedger a try.
 
 The project is early: four demo instances are built in, the full chain — ingest, validate, run, report, lineage — works end to end, but it is not a mature product yet. See the end of this page for boundaries and the roadmap. Issues are welcome.
 
-## 📸 What it looks like
-
-| Overview | Lineage graph |
-|---|---|
-| ![Overview](docs/assets/screenshot-overview.png) | ![Lineage](docs/assets/screenshot-lineage.png) |
-
-| Reports | Metric caliber popup |
-|---|---|
-| ![Reports](docs/assets/screenshot-reports.png) | ![Caliber](docs/assets/screenshot-caliber.png) |
-
-## 🎯 For everyone who has ever waited on a report
-
-> Monday standup. The boss asks: "Do we have last month's numbers yet?"
-> "Working on it — the sheet is still with finance. I'll chase."
-
-This conversation probably sounds familiar. So will at least one of these:
-
-- 🌙 **The first three days of every month** — a dozen group chats, forty spreadsheets, endless VLOOKUPs, to produce a report that expires next month
-- 📅 **The request you filed half a year ago** — engineering says "next quarter", then "it's not making the priority cut". The business won't wait for the backlog
-- 🚀 **The new venture that just started** — HQ's platform won't reach you for three years, but the boss wants numbers *now*
-- 🧩 **Caliber passed down by word of mouth** — "How is gross margin computed?" "Ask Wang." Wang is on leave; reporting stops
-
-Big company or small, it happens whenever the business runs ahead of the systems. ClearLedger was built for exactly these moments.
-
-
-**A transition period can still be dignified.**
-
-The author's own story: a new project needed reporting; engineering scheduled it a full year out.
-The business couldn't wait — so a BP who can't read code, together with one AI, stood up the whole
-pipeline: ingest → clean → caliber → reports → lineage. Since then, the three days at month-start
-became three minutes.
-
-And it never locks you into the interim: **every caliber, every lineage, every contract lives in
-config files**. When the official platform finally arrives, hand them over as-is — a transition
-that leaves no tech debt behind.
-
-> **When the roadmap won't save you, let the data run first.**
-
-No SQL required. No project approval queue. No ops to babysit. Your AI assistant reads every
-config and fixes what breaks; your only job is deciding what the numbers *should mean*.
-
-## 📸 What it looks like
-
-| Overview | Lineage graph |
-|---|---|
-| ![Overview](docs/assets/screenshot-overview.png) | ![Lineage](docs/assets/screenshot-lineage.png) |
-
-| Reports | Metric caliber popup |
-|---|---|
-| ![Reports](docs/assets/screenshot-reports.png) | ![Caliber](docs/assets/screenshot-caliber.png) |
-
-## 🎯 Who this is for
-
-**Not for big companies** — they have BI teams and mature reporting pipelines. ClearLedger is for
-the people who **can't wait for a sprint slot**:
-
-- 🧭 **The BP / lead of a new project** — the board wants a dashboard *this month*, engineering says "see you in a year"
-- 🏭 **Companies & departments that never digitized** — data scattered across a dozen Excel files, relayed by hand for years
-- ⚡ **Department-level, ad-hoc needs** — too small for a proper project, yet it bites you every single day
-
-**The author's story**: a new project needed reporting. Engineering's backlog put it a full year out.
-Waiting was not an option — so a **BP who can't read code**, together with one AI, stood up the entire
-pipeline: ingest → clean → caliber → reports → lineage. And then made it modular on purpose:
-**next project? swap six config files and go.**
-
-That's the pitch:
-
-> **When engineering capacity can't save you, one person is a data team.**
-
-No SQL required. No project approval queue. No ops to babysit: your AI assistant reads every config,
-fixes what breaks — you only decide what the numbers *should mean*.
+<div align="center">
+<img src="docs/assets/flow-governance.png" width="96%" alt="Every batch's journey: drop zone, three contracts, pipeline run, traffic lights, reports" />
+<sub>Every batch passes the same road: drop → three contracts → run → traffic lights.</sub>
+</div>
 
 ## ⚙️ Architecture
 
@@ -166,6 +99,11 @@ The engine (`semantic/`) contains **zero business logic**. Everything company-sp
 **six config blocks** per instance — the engine is generic, the assembly is done by AI.
 
 ## 🧱 The six building blocks
+
+<div align="center">
+<img src="docs/assets/info-blocks-v5.png" width="96%" alt="Six plain-text configs, one generic engine: files in, calibers and reports out" />
+<sub>Six plain-text configs, one generic engine — swap the company, swap the configs, the engine unchanged.</sub>
+</div>
 
 | Block | File | What it controls |
 |---|---|---|
@@ -210,6 +148,11 @@ ClearLedger ships an MCP server (stdio, read-only, fully audited). Four tools yo
 **metric catalog** (with human-readable caliber), **report query** (declared dimensions × metrics only —
 row-level data is architecturally unreachable), **data health diagnosis** ("what's missing this period?"),
 and **caliber lookup**.
+
+<div align="center">
+<img src="docs/assets/flow-agent-qa.png" width="92%" alt="An agent asks via read-only MCP and gets an answer with its caliber attached" />
+<sub>Read-only queries over declared dimensions × metrics, answers with caliber attached — every call audited.</sub>
+</div>
 
 ```json
 { "mcpServers": { "clearledger": {
