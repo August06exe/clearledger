@@ -39,6 +39,52 @@ English · [中文](README.zh-CN.md)
 |---|---|
 | ![Reports](docs/assets/screenshot-reports.png) | ![Caliber](docs/assets/screenshot-caliber.png) |
 
+## 🎯 Why ClearLedger
+
+Hi, I'm the author.
+
+I do business planning at my company; my day job is turning ideas into numbers and presenting those numbers to the boss.
+
+Last year a new project needed management reports. The proper way to do this is well known: land data in DuckDB, transform with dbt, write calibers as models, hang a dashboard on top. The tools are all open source and ready; I can tinker with them myself.
+
+But actually maintaining that stack is another story: pipelines need someone to run them, configs need someone to change them, errors need someone to chase them. Every piece is ongoing ops. For people who just want the report done, it doesn't add up — so the request goes to engineering, and the schedule comes back a year out.
+
+Before that, I built automations with low-code platforms like PowerBI, Alteryx, and FineDataLink. They run, but they are nowhere near AI-native: everything lives inside their own canvas and private formats, which AI can neither read nor edit, so every change still needs a human. I also tried letting an agent write the automation scripts directly, and stepped into the pit on the other side: as context grows it forgets, sometimes it doesn't listen, and the numbers quietly go wrong. In reporting, wrong numbers are unacceptable. Hardcoded scripts are stable, but the pipeline becomes a black box — where it's stuck, where the data came from, all buried in code.
+
+ClearLedger exists for exactly this spot:
+
+| | Low-code platforms | Pure agent automation | Handwritten scripts | ClearLedger |
+|---|---|---|---|---|
+| AI can read & edit directly | ❌ private canvas formats | ⚠️ can write, may freelance | ⚠️ risky to refactor | ✅ six plain-text configs |
+| Data reliability | ✅ | ❌ loses context, disobedient | ✅ | ✅ calibers live in the system, not in the agent's memory |
+| Pipeline visibility | ⚠️ exists, black box inside | ❌ | ❌ | ✅ traffic lights + lineage, bottlenecks at a glance |
+| Cost of a new project | high, redraw | — | high, rewrite | low, swap six configs |
+
+The approach: standardize the engineering work into six config files — sources, wide table, dimensions, metrics, dashboard, permissions. All plain-text YAML that agents can read and edit directly, and so can you. A new project swaps six configs and runs; the engine doesn't change a line. Day to day, you drop files, define calibers, and watch the lights; building pipelines, editing configs, fixing errors — that's the agent's job. Calibers have a single source of truth, data has lineage, ingestion has contracts. None of the engineering discipline is missing; it just doesn't need your hands.
+
+<img src="docs/assets/cover-b.png" width="100%" alt="Late at night: one person and one agent, standing up the whole pipeline" />
+
+If you:
+
+- spend days every month stitching Excel reports that break on every caliber change
+- filed a reporting request with engineering and the schedule is far away while the business waits
+- run a new project or business line the main systems won't reach for a while, and need a data view running first
+- have calibers living in people's heads, so reporting dies when anyone takes leave
+
+give ClearLedger a try.
+
+The project is early: four demo instances are built in, the full chain — ingest, validate, run, report, lineage — works end to end, but it is not a mature product yet. See the end of this page for boundaries and the roadmap. Issues are welcome.
+
+## 📸 What it looks like
+
+| Overview | Lineage graph |
+|---|---|
+| ![Overview](docs/assets/screenshot-overview.png) | ![Lineage](docs/assets/screenshot-lineage.png) |
+
+| Reports | Metric caliber popup |
+|---|---|
+| ![Reports](docs/assets/screenshot-reports.png) | ![Caliber](docs/assets/screenshot-caliber.png) |
+
 ## 🎯 For everyone who has ever waited on a report
 
 > Monday standup. The boss asks: "Do we have last month's numbers yet?"
