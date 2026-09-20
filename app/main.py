@@ -17,7 +17,7 @@ from urllib.parse import quote
 import duckdb
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Body, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, PlainTextResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -498,6 +498,73 @@ def api_caliber():
                         "type": d.get("type")}
                        for d in inst.dimensions],
     }
+
+
+# ---------------------------------------------------------------- 配置工作台（v0.5）
+from app.services import config_workbench as workbench
+from app.services.config_workbench import WorkbenchError
+
+
+@app.get("/api/config/{instance}")
+def api_config_overview(instance: str):
+    try:
+        return workbench.overview(instance)
+    except WorkbenchError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/api/config/{instance}/pending")
+def api_config_pending(instance: str):
+    try:
+        return workbench.pending_items(instance)
+    except WorkbenchError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/api/config/{instance}/impact")
+def api_config_impact(instance: str):
+    try:
+        return workbench.impact_map(instance)
+    except WorkbenchError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/api/config/{instance}/{block}")
+def api_config_read(instance: str, block: str):
+    try:
+        return workbench.read_block(instance, block)
+    except WorkbenchError as e:
+        raise HTTPException(404, str(e))
+
+
+def _draft_payload(payload: dict) -> str:
+    content = (payload or {}).get("content")
+    if not isinstance(content, str) or not content.strip():
+        raise HTTPException(422, "请求体需含非空字符串字段 content")
+    return content
+
+
+@app.post("/api/config/{instance}/{block}/validate")
+def api_config_validate(instance: str, block: str, payload: dict = Body(...)):
+    content = _draft_payload(payload)
+    try:
+        return workbench.validate_draft(instance, block, content)
+    except WorkbenchError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.post("/api/config/{instance}/{block}/save")
+def api_config_save(instance: str, block: str, payload: dict = Body(...)):
+    content = _draft_payload(payload)
+    rebuild = bool((payload or {}).get("rebuild", False))
+    try:
+        result = workbench.save_block(instance, block, content, rebuild, dbt_runner.trigger_run)
+    except WorkbenchError as e:
+        raise HTTPException(404, str(e))
+    if not result["ok"]:
+        return JSONResponse(status_code=result["http"],
+                            content={"ok": False, "errors": result["errors"]})
+    return result
 
 
 # ---------------------------------------------------------------- 设置

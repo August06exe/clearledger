@@ -77,6 +77,17 @@ def load_instance(name: str) -> Instance:
     d = INSTANCES_DIR / name
     if not d.exists():
         raise ConfigError(f"实例不存在: {d}")
+    return load_instance_dir(d, name)
+
+
+def load_instance_dir(d: Path, name: str) -> Instance:
+    """从任意目录加载实例配置（load_instance 的目录变体）。
+
+    配置工作台的草稿校验靠它：把六份配置（含草稿）放进临时目录即可走全套交叉校验，
+    不必真的落盘到 instances/。语义与 load_instance 完全一致。
+    """
+    if not d.exists():
+        raise ConfigError(f"实例目录不存在: {d}")
 
     meta = _read_yaml(d / "instance.yml")
     inst = Instance(

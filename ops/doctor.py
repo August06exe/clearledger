@@ -34,6 +34,16 @@ def main() -> int:
     except Exception as e:
         check("python 依赖", "fail", f"导入失败：{e}（重装：.venv/Scripts/python -m pip install -r requirements.txt）")
 
+    # ---- 配置工作台（v0.5）----
+    try:
+        from app.services.config_workbench import BLOCK_FILES, instance_dir, validate_draft
+        d0 = instance_dir("sales")
+        ok0 = all((d0 / f).exists() for f in BLOCK_FILES.values())
+        check("配置工作台", "ok" if ok0 else "warn",
+              f"六块映射 {len(BLOCK_FILES)} 块" + ("" if ok0 else "（sales 有块文件缺失）"))
+    except Exception as e:
+        check("配置工作台", "fail", f"工作台服务异常：{e}")
+
     dbt_exe = ROOT / ".venv" / "Scripts" / "dbt.exe"
     check("dbt 可执行", "ok" if dbt_exe.exists() else "fail",
           str(dbt_exe.relative_to(ROOT)) if dbt_exe.exists() else "不存在（重装 dbt-duckdb）")

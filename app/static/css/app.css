@@ -243,3 +243,25 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
   margin: 0; padding-right: 76px;
 }
 .ai-copy { position: absolute; top: 10px; right: 10px; font-size: 12px; padding: 3px 10px; }
+
+/* ---- 配置工作台（v20260921a） ---- */
+.wb-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.wb-tab.active { background: #2563EB; color: #fff; border-color: #2563EB; }
+.wb-layout { display: flex; gap: 12px; align-items: flex-start; }
+.wb-side { width: 230px; flex-shrink: 0; padding: 6px !important; }
+.wb-block { padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13.5px; }
+.wb-block:hover { background: #F1F5F9; }
+.wb-block.active { background: #EFF6FF; color: #1D4ED8; font-weight: 600; }
+.wb-block.wb-missing { opacity: 0.5; }
+.wb-main { flex: 1; min-width: 0; }
+.wb-editor {
+  width: 100%; min-height: 420px; resize: vertical;
+  font-family: Consolas, 'Courier New', monospace; font-size: 12.5px; line-height: 1.6;
+  border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px;
+  background: #0F172A; color: #E2E8F0; tab-size: 2;
+}
+.wb-editor:focus { outline: 2px solid #93C5FD; }
+.wb-result { margin-top: 10px; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+.wb-result.bad { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+.wb-result.good { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.wb-result ul { margin: 6px 0 0 18px; }

@@ -1,0 +1,23 @@
+{
+  "M1": {
+    "desc": "保存绕过校验（save 不校验直接写盘）",
+    "bug_class": "保存绕过校验——设计§7 M1：非法草稿必须 422 且不落盘",
+    "file": "app/services/config_workbench.py",
+    "old": "    check = validate_draft(instance, block, content)\n    if not check[\"ok\"]:\n        return {\"ok\": False, \"errors\": check[\"errors\"], \"http\": 422}\n",
+    "new": "    check = {\"ok\": True, \"errors\": []}\n"
+  },
+  "M2": {
+    "desc": "挂起队列丢级（漏掉 yellow 行）",
+    "bug_class": "挂起队列丢级——设计§7 M2：items 必须含最近 run 全部 level 的行",
+    "file": "app/services/config_workbench.py",
+    "old": "            where run_id = (select max(run_id) from raw.contract_report)\n",
+    "new": "            where run_id = (select max(run_id) from raw.contract_report)\n              and level != 'yellow'\n"
+  },
+  "M3": {
+    "desc": "白名单与防穿越失效（任意块/任意路径可读写）",
+    "bug_class": "路径穿越——设计§7 M3：非白名单 block 与越界实例必须 404",
+    "file": "app/services/config_workbench.py",
+    "old": "    if not isinstance(instance, str) or not _NAME_RE.match(instance or \"\"):\n        raise WorkbenchError(f\"实例名不合法: {instance!r}\")\n    root = Path(__file__).resolve().parents[2] / \"instances\"\n    d = (root / instance).resolve()\n    if root.resolve() not in d.parents or not d.is_dir():\n        raise WorkbenchError(f\"实例不存在: {instance}\")\n    return d",
+    "new": "    root = Path(__file__).resolve().parents[2] / \"instances\"\n    return root / instance"
+  }
+}

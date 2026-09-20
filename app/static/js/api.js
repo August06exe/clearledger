@@ -12,9 +12,12 @@ async function api(path, opts = {}) {
   }
   if (!res.ok) {
     let msg = res.statusText;
-    try { const j = await res.json(); msg = j.detail || msg; } catch (_) {}
-    Toast.show(msg, res.status >= 500);
-    throw new Error(msg);
+    let detail = null;
+    try { const j = await res.json(); msg = j.detail || msg; detail = j.detail; } catch (_) {}
+    Toast.show(typeof msg === 'object' ? '请求被拒绝' : msg, res.status >= 500);
+    const err = new Error(typeof msg === 'object' ? JSON.stringify(msg) : msg);
+    err.detail = detail;
+    throw err;
   }
   if (res.status === 204) return null;
   return res.json();
