@@ -39,7 +39,7 @@ window.Pages.lineage = {
         const [fill, stroke] = statusFill[n.status] || statusFill.unknown;
         return {
           id: n.uid,
-          label: n.name,
+          label: App.alias(n.name),
           nodeType: n.resource_type,
           status: n.status,
           style: {
@@ -87,7 +87,7 @@ window.Pages.lineage = {
     graph.on('node:mouseenter', evt => {
       const n = byUid[evt.item.getID()];
       if (!n) return;
-      tip.innerHTML = `<b>${n.name}</b><br>${n.schema || ''} · ${n.resource_type === 'source' ? '源数据' : '模型'}
+      tip.innerHTML = `<b>${App.alias(n.name)}</b> <span class="muted2" style="font-size:11px">${n.name}</span><br>${n.schema || ''} · ${n.resource_type === 'source' ? '源数据' : '模型'}
         ${n.description ? '<br>' + n.description.slice(0, 80) : ''}`;
       tip.style.display = 'block';
     });
@@ -105,7 +105,7 @@ window.Pages.lineage = {
       if (e.key !== 'Enter') return;
       const q = e.target.value.trim().toLowerCase();
       if (!q) return;
-      const hit = g.nodes.find(n => n.name.toLowerCase().includes(q));
+      const hit = g.nodes.find(n => n.name.toLowerCase().includes(q) || (App.alias(n.name) || '').toLowerCase().includes(q));
       if (!hit) { Toast.show('没有匹配的节点', true); return; }
       const item = graph.findById(hit.uid);
       if (item) { graph.focusItem(item, true, { easing: 'easeCubic', duration: 300 }); this.showPanel(hit); }
@@ -123,7 +123,7 @@ window.Pages.lineage = {
 
     panel.innerHTML = `
       <div class="row spread">
-        <h3 style="margin:0">${n.name}</h3>
+        <h3 style="margin:0">${App.alias(n.name)} <span class="muted2" style="font-size:12px;font-weight:400">${n.name}</span></h3>
         ${StChip.html(n.status)}
       </div>
       <div class="muted mt8">${n.schema || ''} · ${n.resource_type === 'source' ? '源数据' : '数据模型'}${stTime}</div>
@@ -141,7 +141,7 @@ window.Pages.lineage = {
       <h3 class="mt16">字段与口径 <span class="sub">${(d.columns || []).length} 个字段</span></h3>
       <div style="max-height:230px;overflow:auto">
       <table class="tbl"><thead><tr><th>字段</th><th>类型</th><th>业务含义</th></tr></thead><tbody>
-        ${(d.columns || []).map(c => `<tr><td style="white-space:nowrap"><b>${c.name}</b></td>
+        ${(d.columns || []).map(c => `<tr><td style="white-space:nowrap"><b>${App.falias(c.name)}</b><span class="muted2" style="font-size:11px"> ${c.name}</span></td>
           <td class="muted" style="white-space:nowrap">${c.type || '—'}</td>
           <td>${c.description || ''}</td></tr>`).join('')}
       </tbody></table></div>

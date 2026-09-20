@@ -147,6 +147,7 @@ curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/status"
 - **改了 launcher.py 要重打包**：命令在 `ops/launcher.py` 文件头 docstring（pyinstaller + ico 生成），产物 `启动明账.exe` 提交仓库。
 - **首开 AI 提醒横幅**：新克隆首次打开门户会提示"明账是 AI-Native 的、如何让 agent 介入"，可勾选"下次不再提醒"（持久化在 `data/settings.json` 的 `ai_banner`）。随时在门户左侧「AI 接入」页查看指引/重开提醒。
 - 退役资产：`启动明账.bat`、`重建演示数据.bat`（功能已并入 exe，git 历史可找回）；`备份数据.bat` 保留。
+- **界面中文化别名层**（v0.4 收官）：`app/services/aliases.py` 从六份配置自动推导技术名→中文（源/清洗表←sources.title，宽表←主源标题，报表←dashboard.title，字段←cn/维度名），经 `/api/aliases` 供前端 `App.alias()/falias()` 用。改配置标题即自动生效，别名层只做展示不改数据层命名。
 
 ### R-08 更新演示数据
 启动器 **`启动明账.exe`** 的「重建演示数据」按钮，或分步：`sample_data/generate.py` → `semantic.ingest_run` → `semantic.compile_dbt` → cd pipeline && dbt build（详见 docs/AI-点火指南.md Step 3/4）。

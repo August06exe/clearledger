@@ -96,7 +96,7 @@ window.Pages.runs = {
             ${(r.nodes || []).map(n => `
               <tr>
                 <td><span class="kind ${n.kind === 'model' ? 'kind-model' : 'kind-log'}">${n.kind === 'model' ? '模型' : '测试'}</span></td>
-                <td><b>${n.name}</b></td>
+                <td><b>${App.alias(n.name)}</b></td>
                 <td>${StChip.html(n.status)}</td>
                 <td class="num">${n.time !== undefined ? n.time + 's' : '—'}</td>
                 <td class="muted" style="max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(n.message || '').replace(/"/g, '&quot;')}">${n.message || ''}</td>

@@ -11,7 +11,7 @@
 - 门户：`http://127.0.0.1:8620`（仅本机监听，无认证——有意为之，见决策 D4）
 - **多账套架构（v0.3 起）**：一个公司 = `instances/<账套>/` 下五份配置（sources/wide/dimensions/metrics/dashboard）+ 独立库 `data/warehouse/<账套>.duckdb`。引擎 `semantic/` 零业务预设。内置账套：sales（演示销售公司）、restaurant（演示连锁餐饮）、retail（零售进销存·测试）、hro（人力外包·测试）
 - 数据流：`instances/<账套>/data/inbox/` → `semantic.ingest_run`（三契约校验）→ `semantic.compile_dbt`（配置→dbt project）→ dbt build → 门户按账套路由
-- 当前状态：main=develop（v0.3 收官：语义引擎+账套切换+旧手写管道退役）；下一站 v0.5 配置工作台与挂起队列
+- 当前状态：v0.4 已收官（MCP/HTTP 开放接口 + 体检器 + 界面中文化 + 测试闸门 R3~R5 连续三轮 48/48=100%）；下一站 v0.5 配置工作台与挂起队列
 
 ## 必读文件（按顺序）
 

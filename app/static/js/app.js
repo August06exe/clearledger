@@ -61,6 +61,7 @@ const icon = (name) =>
 
 const App = {
   charts: [],   // 已注册的 echarts 实例（切页时销毁）
+  ALIASES: { nodes: {}, fields: {} },  // 界面中文化别名（/api/aliases）
   graph: null,  // g6 实例
   polls: [],    // 定时轮询句柄
   sysTimer: null,
@@ -89,6 +90,7 @@ const App = {
     });
     this.refreshSys();
     this.sysTimer = setInterval(() => this.refreshSys(), 60_000);
+    this.loadAliases();
     this.maybeAiBanner();
     this.route();
   },
@@ -118,6 +120,20 @@ const App = {
       } catch (_) { e.target.checked = !e.target.checked; }
     });
     banner.querySelector('#ai-banner-close').addEventListener('click', () => banner.remove());
+  },
+
+  async loadAliases() {
+    try { this.ALIASES = await api('/api/aliases'); } catch (_) {}
+  },
+
+  // 技术名 → 中文（查不到返回原名）
+  alias(name) {
+    if (!name) return name;
+    return this.ALIASES.nodes[name] || name;
+  },
+  falias(field) {
+    if (!field) return field;
+    return this.ALIASES.fields[field] || field;
   },
 
   async refreshInstances(selected) {

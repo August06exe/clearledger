@@ -30,9 +30,9 @@ window.Pages.dictionary = {
     const order = { raw: '① raw 源数据', staging: '② staging 清洗', intermediate: '③ intermediate 加工', marts: '④ marts 报表' };
     const match = t => {
       if (!q) return true;
-      if ((t.name || '').toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q)) return true;
+      if ((t.name || '').toLowerCase().includes(q) || (App.alias(t.name) || '').toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q)) return true;
       return (t.columns || []).some(c =>
-        (c.name || '').toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q));
+        (c.name || '').toLowerCase().includes(q) || (App.falias(c.name) || '').toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q));
     };
     const groups = {};
     this.tables.filter(match).forEach(t => (groups[t.schema] = groups[t.schema] || []).push(t));
@@ -43,7 +43,7 @@ window.Pages.dictionary = {
       return `<div class="muted" style="margin:10px 0 4px">${label}</div>` + items.map(t => `
         <div class="dict-item" data-uid="${t.uid}">
           <span class="kind kind-${t.kind === 'source' ? 'source' : t.kind === 'log' ? 'log' : 'model'}">${t.kind === 'source' ? '源' : t.kind === 'log' ? '日志' : '模型'}</span>
-          <span>${t.name}</span>
+          <span>${App.alias(t.name)}</span>
         </div>`).join('');
     }).join('') || '<div class="empty-tip">没有匹配的表</div>';
 
@@ -60,7 +60,7 @@ window.Pages.dictionary = {
     if (!t) return;
     document.getElementById('dict-detail').innerHTML = `
       <div class="row spread">
-        <h3 style="margin:0">${t.name} <span class="kind kind-${t.kind === 'source' ? 'source' : t.kind === 'log' ? 'log' : 'model'}">${t.schema}</span></h3>
+        <h3 style="margin:0">${App.alias(t.name)} <span class="muted2" style="font-size:12px;font-weight:400">${t.name}</span> <span class="kind kind-${t.kind === 'source' ? 'source' : t.kind === 'log' ? 'log' : 'model'}">${t.schema}</span></h3>
         <span class="muted">${(t.columns || []).length} 个字段 · ${t.test_count} 项质量测试</span>
       </div>
       ${t.description ? `<p class="mt8 muted" style="line-height:1.7">${t.description}</p>` : ''}
@@ -68,7 +68,7 @@ window.Pages.dictionary = {
         <thead><tr><th style="width:220px">字段名</th><th style="width:140px">类型</th><th>业务含义</th></tr></thead>
         <tbody>
           ${(t.columns || []).map(c => `
-            <tr><td><b>${c.name}</b></td><td class="muted">${c.type || '—'}</td><td>${c.description || ''}</td></tr>`).join('')}
+            <tr><td><b>${App.falias(c.name)}</b><span class="muted2" style="font-size:11px"> ${c.name}</span></td><td class="muted">${c.type || '—'}</td><td>${c.description || ''}</td></tr>`).join('')}
         </tbody>
       </table>`;
   },

@@ -390,6 +390,16 @@ def api_dictionary():
     return {"tables": tables, "generated_at": datetime.now().isoformat(timespec="seconds")}
 
 
+# ---------------------------------------------------------------- 界面中文化别名
+@app.get("/api/aliases")
+def api_aliases():
+    from app.services.aliases import build_alias_map
+    try:
+        return build_alias_map(load_instance(_inst()))
+    except ConfigError as e:
+        raise HTTPException(503, str(e))
+
+
 # ---------------------------------------------------------------- 报表（语义层驱动）
 @app.get("/api/reports")
 def api_reports():
@@ -641,7 +651,10 @@ def api_open_report_data(key: str, request: Request, limit: int | None = None, i
     filters = {k: v for k, v in request.query_params.items() if k in allowed}
     rows = _guard(semantic_query.run_report, inst_name, key, filters, limit or 200)
     _audit_open(request, principal, True, f"report={key} rows={len(rows)}")
-    return {"instance": inst_name, "key": key, "rows": rows}
+    # columns 与 MCP query_report 对齐（外部 agent 消费面一致性）
+    return {"instance": inst_name, "key": key,
+            "columns": list(rows[0].keys()) if rows else [],
+            "rows": rows, "count": len(rows)}
 
 
 @app.get("/api/open/status")

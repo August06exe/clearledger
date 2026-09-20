@@ -92,7 +92,7 @@ window.Pages.overview = {
       if (!items.length) return '';
       return `<div style="margin-bottom:6px">
         <div class="muted" style="margin:6px 0 2px">${order[sch]}</div>
-        ${items.map(n => `<span class="pipe-chip"><span class="dot ${DOT_CLASS[n.status] || 'dot-gray'}"></span>${n.name}</span>`).join('')}
+        ${items.map(n => `<span class="pipe-chip" title="${n.name}"><span class="dot ${DOT_CLASS[n.status] || 'dot-gray'}"></span>${App.alias(n.name)}</span>`).join('')}
       </div>`;
     }).join('') || '<div class="muted">暂无管道数据</div>';
   },

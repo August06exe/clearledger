@@ -235,7 +235,7 @@ Prefer plain HTTP? Enable `data/openapi_keys.json` (see `openapi_keys.example.js
 | v0.1 | First bucket | End-to-end minimal loop | ✅ shipped |
 | v0.2 | Visible | Unified portal: lineage / traffic lights / dictionary / reports | ✅ shipped |
 | v0.3 | Generic blocks | Six configs + semantic engine + multi-instance + account switching | ✅ shipped |
-| v0.4 | AI assembly line | Onboarding inspector + open MCP + **UI localization (Chinese aliases for lineage/fields/status)** | 🔨 in progress |
+| v0.4 | AI assembly line | Onboarding inspector + open MCP + UI localization (Chinese alias layer) | ✅ shipped |
 | v0.5 | Config workbench | Visual management & editing for configs and contracts | ⏳ planned |
 | v0.6 | Complex rules | Allocation / restatement / reconciliation engines | ⏳ planned |
 | v0.7 | Multi-user & permissions | Sixth block: permissions.yml, unified portal (hide-only ACL) | ⏳ planned |

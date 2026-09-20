@@ -338,9 +338,12 @@ if isinstance(oapi_parsed, dict):
     except Exception:
         declared_params = f"openapi_status={st_oapi}, path not found"
 attempts = []
+first_parsed = None
 for style, suffix in (("filter_style", "&filter=" + quote(f"大区:{INJ}")), ("bare_param_style", "&" + quote("大区") + "=" + quote(INJ))):
     path = "/api/open/reports/region_month/data?instance=retail" + suffix
     st, parsed, body = http_get(path)
+    if first_parsed is None and isinstance(parsed, dict):
+        first_parsed = parsed
     attempts.append({"style": style, "path_suffix": suffix, "http_status": st,
                      "body_contains_OR11": "OR 1=1" in body,
                      "rows": len((parsed or {}).get("rows") or (parsed or {}).get("data") or []) if isinstance(parsed, dict) else None,
@@ -349,7 +352,7 @@ save("b08_inject_http.json", {"tool_or_endpoint": "GET /api/open/reports/region_
                               "args_or_path": {"injection_value": INJ}, "attempts": attempts,
                               "declared_params_openapi": declared_params,
                               "ok": all(a["http_status"] == 200 for a in attempts),
-                              "http_status": attempts[0]["http_status"], "raw": attempts[0]["raw"], "parsed": None})
+                              "http_status": attempts[0]["http_status"], "raw": attempts[0]["raw"], "parsed": first_parsed})
 note("B-08", f"attempts={[(a['style'], a['http_status'], a['rows'], a['body_contains_OR11']) for a in attempts]} openapi_params={str(declared_params)[:300]}")
 
 # ================= B-09 limit 边界三连 =================
@@ -359,9 +362,9 @@ st5, parsed5, body5 = http_get("/api/open/reports/monthly_kpi/data?instance=reta
 rows5 = len((parsed5 or {}).get("rows") or (parsed5 or {}).get("data") or []) if isinstance(parsed5, dict) else None
 stabc, parsedabc, bodyabc = http_get("/api/open/reports/monthly_kpi/data?instance=retail&limit=abc")
 save("b09_limit.json", {"tool_or_endpoint": "query_report + HTTP monthly_kpi/data",
-                        "mcp_limit_100000": {"ok": ok, "rows": mcp_rows, "raw_head": raw[:200]},
+                        "mcp": {"ok": ok, "rows": mcp_rows, "raw_head": raw[:200]},
                         "http_limit_5": {"http_status": st5, "rows": rows5, "raw": body5},
-                        "http_limit_abc": {"http_status": stabc, "raw_head": bodyabc[:300]},
+                        "http_bad_limit": {"http_status": stabc, "raw_head": bodyabc[:300]},
                         "ok": ok and 200 <= st5 < 300, "raw": raw, "parsed": None,
                         "http_status": st5})
 note("B-09", f"mcp(100000): ok={ok} rows={mcp_rows}; http limit=5: {st5} rows={rows5}; http limit=abc: {stabc}")
