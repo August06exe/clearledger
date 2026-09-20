@@ -26,9 +26,8 @@ English · [中文](README.zh-CN.md)
 
 > [!NOTE]
 > **This is a working early-access build (开发中 · 抢鲜体验).** It already runs four live company
-> instances (sales / F&B chain / retail / HRO) with red-yellow-green data governance, and is under
-> an adversarial three-agent test protocol with a 3-consecutive-100% gate. See the
-> [Roadmap](#-roadmap) for what's landed and what's next.
+> instances (sales / F&B chain / retail / HRO) with red-yellow-green data governance.
+> See the [Roadmap](#-roadmap) for what's landed and what's next.
 
 ## 📸 What it looks like
 
@@ -40,22 +39,34 @@ English · [中文](README.zh-CN.md)
 |---|---|
 | ![Reports](docs/assets/screenshot-reports.png) | ![Caliber](docs/assets/screenshot-caliber.png) |
 
-## 🤔 Why
+## 🎯 Who this is for
 
-Management reporting in most companies is still a human relay race: export from business systems,
-massage in Excel, pass around, merge, pray. The result is slow, opaque ("how was this number even
-computed?"), fragile (one person on leave = reporting stops), and **unrepeatable** — every company
-rebuilds the same wheel.
+**Not for big companies** — they have BI teams and mature reporting pipelines. ClearLedger is for
+the people who **can't wait for a sprint slot**:
 
-ClearLedger replaces that relay with an AI-assembled, config-driven pipeline:
+- 🧭 **The BP / lead of a new project** — the board wants a dashboard *this month*, engineering says "see you in a year"
+- 🏭 **Companies & departments that never digitized** — data scattered across a dozen Excel files, relayed by hand for years
+- ⚡ **Department-level, ad-hoc needs** — too small for a proper project, yet it bites you every single day
 
-- **Drop Excel/CSV files into an inbox** → they are cleaned, contract-checked, and loaded automatically
-- **Every metric has exactly one definition** (a YAML config, not SQL buried in someone's spreadsheet)
-- **Every number is traceable** — click any field and walk its lineage back to the source column
-- **Traffic-light governance** — 🟢 pass · 🟡 data-quality warning (with AI-attributed cause) · 🔴 pipeline
-  failure (downstream blocked, reports explicitly marked *stale*, never silently old)
-- **Your AI agent can plug in** — ClearLedger ships an [MCP server](#-connect-your-ai-agent) so Claude
-  Code, Codex, Hermes, or any MCP client can query metrics and diagnose data health in natural language
+**The author's story**: a new project needed reporting. Engineering's backlog put it a full year out.
+Waiting was not an option — so a **BP who can't read code**, together with one AI, stood up the entire
+pipeline: ingest → clean → caliber → reports → lineage. And then made it modular on purpose:
+**next project? swap six config files and go.**
+
+That's the pitch:
+
+> **When engineering capacity can't save you, one person is a data team.**
+
+No SQL required. No project approval queue. No ops to babysit: your AI assistant reads every config,
+fixes what breaks — you only decide what the numbers *should mean*.
+
+## ✨ Understand it in three minutes
+
+<img src="docs/assets/promo-card1.png" width="100%" alt="Feature 1: drop files in, the pipeline does the rest (CN)" />
+
+<img src="docs/assets/promo-card2.png" width="100%" alt="Feature 2: new company = six config blocks (CN)" />
+
+<img src="docs/assets/promo-card3.png" width="100%" alt="Feature 3: every number introduces itself (CN)" />
 
 ## ⚙️ Architecture
 
@@ -131,21 +142,6 @@ and **caliber lookup**.
 Prefer plain HTTP? Enable `data/openapi_keys.json` (see `openapi_keys.example.json`) and call
 `/api/open/*` with an `X-API-Key` header. Every call is audit-logged.
 
-## 🧪 How we test it (no self-grading allowed)
-
-Every release passes an adversarial **three-agent protocol**:
-
-| Agent | Knows the code? | Knows the answers? | Memory |
-|---|---|---|---|
-| 🔮 Question Setter | ❌ forbidden | ✅ computes sealed answers independently (pure pandas, never via the engine) | kept across rounds |
-| 🧪 Test Runner | ❌ forbidden | ❌ **forbidden — sealed until scoring** | ❌ **fresh spawn every round (first-strike kill)** |
-| ⚖️ Reviewer | ✅ | ✅ at scoring time | kept, but every verdict must cite mechanical evidence |
-
-Answers are sealed with SHA256 manifests; numeric scoring is done by a frozen diff script
-(tolerance 0.01 / 1e-6) — never by an LLM grading numbers. The gate: **3 consecutive rounds at
-100%**, with the question-setter deepening the chaos every round. Last gate: **357 → 381 → 357,
-all 100%**. See [tests/v0.4/](tests/v0.4) for sealed answers, generators, and judge scripts.
-
 ## 📍 Roadmap
 
 | Version | Codename | Theme | Status |
@@ -153,7 +149,7 @@ all 100%**. See [tests/v0.4/](tests/v0.4) for sealed answers, generators, and ju
 | v0.1 | First bucket | End-to-end minimal loop | ✅ shipped |
 | v0.2 | Visible | Unified portal: lineage / traffic lights / dictionary / reports | ✅ shipped |
 | v0.3 | Generic blocks | Six configs + semantic engine + multi-instance + account switching | ✅ shipped |
-| v0.4 | AI assembly line | Onboarding inspector + open MCP read-only interface | 🔨 in progress |
+| v0.4 | AI assembly line | Onboarding inspector + open MCP + **UI localization (Chinese aliases for lineage/fields/status)** | 🔨 in progress |
 | v0.5 | Config workbench | Visual management & editing for configs and contracts | ⏳ planned |
 | v0.6 | Complex rules | Allocation / restatement / reconciliation engines | ⏳ planned |
 | v0.7 | Multi-user & permissions | Sixth block: permissions.yml, unified portal (hide-only ACL) | ⏳ planned |
@@ -166,7 +162,7 @@ Full narrative roadmap (investor edition, CN): [docs/产品路线图-投资人�
 Early days — the codebase is being shaped fast. Issues and ideas are welcome; please read
 [AGENTS.md](AGENTS.md) (our AI-Native engineering charter) and the
 [AI operations manual](docs/AI-操作手册.md) first: they explain the architecture, the red lines
-(single-source caliber, sealed-answer discipline), and the operational recipes.
+(single-source caliber), and the operational recipes.
 
 
 ## 🙏 致谢 · 站在开源巨人的肩膀上
@@ -186,12 +182,11 @@ Early days — the codebase is being shaped fast. Issues and ideas are welcome; 
 
 **方法论借鉴**
 
-[![Inspect AI](https://img.shields.io/badge/Inspect_AI(UK_AISI)-8B5CF6.svg)](https://github.com/UKGovernmentBEIS/inspect_ai) —— Task/Solver/Scorer 三段分离，启发了我们的命题/执行/判分架构
-[![CAR-bench](https://img.shields.io/badge/CAR-bench(UC_Berkeley)-DC2626.svg)](https://github.com/cornell-carbon-research/carbon-bench) —— "LLM Judges Are Not Judges"：我们坚持数字判分必须机械、绝不让 LLM 给数字打分
-[![Hypothesis](https://img.shields.io/badge/Property_Based_Testing(Hypothesis)-7C3AED.svg)](https://github.com/HypothesisWorks/hypothesis) ⭐ 7.8k —— 独立 oracle + 随机生成 + 收缩定位 → 我们的密封答案生成器
+[![Inspect AI](https://img.shields.io/badge/Inspect_AI(UK_AISI)-8B5CF6.svg)](https://github.com/UKGovernmentBEIS/inspect_ai) —— the Task/Solver/Scorer separation inspired our evaluation architecture
+[![Hypothesis](https://img.shields.io/badge/Property_Based_Testing(Hypothesis)-7C3AED.svg)](https://github.com/HypothesisWorks/hypothesis) ⭐ 7.8k —— independent oracle + generative inputs → our acceptance-answer generation
 [![agent-testing](https://img.shields.io/badge/Agent_Red_Team_Tools-0891B2.svg)](https://github.com/topics/agent-testing) —— 对抗注入思路 → 混沌条款
 
-> 一句话：**引擎是它们的，积木是配置的，装配是 AI 的，验收是三个 Agent 互相盯着的。**
+> One line: **the engines are theirs, the blocks are config, the assembly is AI's.**
 > 感谢以上项目的维护者与社区——明账每个版本都会同步更新这份名单。
 
 

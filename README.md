@@ -13,9 +13,9 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://python.org)
 [![Engine](https://img.shields.io/badge/引擎-DuckDB%20%2B%20dbt-8B5CF6.svg)](#️-架构一页看懂)
 [![MCP](https://img.shields.io/badge/MCP-只读开放-0D9488.svg)](#-让你的ai-agent连上来)
-[![English](https://img.shields.io/badge/README-English-2563EB.svg)](README.md)
+[![English](https://img.shields.io/badge/README-English-2563EB.svg)](README.en.md)
 
-[English](README.en.md) · 中文
+中文 · [English](README.en.md)
 
 <img src="docs/assets/hero-banner.png" width="100%" alt="明账 —— 从混乱表格到治理报表" />
 
@@ -25,8 +25,34 @@
 
 > [!NOTE]
 > **当前为开发中版本（抢鲜体验 Early Access）**。已有 4 个真实运转的公司账套实例
-> （销售 / 连锁餐饮 / 零售进销存 / 人力外包），跑批红绿灯治理完整，并通过
-> 三 Agent 对抗式验收测试（连续 3 轮 100% 闸门）。更新计划见[文末](#-更新计划)。
+> （销售 / 连锁餐饮 / 零售进销存 / 人力外包），跑批红绿灯治理完整。更新计划见[文末](#-更新计划)。
+
+## ✨ 三分钟看懂
+
+<img src="docs/assets/promo-card1.png" width="100%" alt="功能一：把文件丢进去，剩下交给管道" />
+
+<img src="docs/assets/promo-card2.png" width="100%" alt="功能二：换一家公司 = 换六块积木" />
+
+<img src="docs/assets/promo-card3.png" width="100%" alt="功能三：每个数字都会自我介绍" />
+
+## 🎯 为谁而做
+
+**不是给大公司的**——他们有自己的 BI 团队和完整的报表流水线。明账是给那些**等不起排期的人**：
+
+- 🧭 **新项目的 BP / 负责人**——项目明天就要数据看板，产研说"排期一年后见"
+- 🏭 **还没完成数字化的公司 / 部门**——数据散落在十几张 Excel 里，人肉接力了好多年
+- ⚡ **部门级、临时性的需求**——不值得立项走研发流程，但每天都被它折磨
+
+**作者的故事**：新项目立项，报表需求提给产研，排期直接排到一年以后。等是不可能等的——
+于是一个**不会写代码的 BP**，带着一个 AI，把"投放 → 清洗 → 口径 → 报表 → 血缘"整条自动化
+流水线拉了起来。而且顺手做成了积木化的：**下一个项目来，换六份配置文件就能用**。
+
+这就是明账的定位——
+
+> **当产研排期救不了你的时候，一个人，就是一支数据团队。**
+
+不需要你会 SQL，不需要等立项，不需要养运维：你的 AI 助手读得懂全部配置，
+出问题它会修，你只负责定义"这个数应该怎么算"。
 
 ## 📸 产品实拍
 
@@ -37,21 +63,6 @@
 | 管理报表 · 一键导出 | 指标口径 · 界面可查 |
 |---|---|
 | ![报表](docs/assets/screenshot-reports.png) | ![口径](docs/assets/screenshot-caliber.png) |
-
-## 🤔 为什么做这个
-
-大多数公司的管理报表还在靠人肉接力：业务系统导出 → Excel 加工 → 微信传文件 → 拼装 → 祈祷。
-结果是：**慢**（周期以天计）、**黑盒**（"这个数怎么算的"没人说得清）、**脆弱**（做表的人一休假就断供）、
-**不可复制**（每家公司都在重造同一个轮子）。
-
-明账把这条人肉流水线，换成 AI 装配、配置驱动的自动化管道：
-
-- **Excel/CSV 丢进投放区** → 自动清洗、契约校验、入库——脏数据当场亮灯，绝不带病发布
-- **每个指标只有一个定义**（在 YAML 配置里，不在某人的电子表格里），且**界面可查公式与说明**
-- **每个数字可追溯**——点开任意字段，血缘图带你走回源文件的那一列
-- **红绿灯治理**——🟢 通过 · 🟡 数据质量告警（附原因）· 🔴 管道失败（下游拦截，报表标"过期"，绝不拿旧数装新数）
-- **你的 AI 助手可以插进来**——内置 [MCP 服务](#-让你的ai-agent连上来)，Claude Code、Codex、Hermes
-  等 agent 用自然语言问数、诊断数据健康
 
 ## ⚙️ 架构（一页看懂）
 
@@ -124,20 +135,6 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 偏好 HTTP？启用 `data/openapi_keys.json`（见 `openapi_keys.example.json`），带 `X-API-Key`
 调用 `/api/open/*`。每次调用都有审计留痕。
 
-## 🧪 我们怎么测试（不允许 AI 自己给自己打分）
-
-每个版本必须通过对抗式**三 Agent 三权分立**验收：
-
-| Agent | 知道实现吗 | 知道答案吗 | 记忆 |
-|---|---|---|---|
-| 🔮 命题 | ❌ 禁读实现 | ✅ 用纯 pandas 独立计算密封答案（绝不经过引擎） | 跨轮保留 |
-| 🧪 测试 | ❌ 禁读实现 | ❌ **密封，判分前不准看** | ❌ 每轮全新（初见杀） |
-| ⚖️ 评审 | ✅ | ✅ 判分时启封 | 保留，但结论必须引用机械证据 |
-
-答案用 SHA256 清单密封；数值判分由冻结的判分脚本完成（容差 0.01/1e-6）——**绝不让 LLM 给数字打分**。
-闸门：**连续 3 轮 100%**，且每轮命题必须加深混沌。最近一次闸门：**357 → 381 → 357，全部 100%**。
-密封答案、生成器、判分脚本见 [tests/v0.4/](tests/v0.4)。
-
 ## 📍 更新计划
 
 | 版本 | 代号 | 主题 | 状态 |
@@ -145,7 +142,7 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 | v0.1 | 第一桶数据 | 端到端最小闭环 | ✅ 已交付 |
 | v0.2 | 看得见 | 一体化门户：血缘/红绿灯/字典/报表 | ✅ 已交付 |
 | v0.3 | 通用积木 | 六配置+语义引擎+多账套+账套切换 | ✅ 已交付 |
-| v0.4 | AI 装配线 | 接入体检器 + 开放 MCP 只读接口 | 🔨 进行中 |
+| v0.4 | AI 装配线 | 接入体检器 + 开放 MCP + **界面中文化（血缘/字段/状态中文别名）** | 🔨 进行中 |
 | v0.5 | 配置工作台 | 配置与契约的可视化管理和编辑 | ⏳ 计划中 |
 | v0.6 | 复杂规则 | 分摊 / 重算 / 对账引擎化 | ⏳ 计划中 |
 | v0.7 | 多用户与权限 | 第六块积木：permissions.yml、统一门户 | ⏳ 计划中 |
@@ -157,8 +154,7 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 
 项目还在快速成形期，欢迎 Issue 与想法。动手前请先读
 [AGENTS.md](AGENTS.md)（AI-Native 工程章程）与
-[AI 操作手册](docs/AI-操作手册.md)：架构、红线（口径唯一出处、密封答案纪律）、操作配方都在里面。
-
+[AI 操作手册](docs/AI-操作手册.md)：架构、红线（口径唯一出处）、操作配方都在里面。
 
 ## 🙏 致谢 · 站在开源巨人的肩膀上
 
@@ -177,14 +173,12 @@ cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir 
 
 **方法论借鉴**
 
-[![Inspect AI](https://img.shields.io/badge/Inspect_AI(UK_AISI)-8B5CF6.svg)](https://github.com/UKGovernmentBEIS/inspect_ai) —— Task/Solver/Scorer 三段分离，启发了我们的命题/执行/判分架构
-[![CAR-bench](https://img.shields.io/badge/CAR-bench(UC_Berkeley)-DC2626.svg)](https://github.com/cornell-carbon-research/carbon-bench) —— "LLM Judges Are Not Judges"：我们坚持数字判分必须机械、绝不让 LLM 给数字打分
-[![Hypothesis](https://img.shields.io/badge/Property_Based_Testing(Hypothesis)-7C3AED.svg)](https://github.com/HypothesisWorks/hypothesis) ⭐ 7.8k —— 独立 oracle + 随机生成 + 收缩定位 → 我们的密封答案生成器
-[![agent-testing](https://img.shields.io/badge/Agent_Red_Team_Tools-0891B2.svg)](https://github.com/topics/agent-testing) —— 对抗注入思路 → 混沌条款
+[![Inspect AI](https://img.shields.io/badge/Inspect_AI(UK_AISI)-8B5CF6.svg)](https://github.com/UKGovernmentBEIS/inspect_ai) —— Task/Solver/Scorer 三段分离，启发了我们的评估架构
+[![Hypothesis](https://img.shields.io/badge/Property_Based_Testing(Hypothesis)-7C3AED.svg)](https://github.com/HypothesisWorks/hypothesis) ⭐ 7.8k —— 独立 oracle + 随机生成 → 验收答案的独立生成
+[![agent-testing](https://img.shields.io/badge/Agent_Red_Team_Tools-0891B2.svg)](https://github.com/topics/agent-testing) —— 对抗注入思路 → 混沌测试条款
 
-> 一句话：**引擎是它们的，积木是配置的，装配是 AI 的，验收是三个 Agent 互相盯着的。**
+> 一句话：**引擎是它们的，积木是配置的，装配是 AI 的。**
 > 感谢以上项目的维护者与社区——明账每个版本都会同步更新这份名单。
-
 
 ## 📄 协议
 
