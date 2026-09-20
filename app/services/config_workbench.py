@@ -130,7 +130,7 @@ def save_block(instance: str, block: str, content: str, rebuild: bool,
         shutil.copyfile(target, backup)
 
     tmp = target.with_suffix(".yml.tmp")
-    tmp.write_text(content, encoding="utf-8")
+    tmp.write_text(content, encoding="utf-8", newline="")  # 保留原换行符，杜绝 LF→CRLF 字节抖动
     os.replace(tmp, target)
 
     affected = affected_reports(instance, block, content)
