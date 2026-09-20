@@ -82,7 +82,7 @@ The project is early: four demo instances are built in, the full chain — inges
 ## ⚙️ Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["📥 Excel / CSV inbox<br/>(per-instance drop zone)"] -->|"ingest<br/>+ field contracts"| B[("🦆 DuckDB<br/>raw · one file per company")]
     B -->|"compile<br/>(configs → dbt project)"| C["🔧 dbt pipeline<br/>staging → intermediate → marts"]
     C --> D["📊 Semantic layer<br/>metrics.yml = single source of caliber"]

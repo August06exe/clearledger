@@ -79,7 +79,7 @@
 ## ⚙️ 架构（一页看懂）
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["📥 Excel / CSV 投放区<br/>（每账套独立）"] -->|"摄取<br/>+ 字段契约"| B[("🦆 DuckDB<br/>每账套一个库文件")]
     B -->|"编译<br/>（配置 → dbt project）"| C["🔧 dbt 管道<br/>清洗 → 加工 → 报表层"]
     C --> D["📊 语义层<br/>metrics.yml = 口径唯一出处"]
