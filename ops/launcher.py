@@ -225,10 +225,11 @@ def gui() -> None:
                              if result == "ok" else result))
         bar.stop()
         status_var.set("门户运行中 · 窗口可关闭" if result == "ok" else "初始化失败")
+        root.after(0, lambda: (start_btn.config(state="normal"),
+                               rebuild_btn.config(state="normal"),
+                               open_btn.config(state="normal")))
         if result != "ok":
             root.after(0, lambda: messagebox.showerror("明账启动器", result))
-        else:
-            open_btn.config(state="normal")
 
     def start(force_demo: bool = False) -> None:
         start_btn.config(state="disabled")
@@ -238,8 +239,35 @@ def gui() -> None:
     tk.Label(root, textvariable=status_var, fg="#2563EB").pack(pady=(0, 4))
     start_btn = tk.Button(btns, text="启动 / 初始化", width=16, command=lambda: start(False))
     start_btn.pack(side="left", padx=6)
+    def open_portal() -> None:
+        if portal_alive():
+            webbrowser.open(URL)
+            return
+        # 门户已死（关机重开/进程被杀）：就地拉活，而不是打开一个打不开的网页
+        start_btn.config(state="disabled")
+        rebuild_btn.config(state="disabled")
+        open_btn.config(state="disabled", text="拉起中…")
+        bar.start(24)
+        status_var.set("门户未在运行，正在拉起（约 10~30 秒）…")
+
+        def _revive() -> None:
+            result = bootstrap(log)
+            bar.stop()
+            root.after(0, lambda: (start_btn.config(state="normal"),
+                                   rebuild_btn.config(state="normal")))
+            if result == "ok":
+                status_var.set("门户已拉起 · 浏览器已打开")
+                root.after(0, lambda: open_btn.config(state="normal", text="打开门户"))
+                webbrowser.open(URL)
+            else:
+                status_var.set("拉起失败")
+                root.after(0, lambda: (open_btn.config(state="normal", text="打开门户"),
+                                       messagebox.showerror("明账启动器", result)))
+
+        threading.Thread(target=_revive, daemon=True).start()
+
     open_btn = tk.Button(btns, text="打开门户", width=12, state="normal",
-                         command=lambda: webbrowser.open(URL))
+                         command=open_portal)
     open_btn.pack(side="left", padx=6)
 
     def rebuild() -> None:
