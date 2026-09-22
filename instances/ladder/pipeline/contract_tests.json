@@ -1,0 +1,114 @@
+[
+ {
+  "test": "match_projects_fanout",
+  "wide": "ledger_wide",
+  "table": "projects",
+  "field": "project_code",
+  "rule": "fanout",
+  "level": "red"
+ },
+ {
+  "test": "match_projects_null_match",
+  "wide": "ledger_wide",
+  "table": "projects",
+  "field": "project_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_org_fanout",
+  "wide": "ledger_wide",
+  "table": "org",
+  "field": "dept_code",
+  "rule": "fanout",
+  "level": "red"
+ },
+ {
+  "test": "match_org_null_match",
+  "wide": "ledger_wide",
+  "table": "org",
+  "field": "dept_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_customers_fanout",
+  "wide": "ledger_wide",
+  "table": "customers",
+  "field": "customer_code",
+  "rule": "fanout",
+  "level": "red"
+ },
+ {
+  "test": "match_customers_null_match",
+  "wide": "ledger_wide",
+  "table": "customers",
+  "field": "customer_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_industries_fanout",
+  "wide": "ledger_wide",
+  "table": "industries",
+  "field": "industry_code",
+  "rule": "fanout",
+  "level": "red"
+ },
+ {
+  "test": "match_industries_null_match",
+  "wide": "ledger_wide",
+  "table": "industries",
+  "field": "industry_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_cost_centers_fanout",
+  "wide": "ledger_wide",
+  "table": "cost_centers",
+  "field": "cost_center_code",
+  "rule": "fanout",
+  "level": "red"
+ },
+ {
+  "test": "match_cost_centers_null_match",
+  "wide": "ledger_wide",
+  "table": "cost_centers",
+  "field": "cost_center_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_subsidy_policies_fanout",
+  "wide": "ledger_wide",
+  "table": "subsidy_policies",
+  "field": "policy_code",
+  "rule": "fanout",
+  "level": "red"
+ },
+ {
+  "test": "match_subsidy_policies_null_match",
+  "wide": "ledger_wide",
+  "table": "subsidy_policies",
+  "field": "policy_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_group_params_fanout",
+  "wide": "ledger_wide",
+  "table": "group_params",
+  "field": "group_key",
+  "rule": "fanout",
+  "level": "red"
+ },
+ {
+  "test": "match_group_params_null_match",
+  "wide": "ledger_wide",
+  "table": "group_params",
+  "field": "group_key",
+  "rule": "null_match",
+  "level": "yellow"
+ }
+]

@@ -1,0 +1,21 @@
+# 生成物：报表模型列元数据（L2.5 项目费用月报）
+version: 2
+
+models:
+  - name: mart_fee_project
+    description: L2.5 项目费用月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "项目"
+        description: 分组维度
+      - name: "商旅费"
+        description: 商旅平台账单按成本中心归集（L2.5 并行分支）
+      - name: "费用报销"
+        description: 费用报销单已过滤杂质行后的净额
+      - name: "平台管理费"
+        description: 集团平台管理费（部门/集团单值分摊）
+      - name: "残保金"
+        description: 残保金部门级分摊额
+      - name: "期间费用合计"
+        description: 商旅 + 报销 + 平台管理费 + 残保金（L2.5 期间费用）

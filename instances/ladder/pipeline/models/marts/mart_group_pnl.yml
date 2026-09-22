@@ -1,0 +1,13 @@
+# 生成物：报表模型列元数据（L5 集团净利月报）
+version: 2
+
+models:
+  - name: mart_group_pnl
+    description: L5 集团净利月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 分组维度
+      - name: "集团净利"
+        description: 责任贡献 − 集团费用分摊（L5 集团层；单值不下钻）
+      - name: "净利率"
+        description: 集团净利 ÷ 收入合计

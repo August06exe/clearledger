@@ -1,0 +1,13 @@
+# 生成物：报表模型列元数据（部门人力成本月报）
+version: 2
+
+models:
+  - name: mart_dept_cost
+    description: 部门人力成本月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "一级部门"
+        description: 分组维度
+      - name: "人力成本"
+        description: 工资奖金 + 社保公积金 + 招聘费，即 L2 层人力成本合计

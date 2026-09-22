@@ -205,14 +205,24 @@ def _report_graph(inst):
 
     def required_dims(key):
         rep = reps[key]
-        out = []
+        own = []
         if rep.get("time_dim"):
-            out.append(rep["time_dim"])
-        out.append(rep["dimension"])
+            own.append(rep["time_dim"])
+        own.append(rep["dimension"])
+        out = list(own)
         for c in children.get(key, []):
             for d in required_dims(c):
                 if d not in out:
                     out.append(d)
+        # 粒度契约（方向一）：后代传导维度超出本报表声明维度的部分，
+        # 必须在本报表 rollup 中显式声明——杜绝静默改粒度
+        declared = set(own) | set(rep.get("rollup") or [])
+        extra = [d for d in out if d not in declared]
+        if extra:
+            raise ConfigError(
+                f"[{inst.name}] 报表 {key} 的下级报表需要按 {extra} 分组，"
+                f"这会改变本报表粒度——请在 rollup 中显式声明"
+                f"（如 rollup: {extra}），或调整下级报表维度")
         return out
 
     def subtree_tokens(key):
@@ -351,6 +361,64 @@ def gen_mart_yml(inst, rep: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _is_additive(expr: str) -> bool:
+    """指标可加性启发式（v0，方向一勾稽用；方向二类型系统落地后由 type 取代）：
+    只允许 sum(...) 聚合与 + - 算术；出现除法（nullif 配平除外不可辨，一律视为比率）
+    或非 sum 聚合（avg/max/min/count）即视为不可加，勾稽测试豁免。"""
+    import re
+    if re.search(r"\b(avg|max|min|count)\s*\(", expr):
+        return False
+    no_nullif = re.sub(r"nullif\s*\([^()]*\)", "0", expr)
+    return "/" not in no_nullif
+
+
+def gen_recon_tests(inst, ctx) -> list[tuple[str, str]]:
+    """方向一（勾稽护栏）：为每条 base→child 边生成守恒测试——
+    父层（细粒度）按子层维度聚合后，与子层逐指标比对（可加指标严格相等，
+    比率/非 sum 聚合豁免）。父层经由 carry 链携带子层指标所需的全部可加列，
+    因此子层指标 expr 可在父层逐字重算。任一差异行即测试失败，diff 可读。"""
+    reps, children, req, tok = ctx
+    out: list[tuple[str, str]] = []
+    for parent_key, kids in children.items():
+        parent_cols = set(req[parent_key]) | tok[parent_key]
+        for child_key in kids:
+            child_rep = reps[child_key]
+            shared_dims = [d for d in req[child_key] if d in set(req[parent_key])]
+            if not shared_dims:
+                continue
+            metrics = [(m, inst.metric(m)["expr"]) for m in child_rep.get("metrics", [])
+                       if _is_additive(inst.metric(m)["expr"])]
+            if not metrics:
+                continue
+            dims_select = ", ".join(f'"{d}"' for d in shared_dims)
+            dims_join = " and ".join(
+                f'(p."{d}" = c."{d}" or (p."{d}" is null and c."{d}" is null))'
+                for d in shared_dims)
+            dims_coalesce = ", ".join(f'coalesce(p."{d}", c."{d}") as "{d}"' for d in shared_dims)
+            child_agg = ", ".join(f'"{m}"' for m, _ in metrics)
+            parent_agg = ", ".join(f'{expr} as "{m}"' for m, expr in metrics)
+            diffs = []
+            for m, _ in metrics:
+                diffs.append(
+                    f'select \'{m}\' as 指标, {dims_coalesce}, '
+                    f'p."{m}" as 父层重算, c."{m}" as 子层值 '
+                    f'from parent p full outer join child c on {dims_join} '
+                    f'where abs(coalesce(p."{m}", 0) - coalesce(c."{m}", 0)) > 0.01')
+            body = "\nunion all\n".join(diffs)
+            sql = (f"-- 生成物：勾稽守恒测试（{child_key} ← {parent_key}；"
+                   f"比率/非可加指标豁免）\n"
+                   f"with child as (\n"
+                   f"  select {dims_select}, {child_agg}\n"
+                   f"  from {{{{ ref('mart_{child_key}') }}}}\n"
+                   f"), parent as (\n"
+                   f"  select {dims_select}, {parent_agg}\n"
+                   f"  from {{{{ ref('mart_{parent_key}') }}}}\n"
+                   f"  group by {', '.join(str(i + 1) for i in range(len(shared_dims)))}\n"
+                   f")\n" + body + "\n")
+            out.append((f"recon_{child_key}.sql", sql))
+    return out
+
+
 def gen_project_files(inst) -> dict[str, str]:
     n = inst.name
     project_yml = f"""# 生成物：由 semantic.compile_dbt 从 instances/{n}/ 五配置生成，勿手改
@@ -412,6 +480,9 @@ def compile_instance(inst) -> dict:
 
     # 匹配契约测试 + 字段 range 契约测试
     for fname, content in gen_match_tests(inst):
+        files[f"tests/{fname}"] = content
+    # 勾稽护栏：base 边守恒测试（方向一）
+    for fname, content in gen_recon_tests(inst, _report_graph(inst)):
         files[f"tests/{fname}"] = content
     for src in inst.sources.get("sources", []):
         for fname, content in gen_range_tests(src):

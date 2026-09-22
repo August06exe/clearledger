@@ -7,6 +7,7 @@ reports:
     title: L1 项目收入月报
     dimension: 项目
     time_dim: 月份
+    rollup: [一级部门]
     metrics: [收入, 摊销收入, 政府补助]
     chart: bar_line
     full_period_only: true
@@ -17,6 +18,7 @@ reports:
     base: revenue_project
     dimension: 项目
     time_dim: 月份
+    rollup: [一级部门]
     metrics: [工资奖金, 社保公积金, 招聘费, 人力成本, 毛利, 毛利率]
     chart: bar_line
 
@@ -26,6 +28,7 @@ reports:
     base: revenue_project
     dimension: 项目
     time_dim: 月份
+    rollup: [一级部门]
     metrics: [商旅费, 费用报销, 平台管理费, 残保金, 期间费用合计]
     chart: stack_bar
 
@@ -35,6 +38,7 @@ reports:
     base: margin_project
     dimension: 项目
     time_dim: 月份
+    rollup: [一级部门]
     metrics: [责任贡献, 贡献率]
     chart: bar_line
 

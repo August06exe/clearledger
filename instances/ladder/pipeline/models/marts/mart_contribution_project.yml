@@ -1,0 +1,15 @@
+# 生成物：报表模型列元数据（L3 项目贡献月报）
+version: 2
+
+models:
+  - name: mart_contribution_project
+    description: L3 项目贡献月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "项目"
+        description: 分组维度
+      - name: "责任贡献"
+        description: 收入 + 摊销 + 补助 − 人力成本 − 期间费用（L4 责任组织贡献）
+      - name: "贡献率"
+        description: 责任贡献 ÷ 收入合计

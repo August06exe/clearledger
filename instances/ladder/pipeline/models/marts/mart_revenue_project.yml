@@ -1,0 +1,17 @@
+# 生成物：报表模型列元数据（L1 项目收入月报）
+version: 2
+
+models:
+  - name: mart_revenue_project
+    description: L1 项目收入月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "项目"
+        description: 分组维度
+      - name: "收入"
+        description: 客户合同收入合计（不含摊销与补助）
+      - name: "摊销收入"
+        description: 递延收入按月摊销进入本期部分
+      - name: "政府补助"
+        description: 稳岗补贴、研发加计等政策性补助（按政策编码挂接）
