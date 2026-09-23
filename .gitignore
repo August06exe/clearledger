@@ -35,3 +35,9 @@ dist/
 
 # 门户静态目录不放内容图（图片统一在 docs/assets，预览用副本不入库）
 app/static/*.png
+
+# 截图工作区（候选/参考图，不公开）
+docs/assets/_red/
+
+# 实地试点（影子客户模拟）内部材料，不入公开仓库
+pilot/
