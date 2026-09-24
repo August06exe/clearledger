@@ -3,7 +3,7 @@
 > **读者**：AI agent（ZCode 或任何后继者）。你将独立维护、扩展、排障这套系统，人类只验收。
 > **目标**：让你在不开口问人的前提下，安全完成 95% 的日常操作，并知道剩下 5% 该问什么。
 > **约定**：本文按"认知 → 资产 → 配方 → 排障 → 自动化 → 红线"组织；每条配方都是可执行的。
-> 根入口见 [AGENTS.md](../AGENTS.md)；业务口径见 [指标口径.md](指标口径.md)；决策与 why 见 [待确认与决策.md](待确认与决策.md)。
+> 根入口见 [AGENTS.md](../AGENTS.md)；业务口径见 [指标口径.md](指标口径.md)；决策与 why 见 [待确认与决策.md](../internal/docs/待确认与决策.md)（内部材料，不入公开仓库）。
 
 ---
 
@@ -160,7 +160,7 @@ curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/status"
 - **挂起队列**：工作台「挂起队列」页 = 最近一次 run 的契约违规清单（raw.contract_report 稳定投影）。处理：修数据重投 → 重新跑批；或放宽字段契约 level 后保存并重建。
 - **影响预览**：保存 metrics/dashboard 时响应带 affected_reports（哪些报表引用了草稿里的指标/被改动）；也可单独 GET `/api/config/<账套>/impact`。
 - **回滚**：单步回滚用 `config_history/<block>.prev.yml` 覆回去再重建；跨版本回滚靠 git。
-- API 契约全文：`docs/设计-v0.5-配置工作台.md`。红线不因工作台改变：models 是生成物禁手改，口径唯一出处仍是 metrics.yml。
+- API 契约全文：`internal/docs/设计-v0.5-配置工作台.md`（内部材料，不入公开仓库）。红线不因工作台改变：models 是生成物禁手改，口径唯一出处仍是 metrics.yml。
 
 ### R-08 更新演示数据
 启动器 **`启动明账.exe`** 的「重建演示数据」按钮，或分步：`sample_data/generate.py` → `semantic.ingest_run` → `semantic.compile_dbt` → cd pipeline && dbt build（详见 docs/AI-点火指南.md Step 3/4）。
@@ -237,7 +237,7 @@ curl -s -X POST http://127.0.0.1:8620/api/runs/trigger && sleep 25 && curl -s ht
 
 ### 5.5 夜航模式（长时自主开发）
 人类会说"开工/夜航"。此时你：develop 分支 → 里程碑式小步提交 → **独立审计 agent 循环**
-（调研→spawn 只读 Explore agent 审计→对照需求确认→修复→记录进迭代日志.md）→
+（调研→spawn 只读 Explore agent 审计→对照需求确认→修复→记录进 internal/docs/迭代日志.md，内部材料不入公开仓库）→
 浏览器实测 → 晨间汇报（结论先行、待拍板清单）。完整范式参考迭代日志第 0~2 轮。
 
 ## 6. 红线与纪律（违反=事故，人类验收时会一眼看出）
@@ -245,7 +245,7 @@ curl -s -X POST http://127.0.0.1:8620/api/runs/trigger && sleep 25 && curl -s ht
 1. **口径唯一出处**：`instances/<账套>/metrics.yml` 与 wide.yml 派生列是口径的家；前端/查询编译器之外任何地方重算 = 事故
 2. **原始层只增不改**：raw schema 是源文件镜像（含 _source_file/_loaded_at 溯源列），任何"清洗"发生在 staging
 3. **测试即契约**：每账套 27~61 个节点里的测试（match/range/recon 系列）是产品的一部分；删测试比改错代码更严重。warn 测试是黄灯的来源，动它要更新指标口径.md 的红绿灯表
-4. **决策不推翻**：docs/待确认与决策.md 的 D1~D13 是人类拍过板的（如 Dagster 砍掉、默认手动跑批、仅本机监听），要改先问
+4. **决策不推翻**：internal/docs/待确认与决策.md 的 D1~D13 是人类拍过板的（如 Dagster 砍掉、默认手动跑批、仅本机监听），要改先问（内部材料，不入公开仓库）
 5. **数据不编造**：5.2 的第 4 条，值得单独重复
 6. **提交规范**：develop 分支、中文 commit、why 优先；main 只在人类验收后合并
 7. **改完必验**：没有跑过 R-01 + doctor 的改动不算完成
@@ -267,5 +267,5 @@ curl -s -X POST http://127.0.0.1:8620/api/runs/trigger && sleep 25 && curl -s ht
 
 v0.3「通用积木」已落地（本手册 R-02/R-03/R-04 即配置驱动现状）；v0.4 开放接口与体检器已落地（R-10/R-11）；
 v0.5 配置工作台已落地（R-13）。当前进行中：勾稽护栏（已上线）→ 指标阶梯 → 时间智能 → 分摊引擎
-（用户 2026-09-21 圈选，见 docs/决策-20260921-层级功能与运行视图.md）。测试账套约定：下划线开头=
+（用户 2026-09-21 圈选，见 internal/docs/决策-20260921-层级功能与运行视图.md，内部材料不入公开仓库）。测试账套约定：下划线开头=
 测试副本；ladder=分层演示账套。

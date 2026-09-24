@@ -36,7 +36,7 @@ tz: Asia/Shanghai
 """
 
 SOURCES_YML = """\
-# 测试实例 _wb_r1 —— 入口档案 + 字段契约（契约语义依据 docs/待确认与决策.md D15）
+# 测试实例 _wb_r1 —— 入口档案 + 字段契约（契约语义依据 internal/docs/待确认与决策.md D15，内部材料不入公开仓库）
 # 播种违规：V1 渠道枚举 / V2 数量范围 / V3 单价类型 / V4 单据号必填 / V9 品类枚举 / V8 快照范围 / V10 幽灵供应商
 # 由 tests/v0.6/generate.py 生成：请勿手改，重建请重跑生成器。
 version: 1

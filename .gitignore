@@ -25,6 +25,9 @@ instances/*/pipeline/logs/
 # 回收站（退役资产暂存，确认无用后可整体删除）
 _trash/
 
+# internal/ 开发过程文档（决策记录/迭代日志/设计稿/历史归档——内部材料，不入公开仓库）
+internal/
+
 # 开放接口 API Key（敏感，不入库；模板见 openapi_keys.example.json）
 data/openapi_keys.json
 
