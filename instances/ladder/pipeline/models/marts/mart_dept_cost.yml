@@ -10,4 +10,4 @@ models:
       - name: "一级部门"
         description: 分组维度
       - name: "人力成本"
-        description: 工资奖金 + 社保公积金 + 招聘费，即 L2 层人力成本合计
+        description: 工资奖金 + 社保公积金 + 招聘费（L2 层人力成本合计）

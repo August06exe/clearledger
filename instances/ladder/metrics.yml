@@ -1,30 +1,51 @@
-# 实例：集团经营核算·利润阶梯 —— 指标口径（唯一出处；分层报表逐字复用同口径，可加列自动上卷）
+# 实例：集团经营核算·利润阶梯 —— 指标口径（唯一出处）
+#
+# 指标阶梯示范（方向二）：
+#   - derive: 由其他指标线性组合（add/sub），编译期展开——口径改一处，全链联动
+#   - type: ratio —— 由可加部分重算的比率；比率不进 derive（不可加）
+#   - 层间勾稽：可加指标严格相等（勾稽测试按 type 豁免比率）
 version: 1
 
 metrics:
+  # ---- L1 原子可加指标 ----
   - {name: 收入,       expr: "sum(revenue_amt)", desc: "客户合同收入合计（不含摊销与补助）"}
   - {name: 摊销收入,   expr: "sum(amort_rev)", desc: "递延收入按月摊销进入本期部分"}
   - {name: 政府补助,   expr: "sum(subsidy)", desc: "稳岗补贴、研发加计等政策性补助（按政策编码挂接）"}
   - {name: 工资奖金,   expr: "sum(salary)", desc: "外包员工工资与项目奖金（数据集成层按项目×月聚合）"}
   - {name: 社保公积金, expr: "sum(social_ins)", desc: "五险一金企业缴纳部分；缴纳状态以集成层为准"}
   - {name: 招聘费,     expr: "sum(recruit_fee)", desc: "项目维度归集的招聘渠道费与内推奖金(TS)"}
-  - {name: 人力成本,   expr: "round(sum(salary) + sum(social_ins) + sum(recruit_fee), 2)",
-      desc: "工资奖金 + 社保公积金 + 招聘费，即 L2 层人力成本合计"}
-  - {name: 毛利,       expr: "round(sum(revenue_amt) + sum(amort_rev) - sum(salary) - sum(social_ins) - sum(recruit_fee), 2)",
-      desc: "收入 + 摊销收入 − 人力成本（L3 层毛利口径）"}
-  - {name: 毛利率,     expr: "round((sum(revenue_amt) + sum(amort_rev) - sum(salary) - sum(social_ins) - sum(recruit_fee)) / nullif(sum(revenue_amt) + sum(amort_rev), 0), 4)",
-      desc: "毛利 ÷ 收入合计；分层报表由可加部分重算，不做比率求和"}
   - {name: 商旅费,     expr: "sum(travel_fee)", desc: "商旅平台账单按成本中心归集（L2.5 并行分支）"}
   - {name: 费用报销,   expr: "sum(expense_fee)", desc: "费用报销单已过滤杂质行后的净额"}
   - {name: 平台管理费, expr: "sum(platform_fee)", desc: "集团平台管理费（部门/集团单值分摊）"}
   - {name: 残保金,     expr: "sum(levy)", desc: "残保金部门级分摊额"}
-  - {name: 期间费用合计, expr: "round(sum(travel_fee) + sum(expense_fee) + sum(platform_fee) + sum(levy), 2)",
-      desc: "商旅 + 报销 + 平台管理费 + 残保金（L2.5 期间费用）"}
-  - {name: 责任贡献,   expr: "round(sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy), 2)",
-      desc: "收入 + 摊销 + 补助 − 人力成本 − 期间费用（L4 责任组织贡献）"}
-  - {name: 贡献率,     expr: "round((sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy)) / nullif(sum(revenue_amt) + sum(amort_rev), 0), 4)",
-      desc: "责任贡献 ÷ 收入合计"}
-  - {name: 集团净利,   expr: "round(sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy) - sum(group_fee), 2)",
-      desc: "责任贡献 − 集团费用分摊（L5 集团层；单值不下钻）"}
-  - {name: 净利率,     expr: "round((sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy) - sum(group_fee)) / nullif(sum(revenue_amt) + sum(amort_rev), 0), 4)",
-      desc: "集团净利 ÷ 收入合计"}
+  - {name: 集团费用分摊, expr: "sum(group_fee)", desc: "集团费用按分摊规则落到责任中心的份额"}
+
+  # ---- L2 阶梯层（derive：由下层指标线性组合）----
+  - name: 人力成本
+    derive: {add: [工资奖金, 社保公积金, 招聘费]}
+    desc: "工资奖金 + 社保公积金 + 招聘费（L2 层人力成本合计）"
+  - name: 期间费用合计
+    derive: {add: [商旅费, 费用报销, 平台管理费, 残保金]}
+    desc: "商旅 + 报销 + 平台管理费 + 残保金（L2.5 期间费用）"
+  - name: 毛利
+    derive: {add: [收入, 摊销收入], sub: [人力成本]}
+    desc: "收入 + 摊销收入 − 人力成本（L2 层毛利口径）"
+  - {name: 毛利率, type: ratio,
+     expr: "round((sum(revenue_amt) + sum(amort_rev) - sum(salary) - sum(social_ins) - sum(recruit_fee)) / nullif(sum(revenue_amt) + sum(amort_rev), 0), 4)",
+     desc: "毛利 ÷ 收入合计；分层报表由可加部分重算，不做比率求和"}
+
+  # ---- L3 责任贡献层（derive 跨层引用）----
+  - name: 责任贡献
+    derive: {add: [收入, 摊销收入, 政府补助], sub: [人力成本, 期间费用合计]}
+    desc: "收入 + 摊销 + 补助 − 人力成本 − 期间费用（L4 责任组织贡献）"
+  - {name: 贡献率, type: ratio,
+     expr: "round((sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy)) / nullif(sum(revenue_amt) + sum(amort_rev), 0), 4)",
+     desc: "责任贡献 ÷ 收入合计"}
+
+  # ---- L5 集团层 ----
+  - name: 集团净利
+    derive: {add: [责任贡献], sub: [集团费用分摊]}
+    desc: "责任贡献 − 集团费用分摊（L5 集团层；单值不下钻）"
+  - {name: 净利率, type: ratio,
+     expr: "round((sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy) - sum(group_fee)) / nullif(sum(revenue_amt) + sum(amort_rev), 0), 4)",
+     desc: "集团净利 ÷ 收入合计"}

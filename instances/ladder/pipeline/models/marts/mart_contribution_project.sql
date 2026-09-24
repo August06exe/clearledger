@@ -3,7 +3,7 @@ select
     "月份",
     "项目",
     "一级部门",
-    round(sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy), 2) as "责任贡献",
+    + (sum(revenue_amt))+ (sum(amort_rev))+ (sum(subsidy))- (+ (sum(salary))+ (sum(social_ins))+ (sum(recruit_fee)))- (+ (sum(travel_fee))+ (sum(expense_fee))+ (sum(platform_fee))+ (sum(levy))) as "责任贡献",
     round((sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy)) / nullif(sum(revenue_amt) + sum(amort_rev), 0), 4) as "贡献率",
     sum("amort_rev") as "amort_rev",
     sum("expense_fee") as "expense_fee",

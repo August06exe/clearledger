@@ -361,6 +361,15 @@ def gen_mart_yml(inst, rep: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _is_additive_metric(inst, m) -> bool:
+    """勾稽/可加性判定：显式 type 声明优先（ratio=不可加），缺省回退 expr 启发式。"""
+    if m.get("type") == "ratio":
+        return False
+    if "derive" in m:
+        return True  # derive 只接受可加组合（loader 校验保证）
+    return _is_additive(m["expr"])
+
+
 def _is_additive(expr: str) -> bool:
     """指标可加性启发式（v0，方向一勾稽用；方向二类型系统落地后由 type 取代）：
     只允许 sum(...) 聚合与 + - 算术；出现除法（nullif 配平除外不可辨，一律视为比率）
@@ -387,7 +396,7 @@ def gen_recon_tests(inst, ctx) -> list[tuple[str, str]]:
             if not shared_dims:
                 continue
             metrics = [(m, inst.metric(m)["expr"]) for m in child_rep.get("metrics", [])
-                       if _is_additive(inst.metric(m)["expr"])]
+                       if _is_additive_metric(inst, inst.metric(m))]
             if not metrics:
                 continue
             dims_select = ", ".join(f'"{d}"' for d in shared_dims)

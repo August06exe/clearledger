@@ -3,7 +3,7 @@ with child as (
   select "月份", "项目", "一级部门", "责任贡献"
   from {{ ref('mart_contribution_project') }}
 ), parent as (
-  select "月份", "项目", "一级部门", round(sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy), 2) as "责任贡献"
+  select "月份", "项目", "一级部门", + (sum(revenue_amt))+ (sum(amort_rev))+ (sum(subsidy))- (+ (sum(salary))+ (sum(social_ins))+ (sum(recruit_fee)))- (+ (sum(travel_fee))+ (sum(expense_fee))+ (sum(platform_fee))+ (sum(levy))) as "责任贡献"
   from {{ ref('mart_margin_project') }}
   group by 1, 2, 3
 )

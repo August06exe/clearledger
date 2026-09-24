@@ -12,6 +12,6 @@ models:
       - name: "收入"
         description: 客户合同收入合计（不含摊销与补助）
       - name: "毛利"
-        description: 收入 + 摊销收入 − 人力成本（L3 层毛利口径）
+        description: 收入 + 摊销收入 − 人力成本（L2 层毛利口径）
       - name: "毛利率"
         description: 毛利 ÷ 收入合计；分层报表由可加部分重算，不做比率求和

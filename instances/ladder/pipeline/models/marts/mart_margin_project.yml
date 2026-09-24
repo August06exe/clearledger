@@ -16,8 +16,8 @@ models:
       - name: "招聘费"
         description: 项目维度归集的招聘渠道费与内推奖金(TS)
       - name: "人力成本"
-        description: 工资奖金 + 社保公积金 + 招聘费，即 L2 层人力成本合计
+        description: 工资奖金 + 社保公积金 + 招聘费（L2 层人力成本合计）
       - name: "毛利"
-        description: 收入 + 摊销收入 − 人力成本（L3 层毛利口径）
+        description: 收入 + 摊销收入 − 人力成本（L2 层毛利口径）
       - name: "毛利率"
         description: 毛利 ÷ 收入合计；分层报表由可加部分重算，不做比率求和

@@ -168,11 +168,64 @@ def load_instance_dir(d: Path, name: str) -> Instance:
         dangling = sorted(t for t in tokens if t not in wide_cols)
         if dangling:
             raise ConfigError(f"[{name}] 派生列 [{d['name']}] 引用了宽表不存在的列: {dangling}")
+    # ---- 指标阶梯（方向二）：derive 线性组合 + type 声明 ----
+    # derive: {add: [指标名...], sub: [指标名...]} —— 由其他指标线性组合，编译期展开；
+    # expr 与 derive 互斥；type: additive(默认) | ratio（由可加部分重算的比率）。
+    # ratio 不得进入 derive 的 add/sub（比率不可加，混入即静默错报）。
+    metric_names = {m["name"] for m in inst.metrics}
+    metric_types = {m["name"]: m.get("type", "additive") for m in inst.metrics}
+    for m in inst.metrics:
+        if "derive" in m and "expr" in m:
+            raise ConfigError(f"[{name}] 指标 [{m['name']}] derive 与 expr 互斥，二选一")
+        if "derive" in m and m.get("type") == "ratio":
+            raise ConfigError(f"[{name}] 指标 [{m['name']}] 是比率，derive 只接受可加组合")
+        dv = m.get("derive") or {}
+        for k in ("add", "sub"):
+            for ref in dv.get(k, []):
+                if ref not in metric_names:
+                    raise ConfigError(f"[{name}] 指标 [{m['name']}] derive.{k} 引用了不存在的指标: {ref}")
+                if metric_types.get(ref) == "ratio":
+                    raise ConfigError(
+                        f"[{name}] 指标 [{m['name']}] derive.{k} 引用了比率指标 [{ref}]——"
+                        f"比率不可加，禁止线性组合（请改引用其可加部分）")
+
+    def _resolve_metric(name_, stack):
+        """把 derive 链展开为 expr（递归内联被引用指标的原文，加括号）。"""
+        m = next(x for x in inst.metrics if x["name"] == name_)
+        if "expr" in m:
+            return m["expr"]
+        if name_ in stack:
+            raise ConfigError(f"[{name}] 指标 derive 出现循环引用: {name_} → {' → '.join(stack)}")
+        parts = []
+        dv = m.get("derive") or {}
+        for ref in dv.get("add", []):
+            inner = _resolve_metric(ref, stack + [name_])
+            parts.append(f"+ ({inner})")
+        for ref in dv.get("sub", []):
+            inner = _resolve_metric(ref, stack + [name_])
+            parts.append(f"- ({inner})")
+        if not parts:
+            raise ConfigError(f"[{name}] 指标 [{name_}] 的 derive 为空")
+        return "".join(parts)
+
+    for m in inst.metrics:
+        if "derive" in m:
+            # 顶层 stack 为空——起始名只在递归时入栈，避免自我误判循环
+            m["expr"] = _resolve_metric(m["name"], [])  # 展开结果回写实例内存对象；yml 文件不动
+
     for m in inst.metrics:
         tokens = set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", m["expr"])) - _SQL_KEYWORDS
+        tokens = {t for t in tokens if t not in metric_names}  # 引用其他指标名的 tokens 已展开，不应残留
         dangling = sorted(t for t in tokens if t not in wide_cols)
         if dangling:
             raise ConfigError(f"[{name}] 指标 [{m['name']}] 引用了宽表不存在的列: {dangling}")
+
+    # type 声明校验：ratio 型必须在 expr 里做除法（由可加部分重算），derive 型必须是纯可加
+    for m in inst.metrics:
+        if m.get("type") == "ratio" and "/" not in m.get("expr", ""):
+            raise ConfigError(f"[{name}] 指标 [{m['name']}] 声明 type: ratio 但 expr 无除法——比率应由可加部分相除")
+        if "derive" in m and m.get("type") not in (None, "additive"):
+            raise ConfigError(f"[{name}] derive 指标 [{m['name']}] 的 type 只能是 additive")
 
     # 报表引用的指标/维度必须存在；time_dim 若为时间维度必须声明
     for rep in inst.dashboard.get("reports", []):

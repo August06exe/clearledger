@@ -3,7 +3,7 @@ with child as (
   select "月份", "项目", "一级部门", "工资奖金", "社保公积金", "招聘费", "人力成本", "毛利"
   from {{ ref('mart_margin_project') }}
 ), parent as (
-  select "月份", "项目", "一级部门", sum(salary) as "工资奖金", sum(social_ins) as "社保公积金", sum(recruit_fee) as "招聘费", round(sum(salary) + sum(social_ins) + sum(recruit_fee), 2) as "人力成本", round(sum(revenue_amt) + sum(amort_rev) - sum(salary) - sum(social_ins) - sum(recruit_fee), 2) as "毛利"
+  select "月份", "项目", "一级部门", sum(salary) as "工资奖金", sum(social_ins) as "社保公积金", sum(recruit_fee) as "招聘费", + (sum(salary))+ (sum(social_ins))+ (sum(recruit_fee)) as "人力成本", + (sum(revenue_amt))+ (sum(amort_rev))- (+ (sum(salary))+ (sum(social_ins))+ (sum(recruit_fee))) as "毛利"
   from {{ ref('mart_revenue_project') }}
   group by 1, 2, 3
 )

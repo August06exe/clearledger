@@ -3,7 +3,7 @@ with child as (
   select "月份", "集团净利"
   from {{ ref('mart_group_pnl') }}
 ), parent as (
-  select "月份", round(sum(revenue_amt) + sum(amort_rev) + sum(subsidy) - sum(salary) - sum(social_ins) - sum(recruit_fee) - sum(travel_fee) - sum(expense_fee) - sum(platform_fee) - sum(levy) - sum(group_fee), 2) as "集团净利"
+  select "月份", + (+ (sum(revenue_amt))+ (sum(amort_rev))+ (sum(subsidy))- (+ (sum(salary))+ (sum(social_ins))+ (sum(recruit_fee)))- (+ (sum(travel_fee))+ (sum(expense_fee))+ (sum(platform_fee))+ (sum(levy))))- (sum(group_fee)) as "集团净利"
   from {{ ref('mart_contribution_dept') }}
   group by 1
 )
