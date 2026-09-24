@@ -1,16 +1,24 @@
 {
-  "round": 2,
-  "answer_version": 2,
+  "round": 3,
+  "answer_version": 3,
   "instance": "_wb_r1",
-  "basis": "docs/设计-v0.5-配置工作台.md §3/§4/§6 + docs/待确认与决策.md D15（数据契约三层）+ R1 判分归因裁定（2026-09-21，六条引擎侧修复/裁定）",
+  "basis": "docs/设计-v0.5-配置工作台.md §3/§4/§6 + docs/待确认与决策.md D15（数据契约三层）+ R1 判分归因裁定（两阶段校验 v2 等）+ R2 判分裁定（null_match 非空键语义 / int_<wide> 物化名 / harvest 收获步骤）",
   "r1_to_r2_changes": [
     "裁定1 两阶段校验 v2：先全量记录后统一剔行 —— V3 type 行照记（本项目答案本就含 type 行，无投影变化）",
     "裁定2 type 违规行保留置 NULL：A3 改 A3v2，wide 基数从 46 变 48（少剔 3 行中的 1 行 type + 幽灵行新增）",
     "裁定3 词表钉死 type/required：R1 词表方向正确，投影 rule 名不变",
-    "裁定4 匹配契约收获：fanout/null_match 行入投影，source=wide.yml 声明名（_wb_r1 = wide_ledger），cnt=dbt failures=去重键数（fanout=1，null_match=2），run_id 与跑批链一致",
+    "裁定4 匹配契约收获：fanout/null_match 行入投影，source=wide.yml 声明名（_wb_r1 = wide_ledger），cnt=dbt failures，run_id 与跑批链一致",
     "裁定5 raw 镜像语义改判：raw = 文件行数 − required 剔行数（A5 作废 → A5v2）：raw.fact_ledger=50−2=48",
-    "fixture R2：台账新增 V10 幽灵供应商行 PO-2608-007（SUP-999）→ 文件 50 行，使 null_match 的 distinct 判别值从 1 变 2",
-    "新增密封外 Case：W-04 分层勾稽（ladder）、W-05 字段级血缘、B-09 变异身份、B-10 别名层、B-11 查询白名单回退、MR-05 分层级联守恒——其期望为结构/零偏差断言，不依赖本 answer.json 数值"
+    "fixture R2：台账新增 V10 幽灵供应商行 PO-2608-007（SUP-999）→ 文件 50 行",
+    "新增密封外 Case：W-04 分层勾稽（ladder）、W-05 字段级血缘、B-09 变异身份、B-10 别名层、B-11 查询白名单回退、MR-05 分层级联守恒"
+  ],
+  "r2_to_r3_changes": [
+    "R2 判分裁定 A：null_match 测试 SQL = 主表键【非空】但匹空 的去重值数——空键被 where 排除（空键属 missing/required 语义覆盖）→ null_match cnt 2→1（仅 SUP-999 计入）；A9v2 改 A9v3，V6 空键播种改列反向播种 N7",
+    "R2 判分裁定 B：宽表物化名 = intermediate.int_<wide声明名>（_wb_r1 = int_wide_ledger，52 行实测一致）——answer 键名保留 wide_ledger 作语义标签不变，TESTPLAN W-03 采集指令改按物化名",
+    "R2 判分裁定 C：引擎新增 semantic.harvest 收获 CLI——TESTPLAN 三步链/基线恢复/MR-03 增加 harvest 步骤（匹配契约行经此写入 contract_report）",
+    "R2 判分裁定 D：B-05/B-06 的 observed 键名必须逐字取自 expect；原始观察移入 evidence——TESTPLAN §3 明文化",
+    "R2 判分裁定 E：MUT-M6 探针重设计——合法维度 KEY + 非法 VALUE + 合法值对照组 + 副本保真度对照（TESTPLAN §7/B-11）",
+    "v3 与 R2 引擎实测全投影（8 行）一致：6 条字段行与 fanout=1 不变，null_match 2→1 为唯一数值变更；行数口径（48/52）不变"
   ],
   "comparisons": {
     "pending.items": {
@@ -29,12 +37,12 @@
     },
     "impact": {
       "class": "json_exact",
-      "note": "metrics/dimensions 两张映射：dict[str, list[str]]；报表 key 列表按升序（设计 §3.6）；对象键序无关（sort_keys 规范化后比较）；未被引用者必须出现且映射为空数组。R2 无变化（配置未动）"
+      "note": "metrics/dimensions 两张映射：dict[str, list[str]]；报表 key 列表按升序（设计 §3.6）；对象键序无关（sort_keys 规范化后比较）；未被引用者必须出现且映射为空数组。R2/R3 无变化（配置未动）"
     },
     "rows": {
       "class": "int_exact",
       "keys": ["rows.files.*", "rows.raw.*", "rows.wide_ledger"],
-      "note": "rows.raw 按 A5v2（文件 − required 剔行）；rows.wide_ledger 按 A3v2/A4/A9v2（48 基数 + 4 扇出扩行 = 52）"
+      "note": "rows.raw 按 A5v2（文件 − required 剔行）；rows.wide_ledger 键名为语义标签，对应物化表 intermediate.int_wide_ledger（R2 裁定 B），行数按 A3v2/A4/A9v3（48 基数 + 4 扇出扩行 = 52）"
     },
     "ladder_digest": {
       "class": "amount_zero",
@@ -46,7 +54,7 @@
     },
     "behaviors": {
       "class": "json_structure",
-      "note": "每条 {id, expect, observed, evidence}；expect 以 TESTPLAN 各 Case 声明为准（本文件不含数值答案）"
+      "note": "每条 {id, expect, observed, evidence}；expect 以 TESTPLAN 各 Case 声明为准（本文件不含数值答案）；observed 键名必须逐字取自 expect（R2 裁定 D），原始观察一律放 evidence"
     },
     "mr": {
       "class": "json_structure",
@@ -54,21 +62,21 @@
     },
     "mutations": {
       "class": "caught_or_survived",
-      "note": "R2 菜单 M1~M6（M4/M5/M6 为换血新血，判据见 TESTPLAN 变异节）；kill 率 = caught/(caught+survived)，闸门要求 ≥3 新血全部 caught 且总 kill 率达标"
+      "note": "R2 菜单 M1~M6（M4/M5/M6 为换血新血）；R2 实测 kill 5/6，M6 探针按裁定 E 重设计后进 R3；kill 率 = caught/(caught+survived)"
     }
   },
   "assumptions": {
-    "A1": "contract_report.level = 配置声明的级别字面量经 severity 映射（warn→yellow/error→red）；_wb_r1 全部播种为 yellow",
+    "A1": "contract_report.level = 配置级别经 severity 映射（warn→yellow/error→red）；_wb_r1 全部播种为 yellow",
     "A2": "软违规（enum/range/unique/null_match/fanout）记录不剔行，行照常入库/入宽表",
     "A3v2": "type 违规：记录 rule=type 且行保留（置 NULL 交由 missing 策略），不剔除（R1 裁定）",
     "A4": "required 空值：记录 rule=required 且该行在摄取层剔除（R1 裁定，入库即干净字段）",
-    "A5v2": "raw 行数 = 文件数据行数 − 该源 required 剔行数（raw.fact_ledger=48；其余源无 required 违规=文件行数）（R1 裁定，v1 镜像假设作废）",
+    "A5v2": "raw 行数 = 文件数据行数 − 该源 required 剔行数（raw.fact_ledger=48；其余源无 required 违规=文件行数）（R1 裁定）",
     "A6": "missing=default 为缺失策略而非违规：补默认值、零契约行",
-    "A7": "空值跳过 enum/range 检查（retail 真实基线佐证：海量空供应商编码未产生枚举/范围行）",
+    "A7": "空值跳过 enum/range 检查（retail 真实基线佐证：海量空供应商编码未产生枚举/范围行）；同理 join 匹配测试 where 排除空键（见 A9v3）",
     "A8": "匹配契约行 source = wide.yml 声明名（_wb_r1 声明 name: wide_ledger）；R1 归因反馈括注的 ledger_wide 为 ladder 账套的声明名，契约以各自声明名为准",
-    "A9v2": "匹配契约 cnt = dbt 测试 failures 数：fanout = 去重后重复右键数（S05 重复 → 1）；null_match = 去重后未匹配左键值数（空串与 SUP-999 两个值 → 2）；join 物理扩行语义不变，宽表行数 = 保留主表行数 + 受扇出影响左行数"
+    "A9v3": "匹配契约 cnt = dbt 测试 failures 数：fanout = 去重后重复右键数（→1）；null_match = 主表键非空但匹空 的去重值数（空键被 where 排除 → 仅 SUP-999 计入 → 1）（R2 判分裁定）；join 物理扩行不变 → 宽表行数 = 保留主表行数 48 + 受扇出影响左行数 4 = 52，物化名 intermediate.int_wide_ledger"
   },
-  "attribution_note": "引擎实测与本答案分歧时的归因指引（归因权在评审）：cnt 分歧 → A9v2 的 distinct 粒度；source 归属分歧 → A8；rows.raw 分歧 → A5v2/A4；rows.wide_ledger 分歧 → A3v2/A9v2 物理扩行；rule/level 词表分歧 → spec↔engine 词表分歧。命题方不为对齐引擎而改答案。",
+  "attribution_note": "引擎实测与本答案分歧时的归因指引（归因权在评审）：cnt 粒度分歧 → A9v3 的 distinct/非空键语义；source 归属分歧 → A8；rows.raw 分歧 → A5v2/A4；rows.wide_ledger 分歧 → A3v2/A9v3；rule/level 词表分歧 → spec↔engine 词表分歧。命题方不为对齐引擎而改答案（R3 的 null_match 修正系 R2 判分裁定后的口径对齐，非引擎迎合）。",
   "volatile_fields_excluded": ["mtime", "run_id", "finished_at", "ts", "_loaded_at", "items[].sample 内容"],
-  "seal_protocol": "manifest.sha256 覆盖 answer.json / caliber.json / oracle.py；manifest 自身 sha256 即申报哈希；R1 manifest（5e3d5e8463e798bc52e5c88a99f8b5d98cd082282659a2795c940183088e3d27）随本轮重密封作废，旧哈希档案留存 SCOREBOARD"
+  "seal_protocol": "manifest.sha256 覆盖 answer.json / caliber.json / oracle.py；manifest 自身 sha256 即申报哈希；R1（5e3d5e84…）/ R2（0d0fb81a…）manifest 均已作废，旧哈希档案留存 SCOREBOARD"
 }

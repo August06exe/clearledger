@@ -1,0 +1,19 @@
+# 生成物：报表模型列元数据（事业部月报）
+version: 2
+
+models:
+  - name: mart_bu_month
+    description: 事业部月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "事业部"
+        description: 分组维度
+      - name: "服务费收入"
+        description: 月度账单金额合计（账单行）
+      - name: "毛利"
+        description: 服务费收入 − 人力成本（收入减在册人力口径）
+      - name: "毛利率"
+        description: 毛利 ÷ 服务费收入
+      - name: "外派人数"
+        description: 去重外派员工数（在册行）

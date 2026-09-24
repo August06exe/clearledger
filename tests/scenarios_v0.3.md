@@ -1,7 +1,7 @@
 # v0.3 语义引擎验收测试题库（命题 Agent 出品，2026-09-19 夜航）
 
 > 三权分立：命题 Agent 只读设计与配置出题（未读引擎代码）；测试 Agent 执行并记录；
-> 评审 Agent 独立裁判。预期全部锚定 docs/语义层与多实例设计.md 条款，标注"设计未定义——考察点"处为开放考察。
+> 评审 Agent 独立裁判。预期全部锚定 docs/history/语义层与多实例设计.md 条款，标注"设计未定义——考察点"处为开放考察。
 
 ## T1：客户编号首尾空格——清洗后必须能与维表精确匹配
 - 场景：复制 `instances/sales` → `instances/_t_trim`，改 `instance.yml`（name: `_t_trim`，database 指向新库文件）。在 `_t_trim/data/inbox/sales_transactions.csv` 中挑 5 行，把客户编号改成带首尾空格的形式（如 `" C0001 "`，演示数据本身也预埋了此形态，可直接用原文件验证）。跑 ingest → compile → dbt build。

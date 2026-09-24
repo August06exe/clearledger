@@ -60,7 +60,7 @@ ClearLedger exists for exactly this spot:
 | Pipeline visibility | ⚠️ exists, black box inside | ❌ | ❌ | ✅ traffic lights + lineage, bottlenecks at a glance |
 | Cost of a new project | high, redraw | — | high, rewrite | low, swap six configs |
 
-The approach: standardize the engineering work into six config files — sources, wide table, dimensions, metrics, dashboard, permissions. All plain-text YAML that agents can read and edit directly, and so can you. A new project swaps six configs and runs; the engine doesn't change a line. Day to day, you drop files, define calibers, and watch the lights; building pipelines, editing configs, fixing errors — that's the agent's job. Calibers have a single source of truth, data has lineage, ingestion has contracts. None of the engineering discipline is missing; it just doesn't need your hands.
+The approach: standardize the engineering work into config blocks — five plain-text YAML files (sources, wide table, dimensions, metrics, dashboard) plus one instance manifest. Agents can read and edit them directly, and so can you. Permissions, the sixth block, is on the roadmap. A new project swaps six configs and runs; the engine doesn't change a line. Day to day, you drop files, define calibers, and watch the lights; building pipelines, editing configs, fixing errors — that's the agent's job. Calibers have a single source of truth, data has lineage, ingestion has contracts. None of the engineering discipline is missing; it just doesn't need your hands.
 
 
 If you:
@@ -152,7 +152,7 @@ python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt 
 .venv/Scripts/python sample_data/generate_restaurant.py
 .venv/Scripts/python -m semantic.ingest_run  --instance sales
 .venv/Scripts/python -m semantic.compile_dbt --instance sales
-cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir . && cd ../../..
+cd instances/sales/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . && cd ../../../..
 
 # start the portal
 .venv/Scripts/python -m uvicorn app.main:app --host 127.0.0.1 --port 8620

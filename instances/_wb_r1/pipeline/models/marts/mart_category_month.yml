@@ -1,0 +1,17 @@
+# 生成物：报表模型列元数据（品类月报）
+version: 2
+
+models:
+  - name: mart_category_month
+    description: 品类月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "品类"
+        description: 分组维度
+      - name: "销售额"
+        description: 折后销售合计 = 数量×单价×(1−折扣率)，仅销售行
+      - name: "销售成本"
+        description: 数量×商品标准成本 合计，仅销售行
+      - name: "毛利率"
+        description: 毛利 ÷ 销售额；销售额为 0 时为空

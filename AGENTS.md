@@ -9,9 +9,9 @@
 - 项目：**明账 ClearLedger**——私有化管理报表数据底座（DuckDB + dbt + FastAPI + 原生 JS 门户）
 - 平台：Windows 本机，Git Bash，Python venv 在 `.venv/`（Windows 路径 `.venv\Scripts\`）
 - 门户：`http://127.0.0.1:8620`（仅本机监听，无认证——有意为之，见决策 D4）
-- **多账套架构（v0.3 起）**：一个公司 = `instances/<账套>/` 下五份配置（sources/wide/dimensions/metrics/dashboard）+ 独立库 `data/warehouse/<账套>.duckdb`。引擎 `semantic/` 零业务预设。内置账套：sales（演示销售公司）、restaurant（演示连锁餐饮）、retail（零售进销存·测试）、hro（人力外包·测试）
+- **多账套架构（v0.3 起）**：一个公司 = `instances/<账套>/` 下六份文件（sources/wide/dimensions/metrics/dashboard 五份配置 + instance.yml 账套元信息）+ 独立库 `data/warehouse/<账套>.duckdb`。引擎 `semantic/` 零业务预设。内置账套：sales（演示销售公司）、restaurant（演示连锁餐饮）、retail（零售进销存·测试）、hro（人力外包·测试）、ladder（集团经营核算·利润阶梯·分层演示）、_wb_r1（v0.6 测试专用，下划线开头不进正式清单）
 - 数据流：`instances/<账套>/data/inbox/` → `semantic.ingest_run`（三契约校验）→ `semantic.compile_dbt`（配置→dbt project）→ dbt build → 门户按账套路由
-- 当前状态：v0.4 已收官（MCP/HTTP 开放接口 + 体检器 + 界面中文化 + 测试闸门 R3~R5 连续三轮 48/48=100%）；下一站 v0.5 配置工作台与挂起队列
+- 当前状态：v0.5 已收官（配置工作台 + 报表分层 base 级联 + 挂起队列覆盖匹配契约 + 契约账本 v2 + 字段级血缘修复）；v0.6 进行中（用户圈选：勾稽护栏✅ → 指标阶梯 → 时间智能 → 分摊引擎 + Gantt 运行视图）；v0.6 深度测试 R3 26/28（闸门 0/3，剩 R4~R6）
 
 ## 必读文件（按顺序）
 

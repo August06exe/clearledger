@@ -1,0 +1,27 @@
+# 生成物：报表模型列元数据（月度经营总览）
+version: 2
+
+models:
+  - name: mart_monthly_kpi
+    description: 月度经营总览（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 分组维度
+      - name: "服务费收入"
+        description: 月度账单金额合计（账单行）
+      - name: "人力成本"
+        description: 外派在册员工的月薪资成本（工资+社保+公积金合并列）合计
+      - name: "毛利"
+        description: 服务费收入 − 人力成本（收入减在册人力口径）
+      - name: "毛利率"
+        description: 毛利 ÷ 服务费收入
+      - name: "回款额"
+        description: 回款记录金额合计（回款行）
+      - name: "回款率"
+        description: 回款额 ÷ 服务费收入；收入为 0 时为空
+      - name: "外派人数"
+        description: 去重外派员工数（在册行）
+      - name: "人均产值"
+        description: 服务费收入 ÷ 外派人数
+      - name: "在单客户数"
+        description: 有台账记录的去重客户数

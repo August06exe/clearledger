@@ -1,6 +1,0 @@
-  [ok] fact_ledger            台账_202608.csv                47 行
-  [ok] stock_snapshot         库存快照_202608.csv              21 行
-  [ok] stores                 门店_202608.csv                6 行
-  [ok] products               商品_202608.csv                12 行
-  [ok] suppliers              供应商_202608.csv               5 行
-摄取完成: OK | 违规 5 项（yellow 5 / red 0 / pending 0）

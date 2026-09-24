@@ -1,0 +1,15 @@
+# 生成物：报表模型列元数据（门店排行）
+version: 2
+
+models:
+  - name: mart_store_rank
+    description: 门店排行（维度 × 指标汇总）
+    columns:
+      - name: "门店"
+        description: 分组维度
+      - name: "销售额"
+        description: 折后销售合计 = 数量×单价×(1−折扣率)，仅销售行
+      - name: "毛利"
+        description: 销售额 − 销售成本
+      - name: "期末库存量"
+        description: 期末库存行数量合计

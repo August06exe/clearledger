@@ -1,0 +1,15 @@
+# 生成物：报表模型列元数据（渠道月报）
+version: 2
+
+models:
+  - name: mart_channel_month
+    description: 渠道月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "渠道"
+        description: 分组维度
+      - name: "营业额"
+        description: 订单金额合计（折前口径，未扣折扣）
+      - name: "毛利"
+        description: 营业额 − 成本额

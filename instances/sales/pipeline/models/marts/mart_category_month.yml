@@ -1,0 +1,15 @@
+# 生成物：报表模型列元数据（品类月报）
+version: 2
+
+models:
+  - name: mart_category_month
+    description: 品类月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "品类"
+        description: 分组维度
+      - name: "收入"
+        description: 订单金额 × (1−折扣率) 的合计；折扣率缺失按 0 处理
+      - name: "毛利"
+        description: 收入 − 成本

@@ -1,0 +1,15 @@
+# 生成物：报表模型列元数据（交付组排行）
+version: 2
+
+models:
+  - name: mart_group_rank
+    description: 交付组排行（维度 × 指标汇总）
+    columns:
+      - name: "交付组"
+        description: 分组维度
+      - name: "外派人数"
+        description: 去重外派员工数（在册行）
+      - name: "人力成本"
+        description: 外派在册员工的月薪资成本（工资+社保+公积金合并列）合计
+      - name: "人均人力成本"
+        description: 人力成本 ÷ 外派人数

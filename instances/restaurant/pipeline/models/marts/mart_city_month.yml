@@ -1,0 +1,15 @@
+# 生成物：报表模型列元数据（城市月报）
+version: 2
+
+models:
+  - name: mart_city_month
+    description: 城市月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "城市"
+        description: 分组维度
+      - name: "营业额"
+        description: 订单金额合计（折前口径，未扣折扣）
+      - name: "客单数"
+        description: 去重订单数（一单多菜品行计 1）

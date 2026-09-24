@@ -1,13 +1,17 @@
-# SPEC — v0.6 验收场景圣经（测试实例 `_wb_r1`）【R2 版，随 2026-09-21 归因裁定重密封】
+# SPEC — v0.6 验收场景圣经（测试实例 `_wb_r1`）【R3 版，随 2026-09-21 R2 判分裁定重密封】
 
 > **密封伴侣文档：测试 Agent 不读本文。** 测试 Agent 的唯一指令来源是 [TESTPLAN.md](TESTPLAN.md)；
 > 本文供评审、判分者与修复者使用，包含播种清单的预期规则/级别/计数（答案相邻信息）。
 > 命题依据：[设计-v0.5-配置工作台.md](../docs/设计-v0.5-配置工作台.md)（API 契约唯一出处）、
 > [待确认与决策.md](../docs/待确认与决策.md) D15（数据契约三层）、现有账套配置写法（retail 形态）、
-> **R1 判分归因裁定（2026-09-21）：两阶段校验 v2 / type 行保留 / required 行摄取层剔除 /
-> raw=文件−required 剔行 / 匹配契约行 cnt=dbt failures（distinct 键数）**。
+> **R1 判分归因裁定（两阶段校验 v2 / type 行保留 / required 行摄取层剔除 /
+> raw=文件−required 剔行 / 匹配契约行 cnt=dbt failures）**、
+> **R2 判分裁定（null_match = 主表键非空但匹空 的去重值数，空键被 where 排除——
+> 空键属 missing/required 语义覆盖；宽表物化名 = intermediate.int_<wide声明名>）**。
 > 配置与数据的**唯一真相源**是 [generate.py](generate.py)（幂等生成器）；本文引用其常量，手改本文无效。
-> R2 变更摘要：台账新增 V10 幽灵供应商行（文件 49→50 行）；V6/V7 计数改 distinct 键数口径；
+> R3 变更摘要：null_match cnt 2→1（空串不再计入）；V6 空键播种改列反向播种 N7；
+> 基线配方增加 `semantic.harvest` 收获步骤（匹配契约行经此写入 contract_report）。
+> R2 变更摘要（存档）：台账新增 V10 幽灵供应商行（文件 49→50 行）；匹配契约行 cnt 改 distinct 键数口径；
 > raw/wide 行数口径改判（见 §4.3 与 §8）。
 
 ## 1. 实例总览
@@ -21,7 +25,7 @@
 | 规模 | 5 个数据源、inbox 共 **94 数据行**（50+21+6+12+5），三步链秒级 |
 | 灯色预期 | 三步链退出码全 0（播种违规全部 yellow 级，不触发红灯退出）；run 终态=成功；灯允许绿/黄（黄若出现来自 dbt 测试 warn 机制，与契约黄行是两条不同机制，皆非失败） |
 
-数据流：`generate.py` → `semantic.ingest_run --instance _wb_r1` → `semantic.compile_dbt --instance _wb_r1` → dbt build（命令全文见 TESTPLAN §2）。
+数据流：`generate.py` → `semantic.ingest_run --instance _wb_r1` → `semantic.compile_dbt --instance _wb_r1` → dbt build → `semantic.harvest --instance _wb_r1`（匹配契约收获，R2 起）【命令全文见 TESTPLAN §2】。
 
 ## 2. 六份 YAML 配置全文
 
@@ -220,13 +224,13 @@ reports:
 | V3 | 台账:14（SZ-2607-014） | 单价=`N/A` | fact_ledger.unit_price type decimal 不可强转 | type | yellow | 1 | **行保留置 NULL**（裁定：type 不剔行，A3v2） |
 | V4 | 台账:29（空单据号销售行） | 单据号=空 | fact_ledger.doc_no required | required | yellow | 2 | **该行被摄取层剔除**（裁定：入库即干净字段，A4；与 ：40 合计 cnt=2） |
 | V4 | 台账:40（空单据号采购行） | 单据号=空 | 同上 | required | yellow | （并入上行） | **该行被摄取层剔除** |
-| V6 | 台账（多行） | 供应商编码=空的销售行 24 + 期末库存行 5；供应商编码=`SUP-999` 幽灵行 1（台账:41，PO-2608-007） | wide_ledger×suppliers join null_match | null_match | yellow | **2** | 未匹配**去重值** = {空串, SUP-999}（distinct 语义，A9v2；行数口径会是 30，行数≠cnt 正是变异体判别点） |
-| V7 | 门店:5,6 | S05 两行（社区五店/社区五店二号） | wide_ledger×stores join 右键重复 fanout | fanout | yellow | **1** | 重复**右键去重数** = {S05}（A9v2）；受影响左行 = 台账:13,24,25,50 四行，**宽表物理扩 4 行** |
+| V6 | — | **（R3 起并入反向播种 N7）** 供应商编码=空的 29 行不再产生 null_match 行 | null_match 测试 where 排除空键 | — | — | 0 | 空键属 missing/required 语义覆盖（R2 裁定） |
+| V7 | 门店:5,6 | S05 两行（社区五店/社区五店二号） | wide_ledger×stores join 右键重复 fanout | fanout | yellow | **1** | 重复**右键去重数** = {S05}（A9v3；受影响左行 = 台账:13,24,25,50 四行，**宽表物理扩 4 行**） |
 | V8 | 库存快照:21 | 期末数量=`-5` | stock_snapshot.ending_qty range [0,100000] | range | yellow | 1 | 行保留 |
 | V9 | 商品:12（FP009） | 品类=`生鲜` | products.category enum [食品,百货,日化] | enum | yellow | 1 | 行保留 |
-| V10 | 台账:41（PO-2608-007） | 供应商编码=`SUP-999`（不在供应商档案） | wide_ledger×suppliers join null_match（未匹配左键值） | null_match | yellow | （并入 V6 的 2） | 行保留；R2 新增，佐证 distinct 口径与 retail"幽灵供应商真黄灯"先例 |
+| V10 | 台账:41（PO-2608-007） | 供应商编码=`SUP-999`（不在供应商档案） | wide_ledger×suppliers join null_match（主表键非空但匹空） | null_match | yellow | **1** | 非空未匹配**去重值** = {SUP-999}（R2 实测裁定 cnt=1）；行保留 |
 
-**预期契约行合计：8 条 (source, field, rule, level, cnt) 投影** —— fact_ledger×4（channel/enum=3、doc_no/required=2、quantity/range=2、unit_price/type=1）、products×1（category/enum=1）、stock_snapshot×1（ending_qty/range=1）、wide_ledger×2（store_code/fanout=1、supplier_code/null_match=2）。全部 level=yellow（假设 A1）。匹配契约行 source=wide.yml 声明名（裁定 4；A8：`_wb_r1` 声明名为 `wide_ledger`）。
+**预期契约行合计：8 条 (source, field, rule, level, cnt) 投影** —— fact_ledger×4（channel/enum=3、doc_no/required=2、quantity/range=2、unit_price/type=1）、products×1（category/enum=1）、stock_snapshot×1（ending_qty/range=1）、wide_ledger×2（store_code/fanout=1、supplier_code/null_match=1）。全部 level=yellow（假设 A1）。匹配契约行 source=wide.yml 声明名（裁定 4；A8：`_wb_r1` 声明名为 `wide_ledger`），经 `semantic.harvest` 收获写入。
 
 ### 4.2 反向播种（预期**零**契约行——投影完备性的对照面）
 
@@ -238,6 +242,7 @@ reports:
 | N4 | 五文件齐全、表头逐列一致、无空文件 | problems 类条款全不触发，**无 field="-" 行**（R2 起不再配置 row_drop_ratio 条款，剔行仅 required 2 行） |
 | N5 | entry_type 全部合法、供应商 S05 行大区=华东、结算方式全合法 | 合法值不产生行 |
 | N6 | V3 类型行的其余字段全部合法；V4 两行的其余字段全部合法 | 两阶段 v2 下同 row 多违规互不掩盖——本项目各行单违规，投影不因两阶段而增行 |
+| N7 | 供应商编码=空 ×29（销售 24 + 期末库存 5）（R2 裁定） | null_match 测试 where 排除空键：**无契约行**（空键属 missing/required 语义覆盖；本题两字段均未声明 required/missing 策略，即静默放行） |
 
 ### 4.3 行数口径（W 类对数用，语义见 §8 假设 A3v2/A4/A5v2/A9v2）
 
@@ -280,9 +285,10 @@ rm -rf instances/_wb_r1
 .venv/Scripts/python.exe -m semantic.ingest_run  --instance _wb_r1
 .venv/Scripts/python.exe -m semantic.compile_dbt --instance _wb_r1
 (cd instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors)
+.venv/Scripts/python.exe -m semantic.harvest --instance _wb_r1   # 匹配契约收获（R2 起新步骤）
 ```
 
-## 8. 独立口径假设 v2（与 caliber.json 逐字同步；引擎分歧时归因指引）
+## 8. 独立口径假设 v3（与 caliber.json 逐字同步；引擎分歧时归因指引）
 
 - **A1** contract_report.level = 配置级别经 severity 映射（warn→yellow / error→red）；本账套全部播种为 yellow。
 - **A2** 软违规（enum/range/unique/null_match/fanout）记录不剔行。
@@ -292,6 +298,9 @@ rm -rf instances/_wb_r1
 - **A6** missing=default 补默认值、零契约行。
 - **A7** 空值跳过 enum/range（retail 真实基线佐证：海量空供应商编码未产生枚举/范围行）。
 - **A8** 匹配契约行 source = wide.yml 声明名：`_wb_r1` 声明 `name: wide_ledger`；R1 归因反馈括注的 `ledger_wide` 是 **ladder 账套**的声明名——契约以各自声明名为准，本答案取 `wide_ledger`。
-- **A9v2** 匹配契约 cnt = dbt 测试 failures 数（R1 裁定 4）：fanout = 去重后重复右键数（→1）；null_match = 去重后未匹配左键值数（空串与 SUP-999 → 2，**不是行数 30**）；join 物理扩行语义不变 → 宽表行数 = 保留主表行数 48 + 受扇出影响左行数 4 = 52。
+- **A9v3** 匹配契约 cnt = dbt 测试 failures 数（R1 裁定 4）：
+  - fanout = 去重后重复右键数（S05 重复 → **1**）；
+  - null_match = **主表键非空但匹空**的去重值数（SUP-999 → **1**）；空键被测试 where 排除，属 missing/required 语义覆盖、不产生 null_match 行（R2 判分裁定，v2 "空串计入"作废）；
+  - join 物理扩行语义不变 → 宽表行数 = 保留主表行数 48 + 受扇出影响左行数 4 = 52；宽表物化名 = `intermediate.int_wide_ledger`（R2 判分裁定，answer 键名保留 wide_ledger 作语义标签）。
 
-归因原则：**命题方不为对齐引擎而改答案**。cnt 粒度分歧 → A9v2；source 归属分歧 → A8；`rows.raw` 分歧 → A5v2/A4；`rows.wide_ledger` 分歧 → A3v2/A9v2；rule/level 词表分歧 → spec↔engine 词表分歧。
+归因原则：**命题方不为对齐引擎而改答案**。cnt 粒度分歧 → A9v3；source 归属分歧 → A8；`rows.raw` 分歧 → A5v2/A4；`rows.wide_ledger` 分歧 → A3v2/A9v3；rule/level 词表分歧 → spec↔engine 词表分歧。

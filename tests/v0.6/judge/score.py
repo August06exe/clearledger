@@ -75,11 +75,11 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-# ---- case 注册表（冻结：增删条目 = 口径变更） ----
-W_CASES = ("W-01", "W-02", "W-03")
-B_CASES = tuple("B-%02d" % i for i in range(1, 9))
-MR_CASES = tuple("MR-%02d" % i for i in range(1, 5))
-MUT_CASES = ("MUT-M1", "MUT-M2", "MUT-M3")
+# ---- case 注册表（随密封区版本演进；R2 起含 W-04/W-05、B-09~B-11、MR-05、MUT-M4~M6） ----
+W_CASES = ("W-01", "W-02", "W-03", "W-04", "W-05")
+B_CASES = tuple("B-%02d" % i for i in range(1, 12))
+MR_CASES = tuple("MR-%02d" % i for i in range(1, 6))
+MUT_CASES = tuple("MUT-M%d" % i for i in range(1, 7))
 SPECIAL_CASES = ("DISCIPLINE",)
 ALL_CASES = list(W_CASES + B_CASES + MR_CASES + MUT_CASES + SPECIAL_CASES)
 
@@ -98,7 +98,12 @@ def kind_of(cid: str) -> str:
     return "UNKNOWN"
 
 W_INPUTS = {"W-01": "actual_pending.json", "W-02": "actual_impact.json",
-            "W-03": "actual_rows.json"}
+            "W-03": "actual_rows.json", "W-04": "actual_W04_digest.json",
+            "W-05": "actual_W05_assert.json"}
+
+B09_MUTANTS = ("M1", "M2", "M3", "M4", "M5", "M6")
+MR05_ROWSETS = ("contribution_project", "contribution_dept", "group_pnl")
+RUN_LIGHT_VOCAB = ("green", "yellow")
 
 PENDING_TUPLE_FIELDS = ("source", "field", "rule", "level", "cnt")
 PENDING_ITEM_FIELDS = frozenset(PENDING_TUPLE_FIELDS) | {"sample"}
@@ -297,14 +302,39 @@ def judge_w03(answer: dict, data) -> tuple:
                           "expected": expect_n, "actual": act})
 
     rows_ans = answer.get("rows") or {}
-    for src, n in sorted((rows_ans.get("files") or {}).items()):
-        check(f"files.{src}", n, src)
+    # rows.raw.*：raw 表行数（A5v2 = 文件行数 − required 剔行数）
     raw_keys = rows_ans.get("raw") or {}
     for key, n in sorted(raw_keys.items()):
         if isinstance(key, str) and key.startswith("raw."):
             check(key, n, key[len("raw."):])
         else:
             fails.append({"type": "invalid_structure", "detail": f"answer.rows.raw 键非法: {key!r}"})
+    # rows.files.*：文件数据行数——A5v2 起与 raw 表行数不再相等，
+    # 权威证据 = 测试实例 inbox 源文件本体（判分器直接清点数据行，多重集比对，源名无关）。
+    sealed_files = rows_ans.get("files") or {}
+    inst = answer.get("instance") or "_wb_r1"
+    inbox = SCRIPT_DIR.parents[2] / "instances" / inst / "data" / "inbox"
+    if not inbox.is_dir():
+        fails.append({"type": "w03_files_evidence_missing",
+                      "detail": f"inbox 目录不存在: {inbox}（文件行数无法独立核验）"})
+    else:
+        got = Counter()
+        for f in sorted(inbox.glob("*.csv")):
+            try:
+                lines = [ln for ln in f.read_text(encoding="utf-8-sig",
+                         errors="replace").splitlines() if ln.strip()]
+            except OSError as e:
+                fails.append({"type": "w03_inbox_unreadable", "file": f.name, "error": str(e)})
+                continue
+            got[len(lines) - 1 if lines else 0] += 1  # 首行为表头
+        want = Counter(int(n) for n in sealed_files.values())
+        info["inbox_data_rows"] = sorted(got.elements(), reverse=True)
+        if got != want:
+            fails.append({"type": "rows_mismatch", "key": "files.*（inbox 清点）",
+                          "class": "int_exact",
+                          "expected": {str(k): v for k, v in sorted(want.items())},
+                          "actual": {str(k): v for k, v in sorted(got.items())},
+                          "detail": "密封 files 行数多重集 ≠ inbox 源文件数据行数多重集"})
     exp_wide = rows_ans.get("wide_ledger")
     act_wide = body.get("wide_ledger")
     if not is_int(act_wide) or act_wide != exp_wide:
@@ -319,11 +349,127 @@ def judge_w03(answer: dict, data) -> tuple:
     return fails, info
 
 
+def judge_w04(answer: dict, data, actual_dir: Path) -> tuple:
+    """分层勾稽（ladder）：digest 偏差 amount_zero（≤0.01，理想 0）+ 切换证据。"""
+    fails, info = [], {}
+    body = unwrap(data)
+    if not isinstance(body, dict):
+        return [{"type": "invalid_structure", "detail": "digest 顶层不是对象"}], info
+    layers, direct = body.get("layers"), body.get("direct")
+    if not isinstance(layers, dict) or not isinstance(direct, dict):
+        return [{"type": "invalid_structure", "detail": "digest 缺 direct/layers 对象"}], info
+    for key in MR05_ROWSETS:
+        lay = layers.get(key)
+        if not isinstance(lay, dict):
+            fails.append({"type": "w04_layer_missing", "layer": key})
+            continue
+        dev, rs = lay.get("deviation"), lay.get("report_sum")
+        if isinstance(dev, bool) or not isinstance(dev, (int, float)):
+            fails.append({"type": "w04_deviation_not_number", "layer": key,
+                          "class": "amount_zero", "observed": dev,
+                          "detail": "deviation=null 多为报表响应形态不符（shape_mismatch 证据）"})
+        elif abs(dev) > 0.01:
+            fails.append({"type": "w04_deviation_nonzero", "layer": key,
+                          "class": "amount_zero", "tolerance": 0.01, "deviation": dev,
+                          "report_sum": rs, "direct_sum": lay.get("direct_sum")})
+    if body.get("all_zero") is not True:
+        fails.append({"type": "w04_all_zero_flag_not_true", "observed": body.get("all_zero")})
+    # 环境切换证据：current 须曾切到 ladder
+    ip = actual_dir / "actual_W04_instance.json"
+    idata, ierr = load_json_file(ip)
+    cur = (idata or {}).get("current") if not ierr else None
+    info["current_during_w04"] = cur
+    if cur != "ladder":
+        fails.append({"type": "w04_current_not_ladder", "expected": "ladder", "actual": cur,
+                      "detail": "actual_W04_instance.json 缺失或 current 不符" if ierr or idata is None else "采集期间 current 不在 ladder"})
+    return fails, info
+
+
+def _extract_rows(obj):
+    if isinstance(obj, dict):
+        for k in ("rows", "data", "items"):
+            v = obj.get(k)
+            if isinstance(v, list):
+                return v
+        for v in obj.values():
+            if isinstance(v, list):
+                return v
+    if isinstance(obj, list):
+        return obj
+    return None
+
+
+def _extract_titles(obj):
+    out = []
+    if isinstance(obj, dict):
+        for k in ("reports", "items", "data"):
+            v = obj.get(k)
+            if isinstance(v, list):
+                out.extend(it.get("title") for it in v
+                           if isinstance(it, dict) and isinstance(it.get("title"), str))
+    elif isinstance(obj, list):
+        out.extend(it.get("title") for it in obj
+                   if isinstance(it, dict) and isinstance(it.get("title"), str))
+    return out
+
+
+def judge_w05(answer: dict, data, actual_dir: Path) -> tuple:
+    """字段级血缘：全部列 ok=true、stg 上游非空且指向源表层、节点可发现。"""
+    fails, info = [], {}
+    body = unwrap(data)
+    if not isinstance(body, dict):
+        return [{"type": "invalid_structure", "detail": "assert 顶层不是对象"}], info
+    for flag in ("all_ok", "stg_upstream_nonempty"):
+        if body.get(flag) is not True:
+            fails.append({"type": "w05_assert_false", "flag": flag, "observed": body.get(flag)})
+    files, cols_n = body.get("files"), body.get("columns")
+    if not is_int(files) or files <= 0:
+        fails.append({"type": "w05_no_column_files", "files": files})
+    info["column_files"], info["columns"] = files, cols_n
+    for what, fname in (("stg_nodes_found", "actual_W05_node_sales.txt"),
+                        ("ladder_mart_nodes_found", "actual_W05_node_ladder.txt")):
+        p = actual_dir / fname
+        if not p.exists():
+            fails.append({"type": "evidence_file_missing", "files": [fname]})
+            continue
+        lines = [ln.strip() for ln in p.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+                 if ln.strip()]
+        info[what] = len(lines)
+        if not lines:
+            fails.append({"type": "w05_nodes_not_found", "what": what, "file": fname})
+    # stg 上游指向源表层：上游表名不得是内部层命名（stg_/int_/mart_ 前缀）
+    checked = 0
+    for p in sorted(actual_dir.glob("actual_W05_cols_sales_*.json")):
+        d2, err = load_json_file(p)
+        if err or not isinstance(d2, dict):
+            continue
+        for c in d2.get("columns") or []:
+            if not isinstance(c, dict):
+                continue
+            ups = c.get("upstreams") or c.get("upstream") or c.get("sources") or []
+            for u in ups:
+                t = (u.get("table") or u.get("node") or "") if isinstance(u, dict) else str(u)
+                checked += 1
+                if t.startswith(("stg_", "int_", "mart_")):
+                    fails.append({"type": "w05_upstream_not_source_layer", "file": p.name,
+                                  "column": c.get("column"), "upstream": t})
+    info["upstream_entries_checked"] = checked
+    return fails, info
+
+
 # ---------------------------------------------------------------- B 路
 def cmp_field(key: str, exp, act):
-    """返回 None=通过，否则失败原因串。_in 结尾且期望为列表 → 成员判定。"""
+    """返回 None=通过，否则失败原因串。_in 结尾且期望为列表 → 成员判定。
+    R3 澄清：observed 值允许单元素列表（单请求单观察的列表包装），
+    多元素列表对单请求字段不是诚实观察（疑似回抄词表）→ 判失败。"""
     if key.endswith("_in") and isinstance(exp, list):
-        return None if act in exp else "not_in_vocabulary"
+        act_v = act
+        if isinstance(act, list):
+            if len(act) == 1:
+                act_v = act[0]
+            else:
+                return "multi_value_observation_for_single_request"
+        return None if act_v in exp else "not_in_vocabulary"
     if isinstance(exp, bool) or isinstance(act, bool):
         ok = isinstance(exp, bool) and isinstance(act, bool) and exp is act
         return None if ok else "type_or_value_mismatch"
@@ -336,7 +482,7 @@ def cmp_field(key: str, exp, act):
     return None if canon(exp) == canon(act) else "value_mismatch"
 
 
-def judge_behavior_entry(cid: str, e: dict):
+def judge_behavior_entry(cid: str, e: dict, actual_dir: Path = None):
     """返回 (failures, info, invalid)。invalid=True → 结果 INVALID（结构残缺）。"""
     fails, info = [], {}
     expect, observed = e.get("expect"), e.get("observed")
@@ -367,6 +513,26 @@ def judge_behavior_entry(cid: str, e: dict):
         if observed != "caught":
             fails.append({"type": "mutation_survived", "observed": observed})
         return fails, info, invalid
+    if cid == "B-09":  # 变异身份：observed 按 M1..M6 键控，每副本三断言全真
+        if not isinstance(expect, dict) or not isinstance(observed, dict):
+            fails.append({"type": "expect_observed_not_object",
+                          "expect_type": type(expect).__name__,
+                          "observed_type": type(observed).__name__})
+            return fails, info, True
+        for m in B09_MUTANTS:
+            sub = observed.get(m)
+            if not isinstance(sub, dict):
+                fails.append({"type": "b09_mutant_missing", "mutant": m})
+                continue
+            for k, v in expect.items():
+                ov = sub.get(k)
+                if ov is not True:
+                    fails.append({"type": "b09_field_mismatch", "mutant": m,
+                                  "field": k, "expected": v, "observed": ov})
+        extra = sorted(set(observed) - set(B09_MUTANTS))
+        if extra:
+            fails.append({"type": "b09_unexpected_keys", "keys": extra})
+        return fails, info, invalid
     # B-*：结构对象逐字段比对
     if not isinstance(expect, dict) or not isinstance(observed, dict):
         fails.append({"type": "expect_observed_not_object",
@@ -386,6 +552,32 @@ def judge_behavior_entry(cid: str, e: dict):
         if why:
             fails.append({"type": "field_mismatch", "field": k,
                           "expected": expect[k], "observed": observed[k], "why": why})
+    # B-10/B-11 独立复算（不信任单方声明；证据文件缺失只记 info 不另判失败）
+    if cid == "B-10" and actual_dir is not None:
+        rep, e1 = load_json_file(actual_dir / "actual_B10_reports.json")
+        al, e2 = load_json_file(actual_dir / "actual_B10_aliases.json")
+        if not e1 and not e2:
+            titles = _extract_titles(rep)
+            al_text = json.dumps(al, ensure_ascii=False) if not e2 else ""
+            missing = [t for t in titles if t not in al_text]
+            info["titles_checked"] = len(titles)
+            if titles and missing:
+                fails.append({"type": "b10_titles_missing_in_aliases", "missing": missing,
+                              "detail": "复算：报表 title 在别名层文本中不可寻得"})
+    if cid == "B-11" and actual_dir is not None:
+        nf, e1 = load_json_file(actual_dir / "actual_B11_nofilter.json")
+        be, e2 = load_json_file(actual_dir / "actual_B11_badfilter_encoded.json")
+        if not e1 and not e2:
+            rn, re_ = _extract_rows(nf), _extract_rows(be)
+            if rn is None or re_ is None:
+                info["b11_recompute"] = "evidence 文件无行集结构，跳过复算"
+            else:
+                eq = canon(rn) == canon(re_)
+                info["b11_rows_nofilter"], info["b11_rows_badfilter"] = len(rn), len(re_)
+                info["b11_recompute_equal"] = eq
+                if not eq:
+                    fails.append({"type": "b11_rows_differ_on_recompute",
+                                  "rows_nofilter": len(rn), "rows_badfilter": len(re_)})
     return fails, info, invalid
 
 
@@ -529,6 +721,60 @@ def judge_mr_entry(cid: str, e: dict, actual_dir: Path):
         if not eq:
             fails.append({"type": "mr04_recomputed_mismatch",
                           "detail": "derived 与 endpoint 规范化后不相等（映射须逐键一致）"})
+        return fails, info, False
+
+    if cid == "MR-05":
+        ss = obs.get("save_status")
+        if not (is_int(ss) and ss == 200):
+            fails.append({"type": "mr05_save_status", "expected": 200, "observed": ss})
+        if obs.get("rebuild_triggered") is not True:
+            fails.append({"type": "mr05_rebuild_not_triggered"})
+        light = obs.get("run_terminal_light")
+        if light is None:
+            light = obs.get("run_terminal_light_in")
+        if isinstance(light, list) and len(light) == 1:
+            light = light[0]  # 单请求单观察的列表包装
+        if not isinstance(light, str) or light not in RUN_LIGHT_VOCAB:
+            fails.append({"type": "mr05_run_terminal_light", "vocabulary": list(RUN_LIGHT_VOCAB),
+                          "observed": light})
+        rse = obs.get("rowsets_equal")
+        if not isinstance(rse, dict):
+            fails.append({"type": "mr05_rowsets_missing_or_not_object"})
+            rse = {}
+        for key in MR05_ROWSETS:
+            if rse.get(key) is not True:
+                fails.append({"type": "mr05_rowset_flag_false", "report": key,
+                              "observed": rse.get(key)})
+            bp = actual_dir / f"mr05_before_{key}.json"
+            ap_ = actual_dir / f"mr05_after_{key}.json"
+            if not (bp.exists() and ap_.exists()):
+                fails.append({"type": "evidence_file_missing",
+                              "files": [bp.name, ap_.name], "report": key})
+                continue
+            d1, er1 = load_json_file(bp)
+            d2, er2 = load_json_file(ap_)
+            if er1 or er2:
+                fails.append({"type": "evidence_file_unreadable", "error": er1 or er2, "report": key})
+                continue
+            if canon(d1) != canon(d2):
+                fails.append({"type": "mr05_rowset_changed_on_recompute", "report": key,
+                              "detail": "配置未变的 save+rebuild 后行集规范化 JSON 不相等"})
+        if obs.get("dashboard_content_unchanged") is not True:
+            fails.append({"type": "mr05_flag_false", "flag": "dashboard_content_unchanged"})
+        hp = actual_dir / "mr05_dashboard_hash.txt"
+        if not hp.exists():
+            fails.append({"type": "evidence_file_missing", "files": [hp.name]})
+        else:
+            # sha256sum 输出 = "<hash>  <标签>"；比对哈希 token，忽略标签
+            toks = [ln.split()[0] for ln in
+                    hp.read_text(encoding="utf-8-sig").splitlines() if ln.strip()]
+            if len(toks) < 2:
+                fails.append({"type": "evidence_structure_invalid",
+                              "detail": "mr05_dashboard_hash.txt 应含前后两行哈希"})
+            elif toks[0] != toks[1]:
+                fails.append({"type": "mr05_dashboard_content_changed_on_recompute",
+                              "before": toks[0], "after": toks[1],
+                              "detail": "复算：原样 save 前后 dashboard 内容哈希不一致（复算为权威）"})
         return fails, info, False
 
     return [{"type": "mr_rule_not_implemented", "detail": f"未注册的蜕变关系: {cid}"}], info, True
@@ -704,8 +950,12 @@ def main() -> int:
                 fails, info = judge_w01(answer, data)
             elif cid == "W-02":
                 fails, info = judge_w02(answer, data)
-            else:
+            elif cid == "W-03":
                 fails, info = judge_w03(answer, data)
+            elif cid == "W-04":
+                fails, info = judge_w04(answer, data, actual_dir)
+            else:
+                fails, info = judge_w05(answer, data, actual_dir)
             case["failures"], case["info"] = fails, {**case["info"], **info}
             case["result"] = None  # 交由汇总阶段按 failures 定 PASS/FAIL
         except Exception as e:  # 判分器自身意外 = 该 case invalid，不崩全程
@@ -754,7 +1004,7 @@ def main() -> int:
                                              "dup_indexes": dups[cid]})
                     continue
                 try:
-                    fails, info, invalid = judge_behavior_entry(cid, e)
+                    fails, info, invalid = judge_behavior_entry(cid, e, actual_dir)
                     case["failures"], case["info"] = fails, {**case["info"], **info}
                     case["result"] = "INVALID" if invalid else None
                 except Exception as ex:
@@ -763,7 +1013,7 @@ def main() -> int:
             elif cid == "MUT-SKIPPED":  # TESTPLAN §7 认可的跳过声明
                 c = new_case(cid, "MUT")
                 try:
-                    fails, info, invalid = judge_behavior_entry(cid, e)
+                    fails, info, invalid = judge_behavior_entry(cid, e, actual_dir)
                     c["failures"], c["info"] = fails, info
                     c["result"] = "INVALID" if invalid else None
                 except Exception as ex:

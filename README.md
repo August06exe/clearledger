@@ -48,7 +48,7 @@
 | 流程可视化 | ⚠️ 有，内部黑盒 | ❌ | ❌ | ✅ 红绿灯 + 血缘，卡点一眼可见 |
 | 换新项目成本 | 高，重画 | — | 高，重写 | 低，换六份配置 |
 
-它的做法是把工程活儿标准化成六份配置文件：数据源、宽表、维度、指标、看板、权限。全部是纯文本 YAML，agent 可以直接读、直接改，人也可以。新项目来了，换六份配置就能跑，引擎一行不动。日常你丢文件、定口径、看红绿灯；搭管道、改配置、修报错，都是 agent 的事。口径有唯一出处，数据有血缘，进库有契约，工程上的规矩一条没少，只是不用你亲手伺候。
+它的做法是把工程活儿标准化成配置积木：数据源、宽表、维度、指标、看板五份纯文本 YAML（外加一份账套元信息），agent 可以直接读、直接改，人也可以。第六块积木——权限，在路线图上。新项目来了，换配置就能跑，引擎一行不动。日常你丢文件、定口径、看红绿灯；搭管道、改配置、修报错，都是 agent 的事。口径有唯一出处，数据有血缘，进库有契约，工程上的规矩一条没少，只是不用你亲手伺候。
 
 <div align="center">
 <img src="docs/assets/flow-governance.png" width="96%" alt="每批数据的必经之路：投放、三层契约校验、跑批、红绿灯、报表" />
@@ -147,7 +147,7 @@ python -m venv .venv && .venv/Scripts/python -m pip install -r requirements.txt 
 .venv/Scripts/python sample_data/generate_restaurant.py
 .venv/Scripts/python -m semantic.ingest_run  --instance sales
 .venv/Scripts/python -m semantic.compile_dbt --instance sales
-cd instances/sales/pipeline && ../../.venv/Scripts/dbt.exe build --profiles-dir . && cd ../../..
+cd instances/sales/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . && cd ../../../..
 
 # 启动门户
 .venv/Scripts/python -m uvicorn app.main:app --host 127.0.0.1 --port 8620

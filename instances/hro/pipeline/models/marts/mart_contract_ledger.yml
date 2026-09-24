@@ -1,0 +1,17 @@
+# 生成物：报表模型列元数据（合同台账）
+version: 2
+
+models:
+  - name: mart_contract_ledger
+    description: 合同台账（维度 × 指标汇总）
+    columns:
+      - name: "合同"
+        description: 分组维度
+      - name: "服务费收入"
+        description: 月度账单金额合计（账单行）
+      - name: "回款额"
+        description: 回款记录金额合计（回款行）
+      - name: "应收余额"
+        description: 累计服务费收入 − 累计回款额（全期口径，不做跨月滚存）
+      - name: "外派人数"
+        description: 去重外派员工数（在册行）

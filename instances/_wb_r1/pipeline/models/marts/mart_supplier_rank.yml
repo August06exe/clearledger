@@ -1,0 +1,11 @@
+# 生成物：报表模型列元数据（供应商采购排行）
+version: 2
+
+models:
+  - name: mart_supplier_rank
+    description: 供应商采购排行（维度 × 指标汇总）
+    columns:
+      - name: "供应商"
+        description: 分组维度
+      - name: "采购额"
+        description: 采购行 数量×采购单价 合计

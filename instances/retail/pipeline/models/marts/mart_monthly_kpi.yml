@@ -1,0 +1,25 @@
+# 生成物：报表模型列元数据（月度经营总览）
+version: 2
+
+models:
+  - name: mart_monthly_kpi
+    description: 月度经营总览（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 分组维度
+      - name: "销售额"
+        description: 折后销售合计 = 数量×单价×(1−折扣率)，仅销售行
+      - name: "销售成本"
+        description: 数量×商品标准成本 合计，仅销售行（标准成本法，SPEC 简化口径）
+      - name: "毛利"
+        description: 销售额 − 销售成本
+      - name: "毛利率"
+        description: 毛利 ÷ 销售额；销售额为 0 时为空
+      - name: "期末库存量"
+        description: 月末库存快照的期末数量合计（全月快照行）
+      - name: "库存周转率"
+        description: 销售成本 ÷ 期末库存量（简化口径，SPEC §5.2）
+      - name: "电商销售占比"
+        description: 电商渠道销售额 ÷ 总销售额
+      - name: "动销商品数"
+        description: 有销售记录的去重商品数

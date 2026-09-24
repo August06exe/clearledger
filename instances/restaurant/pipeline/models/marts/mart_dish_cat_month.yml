@@ -1,0 +1,15 @@
+# 生成物：报表模型列元数据（菜类月报）
+version: 2
+
+models:
+  - name: mart_dish_cat_month
+    description: 菜类月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "菜品类别"
+        description: 分组维度
+      - name: "营业额"
+        description: 订单金额合计（折前口径，未扣折扣）
+      - name: "菜品销量"
+        description: 菜品销售数量合计

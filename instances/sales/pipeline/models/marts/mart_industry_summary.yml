@@ -1,0 +1,17 @@
+# 生成物：报表模型列元数据（行业经营汇总）
+version: 2
+
+models:
+  - name: mart_industry_summary
+    description: 行业经营汇总（维度 × 指标汇总）
+    columns:
+      - name: "行业"
+        description: 分组维度
+      - name: "收入"
+        description: 订单金额 × (1−折扣率) 的合计；折扣率缺失按 0 处理
+      - name: "毛利"
+        description: 收入 − 成本
+      - name: "毛利率"
+        description: 毛利 ÷ 收入；收入为 0 时为空
+      - name: "客户数"
+        description: 去重客户数

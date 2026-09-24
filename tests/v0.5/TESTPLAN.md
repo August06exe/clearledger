@@ -2,7 +2,7 @@
 
 > 命题 Agent 出品。被测对象（黑盒）：**MCP 六工具**（`mcp_server.py`）、**HTTP 开放端点**
 > （`/api/open/*` + `X-API-Key`）、**装配线体检器**（`semantic.inspect`）。
-> 对外承诺出处：`docs/AI-操作手册.md` R-10 / R-11、`docs/语义层与多实例设计.md` §3.2/§4.3、
+> 对外承诺出处：`docs/AI-操作手册.md` R-10 / R-11、`docs/history/语义层与多实例设计.md` §3.2/§4.3、
 > 决策 D14 / P-08 / N-10。
 > 三权分立纪律：测试 Agent **不改引擎、不改被测实现、不改本 TESTPLAN、不改 `expected/` 密封答案**；
 > 只执行、按 §5 规范存档实际行为；全部数值判分由 `expected/` + `judge/score.py` 机械完成。

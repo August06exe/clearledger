@@ -1,0 +1,17 @@
+# 生成物：报表模型列元数据（渠道月报）
+version: 2
+
+models:
+  - name: mart_channel_month
+    description: 渠道月报（维度 × 指标汇总）
+    columns:
+      - name: "月份"
+        description: 时间维度（month）
+      - name: "渠道"
+        description: 分组维度
+      - name: "销售额"
+        description: 折后销售合计 = 数量×单价×(1−折扣率)，仅销售行
+      - name: "毛利"
+        description: 销售额 − 销售成本
+      - name: "电商销售占比"
+        description: 电商渠道销售额 ÷ 总销售额

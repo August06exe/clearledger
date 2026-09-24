@@ -31,23 +31,26 @@ sha256sum instances/sales/*.yml instances/restaurant/*.yml instances/retail/*.ym
   instances/ladder/*.yml > judge/hash_official_before.txt
 ```
 
-## 2. 基线装配（三步链）
+## 2. 基线装配（三步链 + 收获）
 
 ```bash
 .venv/Scripts/python.exe tests/v0.6/generate.py                      # 幂等重建 instances/_wb_r1/
 .venv/Scripts/python.exe -m semantic.ingest_run  --instance _wb_r1   # 摄取+契约校验
 .venv/Scripts/python.exe -m semantic.compile_dbt --instance _wb_r1   # 配置→dbt project
 (cd instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors | tail -5)
+.venv/Scripts/python.exe -m semantic.harvest --instance _wb_r1       # 匹配契约收获（R2 裁定 C：匹配契约行经此写入 contract_report）
 ```
 
-- 四条命令退出码**全部记入** `judge/provenance_round2.json`（id=BASE-1..BASE-4）。
+- 五条命令退出码**全部记入** `judge/provenance_round2.json`（id=BASE-1..BASE-5）。
 - 期望：退出码全 0；dbt build 末行 `ERROR=0`（PASS/WARN 数如实记录，不做要求）。
-- 若 ingest 退出码非 0：如实记录 stderr/stderr 摘要进 provenance 并继续（这本身就是判分证据），W 类照采。
+- **W-01 的 pending 采集必须在 harvest 之后**（否则匹配契约行缺失，属工序缺步非引擎错）。
+- 若 ingest/ Harvest 退出码非 0：如实记录 stderr 摘要进 provenance 并继续（这本身就是判分证据），W 类照采。
 
 ## 3. 采集规范
 
 - 数值类 actual：`judge/actual_*.json`，保存**完整响应体**（易变字段保留在内，判分时按口径剔除）。
-- 行为类断言：`judge/behaviors_round2.json`，数组，每条 `{"id": "B-xx", "expect": <本文给出的结构原样拷贝>, "observed": <同构实测>, "evidence": "<一句话+指向的 actual 文件>"}`。
+- **observed 键名纪律（R2 裁定 D）**：`behaviors_round2.json` 每条 `observed` 的键名必须**逐字**使用对应 Case `expect` 声明的键名（含 `_in` 等后缀），一个不多一个不少；原始观察（HTTP 状态码数字、非灯色词表的原始状态串、响应原文等）**一律放 `evidence` 字段**，不得混入 observed 键。
+- 行为类断言：`judge/behaviors_round2.json`，数组，每条 `{"id": "B-xx", "expect": <本文给出的结构原样拷贝>, "observed": <同构实测，键名逐字一致>, "evidence": "<一句话+指向的 actual 文件+原始观察>"}`。
 - 蜕变观察：`judge/mr_round2.json`，数组，每条 `{"id": "MR-0x", "observation": {...}}`（**只记观察，不写期望**）。
 - 溯源：`judge/provenance_round2.json`，数组，每条 `{"id": "<Case或步骤id>", "command": "<命令原文>", "exit_code": <int>}`。
 - JSON 一律 UTF-8、`ensure_ascii=false`、`sort_keys=true`、结尾换行（与判分器规范化一致）。
@@ -80,11 +83,14 @@ curl -s -o judge/actual_impact.json -w '%{http_code}\n' \
 
 ### W-03 行数对数（raw 各源表 + 宽表）
 
+> R2 裁定 B：宽表物化名 = `intermediate.int_<wide声明名>`（读 `instances/_wb_r1/wide.yml` 的 `wide.name` 拼接 `int_` 前缀，本实例即 `int_wide_ledger`）。answer 的语义标签名与物化名解耦，采集按物化名。
+
 ```bash
 .venv/Scripts/python.exe - > judge/actual_rows.json <<'EOF'
 import json, sys, time
-import duckdb
+import duckdb, yaml
 path = "data/warehouse/_wb_r1.duckdb"
+wide_name = yaml.safe_load(open("instances/_wb_r1/wide.yml", encoding="utf-8"))["wide"]["name"]
 con = None
 for i in range(5):                       # 跑批写锁重试（只读连接）
     try:
@@ -93,18 +99,19 @@ for i in range(5):                       # 跑批写锁重试（只读连接）
         if i == 4: print(json.dumps({"error": str(e)})); sys.exit(1)
         time.sleep(2)
 tables = con.execute("select table_schema, table_name from information_schema.tables").fetchall()
-out = {"raw": {}, "wide_ledger": None, "schemas_seen": sorted({t[0] for t in tables})}
+out = {"raw": {}, "wide_ledger": None, "wide_materialized_as": f"intermediate.int_{wide_name}",
+       "schemas_seen": sorted({t[0] for t in tables})}
 for schema, name in tables:
     if schema == "raw":
         n = con.execute(f'select count(*) from raw."{name}"').fetchone()[0]
         out["raw"][name] = n
-    if name == "wide_ledger":
+    if schema == "intermediate" and name == f"int_{wide_name}":
         out["wide_ledger"] = con.execute(f'select count(*) from "{schema}"."{name}"').fetchone()[0]
 print(json.dumps(out, ensure_ascii=False, sort_keys=True, indent=2))
 EOF
 ```
 
-- actual 结构：`{"raw": {"<源表名>": 行数}, "wide_ledger": 行数|null, "schemas_seen": [...]}`（若 `wide_ledger` 为 null，如实记录并注记"宽表模型未找到"——判分证据，不是你的错误）。
+- actual 结构：`{"raw": {"<源表名>": 行数}, "wide_ledger": 行数|null, "wide_materialized_as": "intermediate.int_...", "schemas_seen": [...]}`（若 `wide_ledger` 为 null，如实记录并注记"物化宽表未找到"连同 `schemas_seen`——判分证据，不是你的错误）。
 - 期望（结构性的）：raw 下出现全部五个源的同名表；行数为非负整数。
 
 ### W-04 分层勾稽（ladder 账套，只读——L3/L4/L5 vs 台账直算，digest 偏差=0）
@@ -401,7 +408,7 @@ expect：
  "p1_status_in": [400, 404], "p2_status_in": [400, 404],
  "boundary_files_all_absent": true, "repo_root_listing_unchanged": true}
 ```
-（判定要点：这些探针必须**到达工作台路由**再被 404——若观测到 3xx 重定向或 307，`observed` 原样记录并在 evidence 注明，由判分者归因。`g1` 的 instance 参数是单段 `..`；若该形态被 HTTP 层改写（如 uvicorn 归一化），把实际到达形态写进 evidence。）
+（判定要点：这些探针必须**到达工作台路由**再被 404——若观测到 3xx 重定向或 307，`observed` 原样记录并在 evidence 注明，由判分者归因。`g1` 的 instance 参数是单段 `..`；若该形态被 HTTP 层改写（如 uvicorn 归一化），把实际到达形态写进 evidence。**observed 键名逐字用上方 expect 的键**（`g1_status_in` 等，勿丢 `_in` 后缀）；实际状态码数字放 evidence。）
 
 ### B-06 保存并重建 → 触发器 `workbench`、终态成功
 
@@ -445,7 +452,7 @@ expect：
 {"save_status": 200, "save_ok": true, "rebuild_triggered": true,
  "run_trigger": "workbench", "run_light_in": ["green", "yellow"], "metrics_content_unchanged": true}
 ```
-（R2 修正：终态判定只走**灯色词表** `run_light_in`——dbt 状态词表与灯色词表是两套，`run_status_in` 从 expect 中删除；若观测到 status 字段，原样记录进 observed 供判分者参考，不作断言。若 `/api/runs` 清单/详情无 `trigger` 字段：`observed` 原样记录全部字段，`evidence` 指向 runs_list/run 两个文件——"触发器标记=workbench 且终态成功"这个行为点本身不许放弃断言。）
+（R2 修正：终态判定只走**灯色词表** `run_light_in`——dbt 状态词表与灯色词表是两套，`run_status_in` 从 expect 中删除；R3 补充：不得自创 `run_status_observed` 之类额外 observed 键——原始 status 串放 evidence。若观测到 status 字段，原样记录进 evidence 供判分者参考，不作断言。若 `/api/runs` 清单/详情无 `trigger` 字段：`observed` 原样记录全部字段，`evidence` 指向 runs_list/run 两个文件——"触发器标记=workbench 且终态成功"这个行为点本身不许放弃断言。）
 
 ### B-10 别名层一致性（界面中文化别名层非空且覆盖当前账套配置推导）
 
@@ -466,18 +473,25 @@ expect：
 ### B-11 查询筛选白名单回退（D14：非法筛选值静默回退为"不过滤"）
 
 > 该 Case 同时是变异体 MUT-M6（查询白名单旁路类）的正式探针。
+> R2 裁定 E：守门层在端点——探针必须是**合法维度 KEY + 非法 VALUE**，并配**合法值对照组**证明值过滤路径可达（否则 survived 可能只是"端点忽略一切筛选"的假象）。
 
 ```bash
+# 1) 无筛选基线行
 curl -s -o judge/actual_B11_nofilter.json "http://127.0.0.1:8620/api/reports/region_month/data"
+# 2) 合法值对照（值路径可达性证明：合法值必须真的过滤）
+curl -s -o judge/actual_B11_goodfilter.json -w '%{http_code}\n' \
+  "http://127.0.0.1:8620/api/reports/region_month/data?区域=华东"
+# 3) 非法值（合法 KEY + 不存在的 VALUE → D14 回退为不过滤）
 curl -s -o judge/actual_B11_badfilter.json -w '%{http_code}\n' \
   "http://127.0.0.1:8620/api/reports/region_month/data?区域=__no_such_region__"
 ```
 
 expect：
 ```json
-{"badfilter_status": 200, "rows_equal_unfiltered": true}
+{"goodfilter_status": 200, "goodfilter_rows_lt_unfiltered": true,
+ "badfilter_status": 200, "badfilter_rows_equal_unfiltered": true}
 ```
-（行集比较用规范化 JSON：`json.dumps(rows, sort_keys=True, ensure_ascii=False)` 逐字节相等。若报表 key/参数名在当前账套不可达，换可用的报表+维度组合并记录实际形态；若端点对未知查询串整体忽略，同样满足"回退为不过滤"，断言依旧成立。）
+（行集比较用规范化 JSON：`json.dumps(rows, sort_keys=True, ensure_ascii=False)`。若当前账套 region_month 不可达，换可用的报表+维度组合并把实际形态写进 evidence；`区域=华东` 若在该账套无数据行，改取无筛选行集中确实存在的维度值。对照组若不成立（合法值也不过滤），如实记录——那是比 M6 更宽的功能缺陷，交判分者归因。）
 
 ---
 
@@ -510,6 +524,7 @@ diff judge/mr02_before.txt judge/mr02_after.txt
 
 ```bash
 .venv/Scripts/python.exe -m semantic.ingest_run --instance _wb_r1      # 记退出码
+.venv/Scripts/python.exe -m semantic.harvest --instance _wb_r1         # 匹配契约收获（同 §2，缺此步 items 不完整）
 curl -s -o judge/actual_pending_rerun.json http://127.0.0.1:8620/api/config/_wb_r1/pending
 # 规范化比较两次 items（W-01 的 actual_pending.json 与本次）：
 .venv/Scripts/python.exe - <<'EOF'
@@ -637,7 +652,7 @@ netstat -ano | grep ":8630" | grep LISTENING && echo "8630 STILL BUSY" || echo "
 sha256sum instances/sales/*.yml instances/_wb_r1/*.yml > judge/actual_B09_hash_before.txt
 # 2) 生成副本（真实仓库零改动）
 .venv/Scripts/python.exe tests/v0.6/mutations/apply_mutation.py M
-# 3) 给副本补库文件（副本只拷 app/ semantic/ instances/_wb_r1/，不含 data/）
+# 3) 给副本补库文件（M1~M6 通用，保真度：副本 duckdb 从基线 build 后复制，保证副本数据面与真身一致）
 mkdir -p build/_mut_M/data/warehouse
 cp data/warehouse/_wb_r1.duckdb build/_mut_M/data/warehouse/_wb_r1.duckdb
 # 4) 起 8630 副本服务——解释器必须用仓库根的绝对路径（R2 修正：相对路径 ../../../.venv 从副本目录解析越界）
@@ -645,9 +660,14 @@ PY="$(pwd)/.venv/Scripts/python.exe"
 (cd build/_mut_M && "$PY" -m uvicorn app.main:app --host 127.0.0.1 --port 8630 \
   > ../../logs/_mut_M_uvicorn.log 2>&1 &)
 sleep 4
-# 5) B-09 身份断言：副本活了、真身无恙
+# 5) B-09 身份断言 + 副本保真度对照：副本活了、真身无恙、副本数据面与真身一致
 curl -s -o judge/actual_B09_mutant_M_instance.json -w '%{http_code}\n' http://127.0.0.1:8630/api/instance   # 期望 200
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8620/api/instance                                # 期望 200
+# 保真度对照（路径寻址，不依赖 current 账套）：副本 pending items 须与真身一致（M2 例外——其探针本身就是 pending，
+# 保真度改用"真身基线 items 非空 + 副本库文件字节一致"佐证，并如实记录）
+curl -s -o judge/actual_B09_fidelity_pending_8630.json "http://127.0.0.1:8630/api/config/_wb_r1/pending"
+curl -s -o judge/actual_B09_fidelity_pending_8620.json "http://127.0.0.1:8620/api/config/_wb_r1/pending"
+# 不相等 = 副本失真，先修环境（重拷 duckdb）再跑探针，不得带病判 caught/survived
 sha256sum instances/sales/*.yml instances/_wb_r1/*.yml > judge/actual_B09_hash_during.txt
 diff judge/actual_B09_hash_before.txt judge/actual_B09_hash_during.txt   # 期望为空
 # 6) 跑探针（判据见下表；与正式 Case 相同命令、端口换 8630，输出存 judge/mut_M_probe_*.json）
@@ -656,16 +676,16 @@ for pid in $(netstat -ano | grep ":8630" | grep LISTENING | awk '{print $5}' | s
 rm -rf build/_mut_M
 ```
 
-B-09 行为条目（每变异体一条 evidence，汇总成一条 behaviors）：
+B-09 行为条目（每变异体一条 evidence，汇总成一条 behaviors；observed 键名逐字取自 expect，原始观察放 evidence）：
 ```json
 {"id": "B-09", "expect": {"mutant_instance_200": true, "real_8620_200": true,
-  "baseline_hashes_unchanged_during_mutation": true},
+  "baseline_hashes_unchanged_during_mutation": true, "copy_fidelity_ok": true},
  "observed": {"M1": {"...": "..."}, "M2": {"...": "..."}, "M3": {"...": "..."},
               "M4": {"...": "..."}, "M5": {"...": "..."}, "M6": {"...": "..."}},
- "evidence": "actual_B09_*.json"}
+ "evidence": "actual_B09_*.json（含 fidelity pending 两侧原文）"}
 ```
 
-探针与判据（`caught` = 变异行为被装备抓住；`survived` = 装备漏检）：
+探针与判据（`caught` = 变异行为被装备抓住；`survived` = 装备漏检；保真度不合格一律先修环境，不计 caught/survived）：
 
 | id | 注入的 bug 类（SPEC 级声明） | 探针（对 8630） | caught 判据 |
 |---|---|---|---|
@@ -674,7 +694,7 @@ B-09 行为条目（每变异体一条 evidence，汇总成一条 behaviors）�
 | MUT-M3 | 白名单/防穿越失效（任意块/任意路径可读写） | B-04 全部探针 + B-05 全部探针 | 任一"应 404"探针返回 2xx/3xx，或越界路径/仓库根出现新文件 → **caught**；全部照旧 404 且边界无文件 → **survived** |
 | MUT-M4 | **备份跳过类**（save 成功但不写 `onboarding/config_history/<block>.prev.yml`，或备份字节 ≠ 覆盖前旧文件） | B-03 的保存合法探针（对 8630：GET dimensions → 原样 save → 检查副本内备份） | `backup_exists=false` 或 `backup_bytes_equal_to_saved=false` → **caught**；两者皆真 → **survived** |
 | MUT-M5 | **别名层清空类**（`/api/aliases` 返回空对象/缺当前账套配置推导条目） | B-10 的别名层探针（对 8630） | aliases 空/缺当前账套报表 title 痕迹 → **caught**；与非变异体同等非空且覆盖 → **survived** |
-| MUT-M6 | **查询白名单旁路类**（报表数据端点维度筛选不走 D14 回退，非法值直接拼入过滤） | B-11 的非法筛选探针（对 8630） | 行集与无筛选不一致 或 5xx → **caught**；与无筛选一致且 200 → **survived** |
+| MUT-M6 | **查询白名单旁路类**（报表数据端点维度筛选不走 D14 回退，非法值直接拼入过滤） | **B-11 全套探针（R2 裁定 E 重设计）**：合法 KEY + 非法 VALUE（`区域=__no_such_region__`）+ 合法值对照组（`区域=华东`）。前置：副本保真度对照通过（B-09 fidelity，副本无筛选行集/库文件与真身一致——R2 证据表明守门层在端点、非法 KEY 会被端点先丢弃，故必须用合法 KEY 打值路径） | 副本上 `badfilter_rows_equal_unfiltered=false`（典型为行集=0）或 badfilter 5xx → **caught**；与无筛选一致且 200 → **survived**（对照组 goodfilter 必须成立，否则本轮结果作废重探） |
 
 每条写进 `behaviors_round2.json`：`{"id": "MUT-M1", "expect": "caught", "observed": "caught|survived|skipped", "evidence": "<探针结果摘要+文件名>"}`。M4/M5/M6 三个新血全部 caught + 总 kill 率达标 = 装备校正通过；任何 survived 原样上报（判分者记债务），**不得为凑 kill 率改探针或改答案**。
 
@@ -720,9 +740,10 @@ rm -rf instances/_wb_r1
 .venv/Scripts/python.exe -m semantic.ingest_run  --instance _wb_r1
 .venv/Scripts/python.exe -m semantic.compile_dbt --instance _wb_r1
 (cd instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors | tail -3)
+.venv/Scripts/python.exe -m semantic.harvest --instance _wb_r1
 curl -s -o judge/postrestore_pending.json -w '%{http_code}\n' http://127.0.0.1:8620/api/config/_wb_r1/pending
 ```
-期望：四条命令退出码 0；恢复后 pending 端点 200（items 与恢复前基线一致——即 MR-03 的守恒，可顺带 diff `actual_pending.json`）。
+期望：五条命令退出码 0；恢复后 pending 端点 200（items 与恢复前基线一致——即 MR-03 的守恒，可顺带 diff `actual_pending.json`）。
 
 ## 10. 结尾自检清单（全部打勾才算交付）
 

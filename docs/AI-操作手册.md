@@ -39,14 +39,14 @@ compile_dbt → dbt build），日志 logs/run_<账套>_<run_id>.log。全系统
 
 | 路径 | 谁写 | 内容 | 可否删 |
 |---|---|---|---|
-| `data/warehouse/warehouse.duckdb` | ingest + dbt | **全部业务数据**（raw/staging/intermediate/marts 四 schema） | ❌ 删=数据清零，只能靠 inbox 重建 |
-| `data/warehouse/warehouse.duckdb.wal` | DuckDB | 未 checkpoint 的写日志；存在时备份必须连它一起拷 | ⚠️ 不要手动删，checkpoint 后自动消失 |
-| `data/inbox/` | 人类投放 | 源数据文件（5 个，清单见 ingest/sources.yml） | ⚠️ 这是数据源头，删了跑批红灯 |
-| `data/runs/history.json` | dbt_runner | 跑批历史（最多 60 条，原子写）| 可删但丢失历史，排查能力降级 |
+| `data/warehouse/<账套>.duckdb` | ingest + dbt | 该账套**全部业务数据**（raw/staging/intermediate/marts 四 schema），每账套一个文件 | ❌ 删=该账套数据清零，只能靠 inbox 重建 |
+| `data/warehouse/<账套>.duckdb.wal` | DuckDB | 未 checkpoint 的写日志；存在时备份必须连它一起拷 | ⚠️ 不要手动删，checkpoint 后自动消失 |
+| `instances/<账套>/data/inbox/` | 人类投放 | 该账套源数据文件（清单见该账套 sources.yml 的 patterns） | ⚠️ 数据源头，删了跑批红灯 |
+| `data/runs/history_<账套>.json` | dbt_runner | 该账套跑批历史（最多 60 条，原子写）| 可删但丢失历史，排查能力降级 |
 | `data/runs/<run_id>_run_results.json` | dbt_runner | 每轮归档的 dbt 产物 | ✅ 随 history 滚动自动清理 |
-| `data/settings.json` | settings.py | 跑批模式（默认手动）+ 定时时间 | ✅ 删了回到默认（手动模式） |
-| `logs/run_<run_id>.log` | 跑批子进程 | ingest+dbt 全量输出（UTF-8，门户可看末 400 行） | ✅ 旧日志可清 |
-| `logs/ingest_last.json` | ingest.py | 最近一次摄取各源行数/成败 | ✅ 每次跑批自动覆盖 |
+| `data/settings.json` | settings.py | 当前账套 + 跑批模式（默认手动）+ 定时时间 + ai_banner | ✅ 删了回到默认（手动模式） |
+| `logs/run_<账套>_<run_id>.log` | 跑批子进程 | ingest+compile+dbt 全量输出（UTF-8，门户可看末 400 行） | ✅ 旧日志可清 |
+| `logs/ingest_<账套>_last.json` | ingest_run | 最近一次摄取各源行数/成败/违规 | ✅ 每次跑批自动覆盖 |
 | `logs/uvicorn.log` | 门户 | HTTP 访问 + 启动日志 | ✅ |
 | `pipeline/target/manifest.json` | dbt | 全部模型结构+血缘+字典（800KB，门户缓存解析） | ✅ dbt 自动重建；**改模型后必须重跑 dbt** 它才更新 |
 | `pipeline/target/run_results.json` | dbt | 最近一轮节点成败（红绿灯原料） | ✅ 同上 |
@@ -67,28 +67,32 @@ curl -s -X POST "http://127.0.0.1:8620/api/runs/trigger?instance=sales"
 .venv/Scripts/python.exe -m semantic.ingest_run  --instance sales
 .venv/Scripts/python.exe -m semantic.compile_dbt --instance sales
 (cd instances/sales/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors)
+.venv/Scripts/python.exe -m semantic.harvest --instance sales   # 匹配契约收获→挂起队列
 
 sleep 30
 curl -s "http://127.0.0.1:8620/api/overview" | python -c "import json,sys;d=json.load(sys.stdin);print(d['instance']['title'], d['light'], d['last_run']['counts'])"
 ```
-各账套基线：sales 37 节点 / restaurant 27 / retail 70（60绿10黄）/ hro 56（52绿4黄）。
-retail/hro 的 warn 是混沌条款预埋（幽灵合同/供应商空键），属预期。red 时去 §4 排障。
+各账套基线：sales 37 / restaurant 27 / retail 70（60绿10黄）/ hro 56（52绿4黄）/
+ladder 61（56绿5勾稽，分层利润阶梯演示）。retail/hro 的 warn 是混沌条款预埋
+（幽灵供应商/空键），属预期。_wb_r1 是 v0.6 测试专用账套（39 节点），不算正式基线。red 时去 §4 排障。
 
-### R-02 新增/修改一个数据源（v0.3 配置驱动）
-1. 人类把新文件放进 `instances/<账套>/data/inbox/`（文件名按 sources.yml 的 patterns）
-2. `ingest/sources.yml` 加一段：`name/title/format/files/column_map(中文表头→英文snake_case)/date_columns/numeric_columns`
-3. `pipeline/models/staging/` 加 `stg_<name>.sql`（照抄现有 5 个的模式：trim 关键列、强类型、where 剔坏行）+ 在 `sources.yml`(staging 的) 声明 source + `_staging.yml` 加字典与测试（not_null/unique/relationships 至少各一）
-4. 若它参与宽表：进 `int_sales_enriched.sql` 关联（v0.3「通用积木」落地后此步变为 wide.yml 配置，见 §8）
-5. 跑 R-01 验证；门户字典页应出现新表
-6. **空文件会显式报错**（设计决策 D7：宁可不跑也不跑错），提醒人类确认导出
+### R-02 新增/修改一个数据源（v0.3+ 配置驱动）
+1. 人类把新文件放进 `instances/<账套>/data/inbox/`（文件名按 sources.yml 的 discover.patterns）
+2. `instances/<账套>/sources.yml` 加一段：`name/title/discover.patterns/encodings/clean/fields`（fields 逐列声明 cn 中文名→map 英文列、type、required/enum/range/missing 契约与 level 定级——这是字段契约，写法照抄同文件现有源）
+3. 若它参与宽表：在 `wide.yml` 的 joins 加一条（keys.left/right + columns 拉取列 + contract 定级）；维度列记得进 `dimensions.yml`
+4. 跑 R-01 三步链验证；契约违规会进挂起队列（工作台「挂起队列」页），扇出/匹空由匹配契约测试收获
+5. **空文件会显式报错**（设计决策 D7），提醒人类确认导出
+6. 新文件名月度漂移不用改配置——discover.patterns 通配符扛住；表头变了才会 header_changed 红灯
 
-### R-03 加一个指标（当前版本；v0.3「通用积木」后改为 metrics.yml 配置）
-- 计算逻辑 → intermediate 层加列（口径唯一出处），`_intermediate.yml` 补字典
-- 报表展示 → `app/services/reports.py` 的 REPORTS 注册表加一项（columns 列表 + run 函数，参数必须走 `_as_int/_in_whitelist` 白名单，**禁止字符串直拼 SQL**）
+### R-03 加一个指标（v0.3+ 配置驱动）
+- `instances/<账套>/metrics.yml` 加一条：`{name, expr, desc}`——expr 只准引用宽表可见列（编译期悬空检查会指名道姓），desc 是界面可查的中文口径，**这是口径唯一出处**
+- 想在报表里用它：把指标名加进 `dashboard.yml` 对应报表的 metrics 数组
+- 生效方式：R-13 工作台「保存并重建」，或 agent 路重跑 compile_dbt + dbt build
 
 ### R-04 加一张报表 / 改看板卡片
-- 新报表：reports.py 注册表 + `static/js/pages/reports.js` 的 drawChart 加分支（注意：这是已知技术债，v0.3 配置化后消失）
-- 总览 KPI 卡：`static/js/pages/overview.js` 的 kpiCard 调用处；**环比一律引用 mart 的 *_mom 字段，前端不许重算**（口径唯一出处原则）
+- `instances/<账套>/dashboard.yml` 加一条报表：`{key, title, dimension, time_dim, metrics, filters?, chart}`（维度/指标必须已声明，编译期校验）
+- 生效：重编译重跑（或工作台「保存并重建」）；门户报表页/字典/血缘自动出现，无需改前端
+- 前端只在图表形态分支时才需要动 `reports.js` 的 drawChart（新图表类型才算技术活）
 
 ### R-05 改跑批模式 / 时间
 ```bash
@@ -238,9 +242,9 @@ curl -s -X POST http://127.0.0.1:8620/api/runs/trigger && sleep 25 && curl -s ht
 
 ## 6. 红线与纪律（违反=事故，人类验收时会一眼看出）
 
-1. **口径唯一出处**：§1 图里 intermediate 层是口径的家；前端/reports.py 重算 = 事故
+1. **口径唯一出处**：`instances/<账套>/metrics.yml` 与 wide.yml 派生列是口径的家；前端/查询编译器之外任何地方重算 = 事故
 2. **原始层只增不改**：raw schema 是源文件镜像（含 _source_file/_loaded_at 溯源列），任何"清洗"发生在 staging
-3. **测试即契约**：55 节点里 43 个测试是产品的一部分；删测试比改错代码更严重。warn 测试是黄灯的来源，动它要更新指标口径.md 的红绿灯表
+3. **测试即契约**：每账套 27~61 个节点里的测试（match/range/recon 系列）是产品的一部分；删测试比改错代码更严重。warn 测试是黄灯的来源，动它要更新指标口径.md 的红绿灯表
 4. **决策不推翻**：docs/待确认与决策.md 的 D1~D13 是人类拍过板的（如 Dagster 砍掉、默认手动跑批、仅本机监听），要改先问
 5. **数据不编造**：5.2 的第 4 条，值得单独重复
 6. **提交规范**：develop 分支、中文 commit、why 优先；main 只在人类验收后合并
@@ -259,9 +263,9 @@ curl -s -X POST http://127.0.0.1:8620/api/runs/trigger && sleep 25 && curl -s ht
 | 7 | 前端两套状态词汇不统一→节点全灰 | _STATUS_TO_LIGHT 归一化；加状态时两套映射都改 |
 | 8 | Git Bash `>nul` 创建真实文件→git add 崩溃 | 用 >/dev/null；.gitignore 已兜底 nul |
 
-## 8. 与路线图的衔接（v0.3「通用积木」对本手册的影响）
+## 8. 路线图衔接
 
-已定方向（路线图第 2 版，AI-Native 第一性原则）：业务层从写死代码改为**五份配置**——sources.yml（已有）、wide.yml（声明式宽表：主表+左联标签表+派生列）、dimensions.yml（维度声明，零预设）、metrics.yml（指标口径唯一出处）、dashboard.yml（看板卡片）；引擎永不随公司变；**双实例验证**（现有销售公司 + 虚构连锁餐饮，一键切换，引擎 git diff 为零）。落地后：
-- R-02/R-03/R-04 将从"改代码"降级为"改配置"（本手册相应章节会重写）
-- 新增"AI 装配 SOP"章节（v0.4：读文件→体检→问答→生成五配置→校验→人审核）
-- 摄取原则已由用户定调：**入库即干净字段**，原始快照仅作底账（清洗镜像层），报表只见干净层
+v0.3「通用积木」已落地（本手册 R-02/R-03/R-04 即配置驱动现状）；v0.4 开放接口与体检器已落地（R-10/R-11）；
+v0.5 配置工作台已落地（R-13）。当前进行中：勾稽护栏（已上线）→ 指标阶梯 → 时间智能 → 分摊引擎
+（用户 2026-09-21 圈选，见 docs/决策-20260921-层级功能与运行视图.md）。测试账套约定：下划线开头=
+测试副本；ladder=分层演示账套。

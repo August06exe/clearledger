@@ -1,7 +1,0 @@
-# 测试实例 _wb_r1 —— 配置工作台验收（零售进销存形态）
-# 由 tests/v0.6/generate.py 生成：请勿手改，重建请重跑生成器。
-name: _wb_r1
-title: 工作台测试账套R1（零售进销存形态）
-inbox: data/inbox
-database: ../../../data/warehouse/_wb_r1.duckdb
-tz: Asia/Shanghai

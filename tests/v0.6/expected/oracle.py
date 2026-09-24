@@ -14,10 +14,14 @@ R2 语义变更（相对 v1，依据 R1 裁定）：
   3. required 违规行在摄取层剔除（"入库即干净字段"）；
   4. raw 行数 = 文件数据行数 − 该源 required 剔行数（v1 的"raw=文件镜像"作废）；
   5. 匹配契约行写入 contract_report：source = wide.yml 声明名（本实例 wide_ledger），
-     field = join 左键；cnt = dbt 测试 failures 数——null_match 测试为 select distinct，
-     cnt = 去重后未匹配左键值数（空串算一个值，幽灵键算一个值）；fanout cnt = 去重后
-     重复右键数；
-  6. join 物理扩行语义不变：宽表行数 = 保留主表行数 + 扇出扩行数。
+     field = join 左键；cnt = dbt 测试 failures 数；join 物理扩行语义不变。
+
+R3 语义变更（相对 v2，依据 R2 判分裁定）：
+  7. null_match 测试 SQL 语义 = "主表键非空但匹空"的去重值数——空键被 where 排除
+     （空键属 missing/required 语义覆盖，不属 null_match）：
+     _wb_r1 实测 SUP-999 计入 → null_match cnt=1（v2 把空串也计入而得 2，作废）；
+  8. 宽表物化名 = intermediate.int_<wide声明名>（_wb_r1 = int_wide_ledger）；
+     answer.json 键名保留 wide_ledger 作语义标签。
 
 运行（仓库根目录）：
     .venv/Scripts/python.exe tests/v0.6/expected/oracle.py
@@ -36,7 +40,7 @@ REPO = Path(__file__).resolve().parents[3]
 INST = REPO / "instances" / "_wb_r1"
 OUT = Path(__file__).resolve().parent / "answer.json"
 
-ANSWER_VERSION = 2
+ANSWER_VERSION = 3
 
 
 def load_source_csv(sname: str, src_cfg: dict) -> pd.DataFrame:
@@ -159,8 +163,10 @@ def main() -> int:
             extra += left_rows                          # 物理扩行仍按受影响左行数
         right_keys = set(right[rkey])
         lv = kept_main[lkey].str.strip()
-        unmatched = kept_main[lkey][(lv == "") | ~lv.isin(right_keys)]
-        if len(unmatched):                              # null_match：去重后未匹配左键值数
+        # R3 裁定：null_match = 主表键【非空】但匹空 的去重值数；空键被 where 排除
+        # （空键属 missing/required 语义覆盖，不属 null_match）
+        unmatched = kept_main[lkey][(lv != "") & ~lv.isin(right_keys)]
+        if len(unmatched):                              # null_match：去重后非空未匹配左键值数
             n = int(unmatched.nunique())
             proj.append(dict(source=wide_name, field=lkey, rule="null_match",
                              level=j["contract"]["null_match"], cnt=n))
@@ -198,9 +204,9 @@ def main() -> int:
             "wide_ledger": wide_rows,                                 # 裁定 4/5 + 物理扩行
         },
         "assumptions_applied": {
-            "pending.items": ["A1", "A2", "A3v2", "A4", "A6", "A7", "A8", "A9v2"],
+            "pending.items": ["A1", "A2", "A3v2", "A4", "A6", "A7", "A8", "A9v3"],
             "rows.raw": ["A4", "A5v2"],
-            "rows.wide_ledger": ["A3v2", "A4", "A9v2"],
+            "rows.wide_ledger": ["A3v2", "A4", "A9v3"],
         },
     }
     OUT.write_text(json.dumps(answer, ensure_ascii=False, indent=2, sort_keys=True) + "\n",

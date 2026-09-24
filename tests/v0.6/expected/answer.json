@@ -1,5 +1,5 @@
 {
-  "answer_version": 2,
+  "answer_version": 3,
   "assumptions_applied": {
     "pending.items": [
       "A1",
@@ -9,7 +9,7 @@
       "A6",
       "A7",
       "A8",
-      "A9v2"
+      "A9v3"
     ],
     "rows.raw": [
       "A4",
@@ -18,7 +18,7 @@
     "rows.wide_ledger": [
       "A3v2",
       "A4",
-      "A9v2"
+      "A9v3"
     ]
   },
   "impact": {
@@ -134,7 +134,7 @@
         "source": "wide_ledger"
       },
       {
-        "cnt": 2,
+        "cnt": 1,
         "field": "supplier_code",
         "level": "yellow",
         "rule": "null_match",
