@@ -134,7 +134,7 @@ It walks itself through: environment bootstrap → demo data → first pipeline 
 
 **Option 2: double-click `启动明账.exe` (Windows)**
 
-Download the exe from the GitHub Releases page (Releases → latest launcher build) and drop it in the repo root, then double-click. A GUI bootstrap window does the same thing and opens `http://127.0.0.1:8620` in your browser. First run takes ~10–25 minutes; afterwards it's seconds. Some antivirus tools false-flag single-file exes — allow it; the source is this very repo.
+Download `ClearLedger-Launcher.exe` from the GitHub Releases page (Releases → latest launcher build), drop it in the repo root, then double-click (filename does not matter). A GUI bootstrap window does the same thing and opens `http://127.0.0.1:8620` in your browser. First run takes ~10–25 minutes; afterwards it's seconds. Some antivirus tools false-flag single-file exes — allow it; the source is this very repo.
 
 **Option 3: bare commands**
 

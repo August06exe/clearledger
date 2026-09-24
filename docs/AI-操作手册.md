@@ -105,7 +105,7 @@ curl -s -X POST http://127.0.0.1:8620/api/settings -H "Content-Type: application
 ### R-06 备份 / 恢复 / 迁移新机器
 - 备份：跑 `备份数据.bat`（PowerShell 时间戳，连 .wal 一起，失败显式报错）
 - 恢复：把 warehouse.duckdb 拷回 `data/warehouse/` 即可
-- 迁移：整个目录拷走（含 .venv 可作废重建）→ 新机 `git clone` 或拷贝 → 从 GitHub Releases 下载 `启动明账.exe` 放仓库根目录双击（首次自动建 venv 装依赖+演示数据+首跑，见 R-12）
+- 迁移：整个目录拷走（含 .venv 可作废重建）→ 新机 `git clone` 或拷贝 → 从 GitHub Releases 下载 `ClearLedger-Launcher.exe` 放仓库根目录双击（首次自动建 venv 装依赖+演示数据+首跑，见 R-12）
 
 ### R-07 重启门户（Windows）
 ```bash
