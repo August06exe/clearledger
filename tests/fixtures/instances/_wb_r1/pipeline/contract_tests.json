@@ -1,0 +1,50 @@
+[
+ {
+  "test": "match_stores_fanout",
+  "wide": "wide_ledger",
+  "table": "stores",
+  "field": "store_code",
+  "rule": "fanout",
+  "level": "yellow"
+ },
+ {
+  "test": "match_stores_null_match",
+  "wide": "wide_ledger",
+  "table": "stores",
+  "field": "store_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_products_fanout",
+  "wide": "wide_ledger",
+  "table": "products",
+  "field": "product_code",
+  "rule": "fanout",
+  "level": "yellow"
+ },
+ {
+  "test": "match_products_null_match",
+  "wide": "wide_ledger",
+  "table": "products",
+  "field": "product_code",
+  "rule": "null_match",
+  "level": "yellow"
+ },
+ {
+  "test": "match_suppliers_fanout",
+  "wide": "wide_ledger",
+  "table": "suppliers",
+  "field": "supplier_code",
+  "rule": "fanout",
+  "level": "yellow"
+ },
+ {
+  "test": "match_suppliers_null_match",
+  "wide": "wide_ledger",
+  "table": "suppliers",
+  "field": "supplier_code",
+  "rule": "null_match",
+  "level": "yellow"
+ }
+]

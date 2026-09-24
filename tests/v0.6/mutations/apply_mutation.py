@@ -21,7 +21,7 @@ MUT_ROOT = Path(__file__).resolve().parent
 REPO = MUT_ROOT.parents[2]
 BUILD = REPO / "build"
 COPY_DIRS = ["app", "semantic"]
-OPTIONAL_DIRS = ["instances/_wb_r1", "instances/_wb_r2", "instances/_wb_r3"]
+OPTIONAL_DIRS = ["tests/fixtures/instances/_wb_r1", "tests/fixtures/instances/_wb_r2", "tests/fixtures/instances/_wb_r3"]
 
 
 def main() -> int:

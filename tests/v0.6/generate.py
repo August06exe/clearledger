@@ -4,10 +4,10 @@
 用法（仓库根目录）：
     .venv/Scripts/python.exe tests/v0.6/generate.py
 
-行为：幂等重建 instances/_wb_r1/（六份 YAML 配置 + data/inbox/*.csv）。
+行为：幂等重建 tests/fixtures/instances/_wb_r1/（六份 YAML 配置 + data/inbox/*.csv）。
   - 全部内容为固定常量，无时间戳、无随机数：同输入双跑逐字节一致；
   - CSV 一律 utf-8-sig（带 BOM），行内容与播种违规清单见 tests/v0.6/SPEC.md；
-  - 重建前先删除既有 instances/_wb_r1/ 目录（保证无残留文件）；
+  - 重建前先删除既有 fixtures 实例目录（保证无残留文件）；
   - 不触碰 data/warehouse/_wb_r1.duckdb（由三步链的 ingest_run 创建/覆盖）。
 
 场景设计：零售进销存形态的最小账套（5 源 94 行），故意播种 10 类契约违规
@@ -21,7 +21,7 @@ import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]      # 仓库根
-INST = ROOT / "instances" / "_wb_r1"
+INST = ROOT / "tests" / "fixtures" / "instances" / "_wb_r1"
 INBOX = INST / "data" / "inbox"
 
 # ---------------------------------------------------------------- 六份 YAML 配置

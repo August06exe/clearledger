@@ -20,7 +20,7 @@
 |---|---|
 | 实例名 | `_wb_r1`（下划线前缀 = 测试副本约定，工作台可寻址、不出现在正式账套清单） |
 | 域形态 | 零售进销存（镜像 `instances/retail/` 的契约词汇，规模最小化） |
-| 目录 | `instances/_wb_r1/`（六份 yml + `data/inbox/` 五个 CSV） |
+| 目录 | `tests/fixtures/instances/_wb_r1/`（六份 yml + `data/inbox/` 五个 CSV） |
 | 独立库 | `data/warehouse/_wb_r1.duckdb`（`data/` 不入 git；由三步链的 ingest 创建/全量覆盖） |
 | 规模 | 5 个数据源、inbox 共 **94 数据行**（50+21+6+12+5），三步链秒级 |
 | 灯色预期 | 三步链退出码全 0（播种违规全部 yellow 级，不触发红灯退出）；run 终态=成功；灯允许绿/黄（黄若出现来自 dbt 测试 warn 机制，与契约黄行是两条不同机制，皆非失败） |
@@ -280,11 +280,11 @@ reports:
 ## 7. 基线恢复配方
 
 ```bash
-rm -rf instances/_wb_r1
+rm -rf tests/fixtures/instances/_wb_r1
 .venv/Scripts/python.exe tests/v0.6/generate.py
 .venv/Scripts/python.exe -m semantic.ingest_run  --instance _wb_r1
 .venv/Scripts/python.exe -m semantic.compile_dbt --instance _wb_r1
-(cd instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors)
+(cd tests/fixtures/instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors)
 .venv/Scripts/python.exe -m semantic.harvest --instance _wb_r1   # 匹配契约收获（R2 起新步骤）
 ```
 

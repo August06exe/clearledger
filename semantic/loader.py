@@ -9,6 +9,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTANCES_DIR = ROOT / "instances"
+TEST_FIXTURES_DIR = ROOT / "tests" / "fixtures" / "instances"
 
 CONFIG_FILES = {
     "sources": "sources.yml",
@@ -73,11 +74,15 @@ def _read_yaml(path: Path) -> dict:
 
 
 def load_instance(name: str) -> Instance:
-    """加载实例五配置并做交叉引用校验。任何引用悬空立即报错——fail fast。"""
-    d = INSTANCES_DIR / name
-    if not d.exists():
-        raise ConfigError(f"实例不存在: {d}")
-    return load_instance_dir(d, name)
+    """加载实例五配置并做交叉引用校验。任何引用悬空立即报错——fail fast。
+
+    双根发现：正式账套在 instances/，测试夹具账套在 tests/fixtures/instances/
+    （下划线前缀约定对两处一致——夹具永不进正式账套清单）。
+    """
+    for d in (INSTANCES_DIR / name, TEST_FIXTURES_DIR / name):
+        if d.exists():
+            return load_instance_dir(d, name)
+    raise ConfigError(f"实例不存在: {name}")
 
 
 def load_instance_dir(d: Path, name: str) -> Instance:

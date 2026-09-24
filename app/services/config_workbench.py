@@ -34,14 +34,21 @@ class WorkbenchError(Exception):
 
 
 def instance_dir(instance: str) -> Path:
-    """实例目录解析：名称合法性 + 目录存在 + 必须真在 instances/ 之下（防穿越）。"""
+    """实例目录解析：名称合法性 + 目录存在 + 必须落在允许的根之下（防穿越）。
+
+    允许根：instances/（正式账套）与 tests/fixtures/instances/（测试夹具账套）。
+    """
     if not isinstance(instance, str) or not _NAME_RE.match(instance or ""):
         raise WorkbenchError(f"实例名不合法: {instance!r}")
-    root = Path(__file__).resolve().parents[2] / "instances"
-    d = (root / instance).resolve()
-    if root.resolve() not in d.parents or not d.is_dir():
-        raise WorkbenchError(f"实例不存在: {instance}")
-    return d
+    roots = [
+        Path(__file__).resolve().parents[2] / "instances",
+        Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "instances",
+    ]
+    for r in roots:
+        d = (r / instance).resolve()
+        if r.resolve() in d.parents and d.is_dir():
+            return d
+    raise WorkbenchError(f"实例不存在: {instance}")
 
 
 def block_file(block: str) -> str:

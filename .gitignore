@@ -48,6 +48,7 @@ docs/assets/_red/
 *_stdout.txt
 # 工作台配置快照（save 自动备份，属运行痕迹）
 instances/*/onboarding/config_history/
+tests/fixtures/instances/*/onboarding/config_history/
 # 摄取/匹配契约运行产物（随跑批重写）
 instances/*/pipeline/contract_tests.json
 # dbt 本机用户标识

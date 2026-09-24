@@ -4,5 +4,5 @@ cl:
   outputs:
     _wb_r1:
       type: duckdb
-      path: "D:/Workshop/3000-Projects/3005-DA-AI Native数据底座系统/data/warehouse/_wb_r1.duckdb"
+      path: "D:/Workshop/3000-Projects/3005-DA-AI Native数据底座系统/tests/fixtures/data/warehouse/_wb_r1.duckdb"
       threads: 4

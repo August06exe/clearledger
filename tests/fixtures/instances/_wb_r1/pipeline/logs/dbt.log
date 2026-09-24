@@ -1,0 +1,2079 @@
+00:14:49.367833 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB3547D70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB5131700>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB51334A0>]}
+
+
+============================== 00:14:49.384457 | 0951c35f-292f-44ab-be66-8f6dbbb1f744 ==============================
+00:14:49.384457 [info ] [MainThread]: Running with dbt=1.12.5
+00:14:49.385482 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'no_print': 'None', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'maximum_seed_size_mib': '1', 'printer_width': '80', 'write_json': 'True', 'empty': 'False', 'log_cache_events': 'False', 'introspect': 'True', 'cache_selected_only': 'False', 'log_format': 'default', 'debug': 'False', 'fail_fast': 'False', 'profiles_dir': '.', 'send_anonymous_usage_stats': 'True', 'quiet': 'False', 'warn_error': 'None', 'partial_parse': 'True', 'use_colors': 'False', 'hints_enabled': 'True', 'indirect_selection': 'eager', 'use_experimental_parser': 'False', 'invocation_command': 'dbt build --profiles-dir . --no-use-colors', 'log_path': 'D:\\Workshop\\3000-Projects\\3005-DA-AI Native数据底座系统\\tests\\fixtures\\instances\\_wb_r1\\pipeline\\logs'}
+00:14:49.617994 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB510F7A0>]}
+00:14:49.669587 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB5131700>]}
+00:14:49.672675 [info ] [MainThread]: Registered adapter: duckdb=1.11.0
+00:14:50.145850 [debug] [MainThread]: checksum: f05054ecec1dcea8abe5306763ad6722db27a95444e816234ad81aa4990499f2, vars: {}, profile: cl, target: _wb_r1, version: 1.12.5
+00:14:50.146871 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+00:14:50.147917 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB54F7B30>]}
+00:14:51.464275 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB5CB2540>]}
+00:14:51.548902 [debug] [MainThread]: Wrote artifact WritableManifest to D:\Workshop\3000-Projects\3005-DA-AI Native数据底座系统\tests\fixtures\instances\_wb_r1\pipeline\target\manifest.json
+00:14:51.551991 [debug] [MainThread]: Wrote artifact SemanticManifest to D:\Workshop\3000-Projects\3005-DA-AI Native数据底座系统\tests\fixtures\instances\_wb_r1\pipeline\target\semantic_manifest.json
+00:14:51.739970 [debug] [MainThread]: Wrote artifact OsiDocument to D:\Workshop\3000-Projects\3005-DA-AI Native数据底座系统\tests\fixtures\instances\_wb_r1\pipeline\target\osi_document.json
+00:14:51.843359 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB6E5CBC0>]}
+00:14:51.843904 [info ] [MainThread]: Found 12 models, 27 data tests, 5 sources, 501 macros
+00:14:51.847038 [info ] [MainThread]: 
+00:14:51.847038 [info ] [MainThread]: Concurrency: 4 threads (target='_wb_r1')
+00:14:51.847555 [info ] [MainThread]: 
+00:14:51.848109 [debug] [MainThread]: Acquiring new duckdb connection 'master'
+00:14:51.851877 [debug] [ThreadPool]: Acquiring new duckdb connection 'list__wb_r1'
+00:14:51.860209 [debug] [ThreadPool]: Acquiring new duckdb connection 'list__wb_r1'
+00:14:51.861247 [debug] [ThreadPool]: Acquiring new duckdb connection 'list__wb_r1'
+00:14:51.946756 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1"
+00:14:51.946756 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1"
+00:14:51.947809 [debug] [ThreadPool]: On list__wb_r1: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "list__wb_r1"} */
+
+    
+    select schema_name
+    from system.information_schema.schemata
+    
+    where lower(catalog_name) = '"_wb_r1"'
+    
+  
+  
+00:14:51.947809 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1"
+00:14:51.947809 [debug] [ThreadPool]: On list__wb_r1: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "list__wb_r1"} */
+
+    
+    select schema_name
+    from system.information_schema.schemata
+    
+    where lower(catalog_name) = '"_wb_r1"'
+    
+  
+  
+00:14:51.947809 [debug] [ThreadPool]: Opening a new connection, currently in state init
+00:14:51.947809 [debug] [ThreadPool]: On list__wb_r1: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "list__wb_r1"} */
+
+    
+    select schema_name
+    from system.information_schema.schemata
+    
+    where lower(catalog_name) = '"_wb_r1"'
+    
+  
+  
+00:14:51.949307 [debug] [ThreadPool]: Opening a new connection, currently in state init
+00:14:51.949307 [debug] [ThreadPool]: Opening a new connection, currently in state init
+00:14:51.966141 [debug] [ThreadPool]: SQL status: OK in 0.017 seconds
+00:14:51.966141 [debug] [ThreadPool]: SQL status: OK in 0.017 seconds
+00:14:51.966141 [debug] [ThreadPool]: SQL status: OK in 0.018 seconds
+00:14:51.967332 [debug] [ThreadPool]: On list__wb_r1: Close
+00:14:51.968350 [debug] [ThreadPool]: On list__wb_r1: Close
+00:14:51.969379 [debug] [ThreadPool]: On list__wb_r1: Close
+00:14:51.969379 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list__wb_r1, now create__wb_r1_intermediate)
+00:14:51.970505 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list__wb_r1, now create__wb_r1_marts)
+00:14:51.970505 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list__wb_r1, now create__wb_r1_staging)
+00:14:51.970505 [debug] [ThreadPool]: Creating schema "database: "_wb_r1"
+schema: "intermediate"
+"
+00:14:51.971523 [debug] [ThreadPool]: Creating schema "database: "_wb_r1"
+schema: "marts"
+"
+00:14:51.971523 [debug] [ThreadPool]: Creating schema "database: "_wb_r1"
+schema: "staging"
+"
+00:14:51.976838 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_intermediate"
+00:14:51.976838 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_marts"
+00:14:51.977838 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_staging"
+00:14:51.977838 [debug] [ThreadPool]: On create__wb_r1_intermediate: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "create__wb_r1_intermediate"} */
+
+    
+        select type from duckdb_databases()
+        where lower(database_name)='_wb_r1'
+        and type != 'duckdb'
+    
+  
+00:14:51.977838 [debug] [ThreadPool]: On create__wb_r1_marts: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "create__wb_r1_marts"} */
+
+    
+        select type from duckdb_databases()
+        where lower(database_name)='_wb_r1'
+        and type != 'duckdb'
+    
+  
+00:14:51.979192 [debug] [ThreadPool]: On create__wb_r1_staging: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "create__wb_r1_staging"} */
+
+    
+        select type from duckdb_databases()
+        where lower(database_name)='_wb_r1'
+        and type != 'duckdb'
+    
+  
+00:14:51.979192 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+00:14:51.979192 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+00:14:51.979192 [debug] [ThreadPool]: Opening a new connection, currently in state closed
+00:14:51.980647 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+00:14:51.981153 [debug] [ThreadPool]: SQL status: OK in 0.002 seconds
+00:14:51.982309 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_intermediate"
+00:14:51.982309 [debug] [ThreadPool]: SQL status: OK in 0.003 seconds
+00:14:51.982825 [debug] [ThreadPool]: On create__wb_r1_intermediate: BEGIN
+00:14:51.983346 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_marts"
+00:14:51.984429 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_staging"
+00:14:51.984949 [debug] [ThreadPool]: On create__wb_r1_marts: BEGIN
+00:14:51.984949 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+00:14:51.984949 [debug] [ThreadPool]: On create__wb_r1_staging: BEGIN
+00:14:51.985497 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_intermediate"
+00:14:51.985497 [debug] [ThreadPool]: SQL status: OK in 0.000 seconds
+00:14:51.986019 [debug] [ThreadPool]: On create__wb_r1_intermediate: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "create__wb_r1_intermediate"} */
+
+    
+    
+        create schema if not exists "_wb_r1"."intermediate"
+    
+00:14:51.986019 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_marts"
+00:14:51.986538 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+00:14:51.986538 [debug] [ThreadPool]: On create__wb_r1_marts: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "create__wb_r1_marts"} */
+
+    
+    
+        create schema if not exists "_wb_r1"."marts"
+    
+00:14:51.987059 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_staging"
+00:14:51.987059 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+00:14:51.987576 [debug] [ThreadPool]: On create__wb_r1_staging: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "create__wb_r1_staging"} */
+
+    
+    
+        create schema if not exists "_wb_r1"."staging"
+    
+00:14:51.988097 [debug] [ThreadPool]: On create__wb_r1_intermediate: COMMIT
+00:14:51.988097 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+00:14:51.988617 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_intermediate"
+00:14:51.989141 [debug] [ThreadPool]: On create__wb_r1_marts: COMMIT
+00:14:51.989141 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+00:14:51.989672 [debug] [ThreadPool]: On create__wb_r1_intermediate: COMMIT
+00:14:51.989672 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_marts"
+00:14:51.990192 [debug] [ThreadPool]: On create__wb_r1_staging: COMMIT
+00:14:51.990711 [debug] [ThreadPool]: On create__wb_r1_marts: COMMIT
+00:14:51.990711 [debug] [ThreadPool]: Using duckdb connection "create__wb_r1_staging"
+00:14:51.991235 [debug] [ThreadPool]: On create__wb_r1_staging: COMMIT
+00:14:51.996141 [debug] [ThreadPool]: SQL status: OK in 0.005 seconds
+00:14:51.996141 [debug] [ThreadPool]: On create__wb_r1_intermediate: Close
+00:14:51.999525 [debug] [ThreadPool]: SQL status: OK in 0.008 seconds
+00:14:51.999525 [debug] [ThreadPool]: On create__wb_r1_staging: Close
+00:14:52.003571 [debug] [ThreadPool]: SQL status: OK in 0.013 seconds
+00:14:52.003571 [debug] [ThreadPool]: On create__wb_r1_marts: Close
+00:14:52.005867 [debug] [ThreadPool]: Acquiring new duckdb connection 'list__wb_r1_intermediate'
+00:14:52.009006 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1_intermediate"
+00:14:52.009006 [debug] [ThreadPool]: Acquiring new duckdb connection 'list__wb_r1_marts'
+00:14:52.010023 [debug] [ThreadPool]: On list__wb_r1_intermediate: BEGIN
+00:14:52.010023 [debug] [ThreadPool]: Acquiring new duckdb connection 'list__wb_r1_staging'
+00:14:52.011056 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1_marts"
+00:14:52.011056 [debug] [ThreadPool]: Opening a new connection, currently in state init
+00:14:52.012088 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1_staging"
+00:14:52.012088 [debug] [ThreadPool]: On list__wb_r1_marts: BEGIN
+00:14:52.012088 [debug] [ThreadPool]: On list__wb_r1_staging: BEGIN
+00:14:52.012088 [debug] [ThreadPool]: Opening a new connection, currently in state init
+00:14:52.013480 [debug] [ThreadPool]: SQL status: OK in 0.002 seconds
+00:14:52.013480 [debug] [ThreadPool]: Opening a new connection, currently in state init
+00:14:52.013480 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1_intermediate"
+00:14:52.014721 [debug] [ThreadPool]: SQL status: OK in 0.001 seconds
+00:14:52.014721 [debug] [ThreadPool]: On list__wb_r1_intermediate: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "list__wb_r1_intermediate"} */
+select
+      '_wb_r1' as database,
+      table_name as name,
+      table_schema as schema,
+      CASE table_type
+        WHEN 'BASE TABLE' THEN 'table'
+        WHEN 'VIEW' THEN 'view'
+        WHEN 'LOCAL TEMPORARY' THEN 'table'
+        END as type
+    from system.information_schema.tables
+    where lower(table_schema) = 'intermediate'
+    and lower(table_catalog) = '_wb_r1'
+  
+00:14:52.014721 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1_marts"
+00:14:52.014721 [debug] [ThreadPool]: SQL status: OK in 0.002 seconds
+00:14:52.015761 [debug] [ThreadPool]: On list__wb_r1_marts: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "list__wb_r1_marts"} */
+select
+      '_wb_r1' as database,
+      table_name as name,
+      table_schema as schema,
+      CASE table_type
+        WHEN 'BASE TABLE' THEN 'table'
+        WHEN 'VIEW' THEN 'view'
+        WHEN 'LOCAL TEMPORARY' THEN 'table'
+        END as type
+    from system.information_schema.tables
+    where lower(table_schema) = 'marts'
+    and lower(table_catalog) = '_wb_r1'
+  
+00:14:52.015761 [debug] [ThreadPool]: Using duckdb connection "list__wb_r1_staging"
+00:14:52.015761 [debug] [ThreadPool]: On list__wb_r1_staging: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "connection_name": "list__wb_r1_staging"} */
+select
+      '_wb_r1' as database,
+      table_name as name,
+      table_schema as schema,
+      CASE table_type
+        WHEN 'BASE TABLE' THEN 'table'
+        WHEN 'VIEW' THEN 'view'
+        WHEN 'LOCAL TEMPORARY' THEN 'table'
+        END as type
+    from system.information_schema.tables
+    where lower(table_schema) = 'staging'
+    and lower(table_catalog) = '_wb_r1'
+  
+00:14:52.017761 [debug] [ThreadPool]: SQL status: OK in 0.002 seconds
+00:14:52.017761 [debug] [ThreadPool]: SQL status: OK in 0.002 seconds
+00:14:52.019011 [debug] [ThreadPool]: SQL status: OK in 0.003 seconds
+00:14:52.019011 [debug] [ThreadPool]: On list__wb_r1_staging: ROLLBACK
+00:14:52.020050 [debug] [ThreadPool]: On list__wb_r1_marts: ROLLBACK
+00:14:52.021090 [debug] [ThreadPool]: On list__wb_r1_intermediate: ROLLBACK
+00:14:52.021090 [debug] [ThreadPool]: On list__wb_r1_staging: Close
+00:14:52.021090 [debug] [ThreadPool]: On list__wb_r1_intermediate: Close
+00:14:52.022114 [debug] [ThreadPool]: On list__wb_r1_marts: Close
+00:14:52.022114 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB5DB1940>]}
+00:14:52.023120 [debug] [MainThread]: Using duckdb connection "master"
+00:14:52.023120 [debug] [MainThread]: On master: BEGIN
+00:14:52.023120 [debug] [MainThread]: Opening a new connection, currently in state init
+00:14:52.023120 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+00:14:52.024126 [debug] [MainThread]: On master: COMMIT
+00:14:52.024126 [debug] [MainThread]: Using duckdb connection "master"
+00:14:52.024126 [debug] [MainThread]: On master: COMMIT
+00:14:52.024126 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+00:14:52.025138 [debug] [MainThread]: On master: Close
+00:14:52.033907 [debug] [Thread-1 (]: Began running node model.cl__wb_r1.stg_fact_ledger
+00:14:52.034429 [debug] [Thread-2 (]: Began running node model.cl__wb_r1.stg_products
+00:14:52.034946 [info ] [Thread-1 (]: 1 of 39 START sql view model staging.stg_fact_ledger ........................... [RUN]
+00:14:52.034946 [debug] [Thread-3 (]: Began running node model.cl__wb_r1.stg_stock_snapshot
+00:14:52.035456 [debug] [Thread-4 (]: Began running node model.cl__wb_r1.stg_stores
+00:14:52.035456 [info ] [Thread-2 (]: 2 of 39 START sql view model staging.stg_products .............................. [RUN]
+00:14:52.035978 [debug] [Thread-1 (]: Acquiring new duckdb connection 'model.cl__wb_r1.stg_fact_ledger'
+00:14:52.036500 [info ] [Thread-3 (]: 3 of 39 START sql view model staging.stg_stock_snapshot ........................ [RUN]
+00:14:52.036500 [info ] [Thread-4 (]: 4 of 39 START sql view model staging.stg_stores ................................ [RUN]
+00:14:52.037024 [debug] [Thread-2 (]: Acquiring new duckdb connection 'model.cl__wb_r1.stg_products'
+00:14:52.037547 [debug] [Thread-1 (]: Began compiling node model.cl__wb_r1.stg_fact_ledger
+00:14:52.038106 [debug] [Thread-3 (]: Acquiring new duckdb connection 'model.cl__wb_r1.stg_stock_snapshot'
+00:14:52.038106 [debug] [Thread-4 (]: Acquiring new duckdb connection 'model.cl__wb_r1.stg_stores'
+00:14:52.038630 [debug] [Thread-2 (]: Began compiling node model.cl__wb_r1.stg_products
+00:14:52.042794 [debug] [Thread-1 (]: Writing injected SQL for node "model.cl__wb_r1.stg_fact_ledger"
+00:14:52.042794 [debug] [Thread-3 (]: Began compiling node model.cl__wb_r1.stg_stock_snapshot
+00:14:52.042794 [debug] [Thread-4 (]: Began compiling node model.cl__wb_r1.stg_stores
+00:14:52.044829 [debug] [Thread-2 (]: Writing injected SQL for node "model.cl__wb_r1.stg_products"
+00:14:52.045983 [debug] [Thread-3 (]: Writing injected SQL for node "model.cl__wb_r1.stg_stock_snapshot"
+00:14:52.047119 [debug] [Thread-4 (]: Writing injected SQL for node "model.cl__wb_r1.stg_stores"
+00:14:52.049756 [debug] [Thread-2 (]: Began executing node model.cl__wb_r1.stg_products
+00:14:52.071505 [debug] [Thread-2 (]: Writing runtime sql for node "model.cl__wb_r1.stg_products"
+00:14:52.071505 [debug] [Thread-3 (]: Began executing node model.cl__wb_r1.stg_stock_snapshot
+00:14:52.071505 [debug] [Thread-4 (]: Began executing node model.cl__wb_r1.stg_stores
+00:14:52.073876 [debug] [Thread-3 (]: Writing runtime sql for node "model.cl__wb_r1.stg_stock_snapshot"
+00:14:52.074914 [debug] [Thread-4 (]: Writing runtime sql for node "model.cl__wb_r1.stg_stores"
+00:14:52.076081 [debug] [Thread-1 (]: Began executing node model.cl__wb_r1.stg_fact_ledger
+00:14:52.077460 [debug] [Thread-1 (]: Writing runtime sql for node "model.cl__wb_r1.stg_fact_ledger"
+00:14:52.079790 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_stores"
+00:14:52.079790 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_stores: BEGIN
+00:14:52.079790 [debug] [Thread-4 (]: Opening a new connection, currently in state init
+00:14:52.080860 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.stg_fact_ledger"
+00:14:52.080860 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.080860 [debug] [Thread-1 (]: On model.cl__wb_r1.stg_fact_ledger: BEGIN
+00:14:52.080860 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.stg_stock_snapshot"
+00:14:52.080860 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.stg_products"
+00:14:52.082223 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_stores"
+00:14:52.082223 [debug] [Thread-1 (]: Opening a new connection, currently in state init
+00:14:52.082223 [debug] [Thread-3 (]: On model.cl__wb_r1.stg_stock_snapshot: BEGIN
+00:14:52.082223 [debug] [Thread-2 (]: On model.cl__wb_r1.stg_products: BEGIN
+00:14:52.083281 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_stores: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_stores"} */
+
+  
+  create view "_wb_r1"."staging"."stg_stores__dbt_tmp" as (
+    -- 生成物：staging 清洗模型（来源 instances 配置，勿手改）
+select
+    trim(cast(store_code as varchar)) as store_code,
+    trim(cast(store_name as varchar)) as store_name,
+    trim(cast(city as varchar)) as city,
+    trim(cast(region_name as varchar)) as region_name,
+    cast(open_date as date) as open_date
+from "_wb_r1"."raw"."stores"
+where store_code is not null
+  );
+
+00:14:52.083281 [debug] [Thread-3 (]: Opening a new connection, currently in state init
+00:14:52.083281 [debug] [Thread-2 (]: Opening a new connection, currently in state init
+00:14:52.084482 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.084482 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.stg_fact_ledger"
+00:14:52.084482 [debug] [Thread-1 (]: On model.cl__wb_r1.stg_fact_ledger: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_fact_ledger"} */
+
+  
+  create view "_wb_r1"."staging"."stg_fact_ledger__dbt_tmp" as (
+    -- 生成物：staging 清洗模型（来源 instances 配置，勿手改）
+select
+    trim(cast(entry_type as varchar)) as entry_type,
+    trim(cast(doc_no as varchar)) as doc_no,
+    cast(doc_date as date) as doc_date,
+    trim(cast(store_code as varchar)) as store_code,
+    trim(cast(product_code as varchar)) as product_code,
+    trim(cast(supplier_code as varchar)) as supplier_code,
+    trim(cast(channel as varchar)) as channel,
+    cast(quantity as bigint) as quantity,
+    cast(unit_price as decimal(18, 4)) as unit_price,
+    coalesce(cast(discount_rate as decimal(18, 4)), 0) as discount_rate,
+    cast(ending_qty as bigint) as ending_qty
+from "_wb_r1"."raw"."fact_ledger"
+where entry_type is not null
+  and doc_no is not null
+  and doc_date is not null
+  and store_code is not null
+  and product_code is not null
+  );
+
+00:14:52.085516 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.085516 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.stg_products"
+00:14:52.085516 [debug] [Thread-3 (]: SQL status: OK in 0.002 seconds
+00:14:52.086530 [debug] [Thread-4 (]: SQL status: OK in 0.002 seconds
+00:14:52.086530 [debug] [Thread-2 (]: On model.cl__wb_r1.stg_products: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_products"} */
+
+  
+  create view "_wb_r1"."staging"."stg_products__dbt_tmp" as (
+    -- 生成物：staging 清洗模型（来源 instances 配置，勿手改）
+select
+    trim(cast(product_code as varchar)) as product_code,
+    trim(cast(product_name as varchar)) as product_name,
+    trim(cast(category as varchar)) as category,
+    trim(cast(unit as varchar)) as unit,
+    cast(std_cost as decimal(18, 4)) as std_cost
+from "_wb_r1"."raw"."products"
+where product_code is not null
+  );
+
+00:14:52.086530 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.086530 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.stg_stock_snapshot"
+00:14:52.090638 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_stores"
+00:14:52.093047 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.stg_fact_ledger"
+00:14:52.093047 [debug] [Thread-3 (]: On model.cl__wb_r1.stg_stock_snapshot: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_stock_snapshot"} */
+
+  
+  create view "_wb_r1"."staging"."stg_stock_snapshot__dbt_tmp" as (
+    -- 生成物：staging 清洗模型（来源 instances 配置，勿手改）
+select
+    trim(cast(snap_month as varchar)) as snap_month,
+    cast(snap_date as date) as snap_date,
+    trim(cast(store_code as varchar)) as store_code,
+    trim(cast(product_code as varchar)) as product_code,
+    cast(ending_qty as bigint) as ending_qty
+from "_wb_r1"."raw"."stock_snapshot"
+where snap_date is not null
+  and store_code is not null
+  and product_code is not null
+  and ending_qty is not null
+  );
+
+00:14:52.093047 [debug] [Thread-2 (]: SQL status: OK in 0.003 seconds
+00:14:52.094239 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_stores: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_stores"} */
+alter view "_wb_r1"."staging"."stg_stores__dbt_tmp" rename to "stg_stores"
+00:14:52.094239 [debug] [Thread-1 (]: On model.cl__wb_r1.stg_fact_ledger: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_fact_ledger"} */
+alter view "_wb_r1"."staging"."stg_fact_ledger__dbt_tmp" rename to "stg_fact_ledger"
+00:14:52.095412 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.stg_products"
+00:14:52.096413 [debug] [Thread-3 (]: SQL status: OK in 0.002 seconds
+00:14:52.096413 [debug] [Thread-4 (]: SQL status: OK in 0.000 seconds
+00:14:52.096413 [debug] [Thread-2 (]: On model.cl__wb_r1.stg_products: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_products"} */
+alter view "_wb_r1"."staging"."stg_products__dbt_tmp" rename to "stg_products"
+00:14:52.096413 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.098690 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.stg_stock_snapshot"
+00:14:52.106689 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_stores: COMMIT
+00:14:52.107897 [debug] [Thread-1 (]: On model.cl__wb_r1.stg_fact_ledger: COMMIT
+00:14:52.107897 [debug] [Thread-3 (]: On model.cl__wb_r1.stg_stock_snapshot: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_stock_snapshot"} */
+alter view "_wb_r1"."staging"."stg_stock_snapshot__dbt_tmp" rename to "stg_stock_snapshot"
+00:14:52.107897 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_stores"
+00:14:52.109173 [debug] [Thread-2 (]: SQL status: OK in 0.002 seconds
+00:14:52.109173 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.stg_fact_ledger"
+00:14:52.109173 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_stores: COMMIT
+00:14:52.110342 [debug] [Thread-2 (]: On model.cl__wb_r1.stg_products: COMMIT
+00:14:52.110342 [debug] [Thread-3 (]: SQL status: OK in 0.001 seconds
+00:14:52.111359 [debug] [Thread-1 (]: On model.cl__wb_r1.stg_fact_ledger: COMMIT
+00:14:52.111359 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.stg_products"
+00:14:52.111359 [debug] [Thread-3 (]: On model.cl__wb_r1.stg_stock_snapshot: COMMIT
+00:14:52.112759 [debug] [Thread-2 (]: On model.cl__wb_r1.stg_products: COMMIT
+00:14:52.112759 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.stg_stock_snapshot"
+00:14:52.112759 [debug] [Thread-3 (]: On model.cl__wb_r1.stg_stock_snapshot: COMMIT
+00:14:52.113796 [debug] [Thread-4 (]: SQL status: OK in 0.003 seconds
+00:14:52.117134 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_stores"
+00:14:52.117134 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_stores: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_stores"} */
+
+      drop view if exists "_wb_r1"."staging"."stg_stores__dbt_backup" cascade
+    
+00:14:52.118211 [debug] [Thread-1 (]: SQL status: OK in 0.006 seconds
+00:14:52.119222 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.stg_fact_ledger"
+00:14:52.119222 [debug] [Thread-1 (]: On model.cl__wb_r1.stg_fact_ledger: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_fact_ledger"} */
+
+      drop view if exists "_wb_r1"."staging"."stg_fact_ledger__dbt_backup" cascade
+    
+00:14:52.120242 [debug] [Thread-2 (]: SQL status: OK in 0.007 seconds
+00:14:52.121256 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.stg_products"
+00:14:52.121256 [debug] [Thread-2 (]: On model.cl__wb_r1.stg_products: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_products"} */
+
+      drop view if exists "_wb_r1"."staging"."stg_products__dbt_backup" cascade
+    
+00:14:52.121256 [debug] [Thread-3 (]: SQL status: OK in 0.008 seconds
+00:14:52.121256 [debug] [Thread-4 (]: SQL status: OK in 0.004 seconds
+00:14:52.122266 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.123285 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.stg_stock_snapshot"
+00:14:52.123285 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.125855 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_stores: Close
+00:14:52.127438 [debug] [Thread-1 (]: On model.cl__wb_r1.stg_fact_ledger: Close
+00:14:52.127438 [debug] [Thread-3 (]: On model.cl__wb_r1.stg_stock_snapshot: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_stock_snapshot"} */
+
+      drop view if exists "_wb_r1"."staging"."stg_stock_snapshot__dbt_backup" cascade
+    
+00:14:52.128445 [debug] [Thread-2 (]: On model.cl__wb_r1.stg_products: Close
+00:14:52.130571 [debug] [Thread-3 (]: SQL status: OK in 0.000 seconds
+00:14:52.131654 [debug] [Thread-3 (]: On model.cl__wb_r1.stg_stock_snapshot: Close
+00:14:52.131654 [debug] [Thread-4 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB2E58320>]}
+00:14:52.132672 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB6E5E300>]}
+00:14:52.132672 [debug] [Thread-2 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB5C6CD70>]}
+00:14:52.133687 [debug] [Thread-3 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB71C2DE0>]}
+00:14:52.132672 [info ] [Thread-4 (]: 4 of 39 OK created sql view model staging.stg_stores ........................... [OK in 0.09s]
+00:14:52.133687 [info ] [Thread-1 (]: 1 of 39 OK created sql view model staging.stg_fact_ledger ...................... [OK in 0.09s]
+00:14:52.133687 [info ] [Thread-2 (]: 2 of 39 OK created sql view model staging.stg_products ......................... [OK in 0.09s]
+00:14:52.134726 [info ] [Thread-3 (]: 3 of 39 OK created sql view model staging.stg_stock_snapshot ................... [OK in 0.09s]
+00:14:52.134726 [debug] [Thread-4 (]: Finished running node model.cl__wb_r1.stg_stores
+00:14:52.135756 [debug] [Thread-1 (]: Finished running node model.cl__wb_r1.stg_fact_ledger
+00:14:52.135756 [debug] [Thread-2 (]: Finished running node model.cl__wb_r1.stg_products
+00:14:52.135756 [debug] [Thread-3 (]: Finished running node model.cl__wb_r1.stg_stock_snapshot
+00:14:52.136786 [debug] [Thread-4 (]: Began running node model.cl__wb_r1.stg_suppliers
+00:14:52.136786 [debug] [Thread-1 (]: Began running node test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae
+00:14:52.137800 [debug] [Thread-2 (]: Began running node test.cl__wb_r1.match_stores_fanout
+00:14:52.137800 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8
+00:14:52.137800 [info ] [Thread-4 (]: 5 of 39 START sql view model staging.stg_suppliers ............................. [RUN]
+00:14:52.138811 [info ] [Thread-1 (]: 6 of 39 START test accepted_values_stg_stores_region_name_________ ............. [RUN]
+00:14:52.138811 [info ] [Thread-2 (]: 7 of 39 START test match_stores_fanout ......................................... [RUN]
+00:14:52.138811 [info ] [Thread-3 (]: 8 of 39 START test not_null_stg_stores_store_code .............................. [RUN]
+00:14:52.139994 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.stg_stores, now model.cl__wb_r1.stg_suppliers)
+00:14:52.139994 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.stg_fact_ledger, now test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae)
+00:14:52.139994 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.stg_products, now test.cl__wb_r1.match_stores_fanout)
+00:14:52.141064 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.stg_stock_snapshot, now test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8)
+00:14:52.141064 [debug] [Thread-4 (]: Began compiling node model.cl__wb_r1.stg_suppliers
+00:14:52.142077 [debug] [Thread-1 (]: Began compiling node test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae
+00:14:52.142077 [debug] [Thread-2 (]: Began compiling node test.cl__wb_r1.match_stores_fanout
+00:14:52.142077 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8
+00:14:52.144126 [debug] [Thread-4 (]: Writing injected SQL for node "model.cl__wb_r1.stg_suppliers"
+00:14:52.148519 [debug] [Thread-1 (]: Writing injected SQL for node "test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae"
+00:14:52.149542 [debug] [Thread-2 (]: Writing injected SQL for node "test.cl__wb_r1.match_stores_fanout"
+00:14:52.158081 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8"
+00:14:52.159290 [debug] [Thread-4 (]: Began executing node model.cl__wb_r1.stg_suppliers
+00:14:52.161811 [debug] [Thread-4 (]: Writing runtime sql for node "model.cl__wb_r1.stg_suppliers"
+00:14:52.161811 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8
+00:14:52.162830 [debug] [Thread-2 (]: Began executing node test.cl__wb_r1.match_stores_fanout
+00:14:52.174057 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8"
+00:14:52.176130 [debug] [Thread-2 (]: Writing runtime sql for node "test.cl__wb_r1.match_stores_fanout"
+00:14:52.176130 [debug] [Thread-1 (]: Began executing node test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae
+00:14:52.177606 [debug] [Thread-1 (]: Writing runtime sql for node "test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae"
+00:14:52.177606 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_suppliers"
+00:14:52.177606 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_suppliers: BEGIN
+00:14:52.178838 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.178838 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.179874 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.match_stores_fanout"
+00:14:52.179874 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_suppliers"
+00:14:52.179874 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8"
+00:14:52.179874 [debug] [Thread-2 (]: On test.cl__wb_r1.match_stores_fanout: BEGIN
+00:14:52.179874 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_suppliers: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_suppliers"} */
+
+  
+  create view "_wb_r1"."staging"."stg_suppliers__dbt_tmp" as (
+    -- 生成物：staging 清洗模型（来源 instances 配置，勿手改）
+select
+    trim(cast(supplier_code as varchar)) as supplier_code,
+    trim(cast(supplier_name as varchar)) as supplier_name,
+    trim(cast(settle_type as varchar)) as settle_type
+from "_wb_r1"."raw"."suppliers"
+where supplier_code is not null
+  );
+
+00:14:52.181113 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8: BEGIN
+00:14:52.181113 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae"
+00:14:52.181113 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.182189 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.182189 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae: BEGIN
+00:14:52.183203 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.183203 [debug] [Thread-2 (]: SQL status: OK in 0.002 seconds
+00:14:52.183203 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.185217 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_suppliers"
+00:14:52.185217 [debug] [Thread-3 (]: SQL status: OK in 0.003 seconds
+00:14:52.185217 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.match_stores_fanout"
+00:14:52.185217 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_suppliers: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_suppliers"} */
+alter view "_wb_r1"."staging"."stg_suppliers__dbt_tmp" rename to "stg_suppliers"
+00:14:52.186710 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8"
+00:14:52.186710 [debug] [Thread-1 (]: SQL status: OK in 0.003 seconds
+00:14:52.186710 [debug] [Thread-2 (]: On test.cl__wb_r1.match_stores_fanout: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.match_stores_fanout"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 匹配契约：stores 的键 store_code 必须唯一，否则 join 扇出/笛卡尔积
+select store_code
+from "_wb_r1"."staging"."stg_stores"
+group by 1 having count(*) > 1
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.186710 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select store_code
+from "_wb_r1"."staging"."stg_stores"
+where store_code is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.187741 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae"
+00:14:52.187741 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.188855 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+with all_values as (
+
+    select
+        region_name as value_field,
+        count(*) as n_records
+
+    from "_wb_r1"."staging"."stg_stores"
+    group by region_name
+
+)
+
+select *
+from all_values
+where value_field not in (
+    '华东','华北','华南'
+)
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.190145 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_suppliers: COMMIT
+00:14:52.190145 [debug] [Thread-3 (]: SQL status: OK in 0.002 seconds
+00:14:52.191290 [debug] [Thread-2 (]: SQL status: OK in 0.003 seconds
+00:14:52.191290 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_suppliers"
+00:14:52.191290 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.194356 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8: ROLLBACK
+00:14:52.194356 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_suppliers: COMMIT
+00:14:52.195363 [debug] [Thread-2 (]: On test.cl__wb_r1.match_stores_fanout: ROLLBACK
+00:14:52.196827 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae: ROLLBACK
+00:14:52.196827 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8: Close
+00:14:52.197850 [info ] [Thread-3 (]: 8 of 39 PASS not_null_stg_stores_store_code .................................... [PASS in 0.06s]
+00:14:52.197850 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8
+00:14:52.197850 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10
+00:14:52.199271 [info ] [Thread-3 (]: 9 of 39 START test accepted_values_stg_fact_ledger_channel______ ............... [RUN]
+00:14:52.199271 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_stores_store_code.91c326a5b8, now test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10)
+00:14:52.199271 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10
+00:14:52.204081 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10"
+00:14:52.205092 [debug] [Thread-2 (]: On test.cl__wb_r1.match_stores_fanout: Close
+00:14:52.205092 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae: Close
+00:14:52.206128 [debug] [Thread-4 (]: SQL status: OK in 0.009 seconds
+00:14:52.206128 [warn ] [Thread-2 (]: 7 of 39 WARN 1 match_stores_fanout ............................................. [WARN 1 in 0.07s]
+00:14:52.207162 [info ] [Thread-1 (]: 6 of 39 PASS accepted_values_stg_stores_region_name_________ ................... [PASS in 0.07s]
+00:14:52.207162 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.stg_suppliers"
+00:14:52.208634 [debug] [Thread-2 (]: Finished running node test.cl__wb_r1.match_stores_fanout
+00:14:52.208634 [debug] [Thread-1 (]: Finished running node test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae
+00:14:52.209830 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_suppliers: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.stg_suppliers"} */
+
+      drop view if exists "_wb_r1"."staging"."stg_suppliers__dbt_backup" cascade
+    
+00:14:52.209830 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10
+00:14:52.210336 [debug] [Thread-2 (]: Began running node test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8
+00:14:52.210336 [debug] [Thread-1 (]: Began running node test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a
+00:14:52.211341 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10"
+00:14:52.212584 [info ] [Thread-2 (]: 10 of 39 START test accepted_values_stg_fact_ledger_entry_type____________ ..... [RUN]
+00:14:52.212584 [debug] [Thread-4 (]: SQL status: OK in 0.002 seconds
+00:14:52.212584 [info ] [Thread-1 (]: 11 of 39 START test accepted_values_stg_products_category_________ ............. [RUN]
+00:14:52.213601 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.match_stores_fanout, now test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8)
+00:14:52.214613 [debug] [Thread-4 (]: On model.cl__wb_r1.stg_suppliers: Close
+00:14:52.214613 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.accepted_values_stg_stores_region_name_________.e0b24768ae, now test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a)
+00:14:52.214613 [debug] [Thread-2 (]: Began compiling node test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8
+00:14:52.215659 [debug] [Thread-1 (]: Began compiling node test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a
+00:14:52.215659 [debug] [Thread-4 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB5AD4860>]}
+00:14:52.221080 [debug] [Thread-2 (]: Writing injected SQL for node "test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8"
+00:14:52.226242 [debug] [Thread-1 (]: Writing injected SQL for node "test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a"
+00:14:52.226242 [info ] [Thread-4 (]: 5 of 39 OK created sql view model staging.stg_suppliers ........................ [OK in 0.08s]
+00:14:52.227257 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10"
+00:14:52.227257 [debug] [Thread-4 (]: Finished running node model.cl__wb_r1.stg_suppliers
+00:14:52.227257 [debug] [Thread-3 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10: BEGIN
+00:14:52.228289 [debug] [Thread-4 (]: Began running node test.cl__wb_r1.match_products_fanout
+00:14:52.228289 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.228289 [debug] [Thread-2 (]: Began executing node test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8
+00:14:52.229328 [info ] [Thread-4 (]: 12 of 39 START test match_products_fanout ...................................... [RUN]
+00:14:52.230482 [debug] [Thread-2 (]: Writing runtime sql for node "test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8"
+00:14:52.230482 [debug] [Thread-1 (]: Began executing node test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a
+00:14:52.231566 [debug] [Thread-3 (]: SQL status: OK in 0.003 seconds
+00:14:52.231566 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.stg_suppliers, now test.cl__wb_r1.match_products_fanout)
+00:14:52.233742 [debug] [Thread-1 (]: Writing runtime sql for node "test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a"
+00:14:52.233742 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10"
+00:14:52.233742 [debug] [Thread-4 (]: Began compiling node test.cl__wb_r1.match_products_fanout
+00:14:52.234849 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8"
+00:14:52.234849 [debug] [Thread-3 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+with all_values as (
+
+    select
+        channel as value_field,
+        count(*) as n_records
+
+    from "_wb_r1"."staging"."stg_fact_ledger"
+    group by channel
+
+)
+
+select *
+from all_values
+where value_field not in (
+    '门店','电商'
+)
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.236162 [debug] [Thread-4 (]: Writing injected SQL for node "test.cl__wb_r1.match_products_fanout"
+00:14:52.236162 [debug] [Thread-2 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8: BEGIN
+00:14:52.237170 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.237170 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a"
+00:14:52.238265 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a: BEGIN
+00:14:52.238265 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.238265 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.239278 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8"
+00:14:52.239278 [debug] [Thread-3 (]: SQL status: OK in 0.003 seconds
+00:14:52.239278 [debug] [Thread-4 (]: Began executing node test.cl__wb_r1.match_products_fanout
+00:14:52.240288 [debug] [Thread-2 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+with all_values as (
+
+    select
+        entry_type as value_field,
+        count(*) as n_records
+
+    from "_wb_r1"."staging"."stg_fact_ledger"
+    group by entry_type
+
+)
+
+select *
+from all_values
+where value_field not in (
+    '销售','采购','采购退货','期末库存'
+)
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.240288 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.241302 [debug] [Thread-4 (]: Writing runtime sql for node "test.cl__wb_r1.match_products_fanout"
+00:14:52.243441 [debug] [Thread-3 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10: ROLLBACK
+00:14:52.243441 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a"
+00:14:52.243441 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+with all_values as (
+
+    select
+        category as value_field,
+        count(*) as n_records
+
+    from "_wb_r1"."staging"."stg_products"
+    group by category
+
+)
+
+select *
+from all_values
+where value_field not in (
+    '食品','百货','日化'
+)
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.244486 [debug] [Thread-3 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10: Close
+00:14:52.244486 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.245615 [warn ] [Thread-3 (]: 9 of 39 WARN 1 accepted_values_stg_fact_ledger_channel______ ................... [WARN 1 in 0.05s]
+00:14:52.245615 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.246628 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10
+00:14:52.247640 [debug] [Thread-2 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8: ROLLBACK
+00:14:52.247640 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.match_products_fanout"
+00:14:52.247640 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450
+00:14:52.249786 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a: ROLLBACK
+00:14:52.250522 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_fanout: BEGIN
+00:14:52.250522 [info ] [Thread-3 (]: 13 of 39 START test not_null_stg_fact_ledger_doc_date .......................... [RUN]
+00:14:52.251055 [debug] [Thread-2 (]: On test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8: Close
+00:14:52.251055 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.251578 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.accepted_values_stg_fact_ledger_channel______.dd870b3c10, now test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450)
+00:14:52.252096 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a: Close
+00:14:52.252616 [info ] [Thread-2 (]: 10 of 39 PASS accepted_values_stg_fact_ledger_entry_type____________ ........... [PASS in 0.04s]
+00:14:52.252616 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450
+00:14:52.253142 [debug] [Thread-4 (]: SQL status: OK in 0.002 seconds
+00:14:52.253658 [warn ] [Thread-1 (]: 11 of 39 WARN 1 accepted_values_stg_products_category_________ ................. [WARN 1 in 0.04s]
+00:14:52.254172 [debug] [Thread-2 (]: Finished running node test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8
+00:14:52.258841 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450"
+00:14:52.259371 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.match_products_fanout"
+00:14:52.259371 [debug] [Thread-1 (]: Finished running node test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a
+00:14:52.259893 [debug] [Thread-2 (]: Began running node test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1
+00:14:52.260411 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_fanout: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.match_products_fanout"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 匹配契约：products 的键 product_code 必须唯一，否则 join 扇出/笛卡尔积
+select product_code
+from "_wb_r1"."staging"."stg_products"
+group by 1 having count(*) > 1
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.260936 [debug] [Thread-1 (]: Began running node test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14
+00:14:52.260936 [info ] [Thread-2 (]: 14 of 39 START test not_null_stg_fact_ledger_doc_no ............................ [RUN]
+00:14:52.261466 [info ] [Thread-1 (]: 15 of 39 START test not_null_stg_fact_ledger_entry_type ........................ [RUN]
+00:14:52.261466 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.accepted_values_stg_fact_ledger_entry_type____________.d65777b0a8, now test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1)
+00:14:52.261466 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450
+00:14:52.262721 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.accepted_values_stg_products_category_________.43b73e2f5a, now test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14)
+00:14:52.262721 [debug] [Thread-4 (]: SQL status: OK in 0.002 seconds
+00:14:52.262721 [debug] [Thread-2 (]: Began compiling node test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1
+00:14:52.264870 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450"
+00:14:52.264870 [debug] [Thread-1 (]: Began compiling node test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14
+00:14:52.271333 [debug] [Thread-2 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1"
+00:14:52.272395 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_fanout: ROLLBACK
+00:14:52.276564 [debug] [Thread-1 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14"
+00:14:52.277085 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450"
+00:14:52.277085 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_fanout: Close
+00:14:52.278134 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450: BEGIN
+00:14:52.278134 [info ] [Thread-4 (]: 12 of 39 PASS match_products_fanout ............................................ [PASS in 0.05s]
+00:14:52.279152 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.279152 [debug] [Thread-1 (]: Began executing node test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14
+00:14:52.279152 [debug] [Thread-2 (]: Began executing node test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1
+00:14:52.280160 [debug] [Thread-4 (]: Finished running node test.cl__wb_r1.match_products_fanout
+00:14:52.281246 [debug] [Thread-1 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14"
+00:14:52.283317 [debug] [Thread-2 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1"
+00:14:52.283317 [debug] [Thread-3 (]: SQL status: OK in 0.005 seconds
+00:14:52.283317 [debug] [Thread-4 (]: Began running node test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe
+00:14:52.284326 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450"
+00:14:52.284326 [info ] [Thread-4 (]: 16 of 39 START test not_null_stg_fact_ledger_product_code ...................... [RUN]
+00:14:52.285331 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select doc_date
+from "_wb_r1"."staging"."stg_fact_ledger"
+where doc_date is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.285331 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.match_products_fanout, now test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe)
+00:14:52.285331 [debug] [Thread-4 (]: Began compiling node test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe
+00:14:52.286582 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14"
+00:14:52.289952 [debug] [Thread-4 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe"
+00:14:52.290978 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1"
+00:14:52.290978 [debug] [Thread-3 (]: SQL status: OK in 0.006 seconds
+00:14:52.292059 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14: BEGIN
+00:14:52.292059 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1: BEGIN
+00:14:52.293072 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450: ROLLBACK
+00:14:52.294107 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.294107 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.294107 [debug] [Thread-4 (]: Began executing node test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe
+00:14:52.295130 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450: Close
+00:14:52.296156 [debug] [Thread-4 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe"
+00:14:52.296156 [debug] [Thread-2 (]: SQL status: OK in 0.002 seconds
+00:14:52.296156 [debug] [Thread-1 (]: SQL status: OK in 0.003 seconds
+00:14:52.297161 [info ] [Thread-3 (]: 13 of 39 PASS not_null_stg_fact_ledger_doc_date ................................ [PASS in 0.05s]
+00:14:52.297161 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1"
+00:14:52.297161 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14"
+00:14:52.298535 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450
+00:14:52.298535 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select doc_no
+from "_wb_r1"."staging"."stg_fact_ledger"
+where doc_no is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.299561 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe"
+00:14:52.299561 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select entry_type
+from "_wb_r1"."staging"."stg_fact_ledger"
+where entry_type is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.299561 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba
+00:14:52.300662 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe: BEGIN
+00:14:52.300662 [info ] [Thread-3 (]: 17 of 39 START test not_null_stg_fact_ledger_store_code ........................ [RUN]
+00:14:52.300662 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.301669 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.301669 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_fact_ledger_doc_date.38114b4450, now test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba)
+00:14:52.301669 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.302721 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.303734 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1: ROLLBACK
+00:14:52.303734 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba
+00:14:52.304804 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14: ROLLBACK
+00:14:52.304804 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe"
+00:14:52.310293 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba"
+00:14:52.310293 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1: Close
+00:14:52.311324 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select product_code
+from "_wb_r1"."staging"."stg_fact_ledger"
+where product_code is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.311324 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14: Close
+00:14:52.311324 [info ] [Thread-2 (]: 14 of 39 PASS not_null_stg_fact_ledger_doc_no .................................. [PASS in 0.05s]
+00:14:52.312341 [info ] [Thread-1 (]: 15 of 39 PASS not_null_stg_fact_ledger_entry_type .............................. [PASS in 0.05s]
+00:14:52.312341 [debug] [Thread-2 (]: Finished running node test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1
+00:14:52.313469 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.313469 [debug] [Thread-1 (]: Finished running node test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14
+00:14:52.313469 [debug] [Thread-2 (]: Began running node test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318
+00:14:52.313469 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba
+00:14:52.314917 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe: ROLLBACK
+00:14:52.315980 [debug] [Thread-1 (]: Began running node test.cl__wb_r1.range_fact_ledger_discount_rate
+00:14:52.315980 [info ] [Thread-2 (]: 18 of 39 START test not_null_stg_products_product_code ......................... [RUN]
+00:14:52.317062 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba"
+00:14:52.318062 [info ] [Thread-1 (]: 19 of 39 START test range_fact_ledger_discount_rate ............................ [RUN]
+00:14:52.318062 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_fact_ledger_doc_no.defe8809e1, now test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318)
+00:14:52.318062 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe: Close
+00:14:52.319078 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_fact_ledger_entry_type.a5c246ce14, now test.cl__wb_r1.range_fact_ledger_discount_rate)
+00:14:52.319078 [debug] [Thread-2 (]: Began compiling node test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318
+00:14:52.320296 [debug] [Thread-1 (]: Began compiling node test.cl__wb_r1.range_fact_ledger_discount_rate
+00:14:52.319078 [info ] [Thread-4 (]: 16 of 39 PASS not_null_stg_fact_ledger_product_code ............................ [PASS in 0.03s]
+00:14:52.324414 [debug] [Thread-2 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318"
+00:14:52.326744 [debug] [Thread-1 (]: Writing injected SQL for node "test.cl__wb_r1.range_fact_ledger_discount_rate"
+00:14:52.326744 [debug] [Thread-4 (]: Finished running node test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe
+00:14:52.326744 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba"
+00:14:52.327781 [debug] [Thread-4 (]: Began running node test.cl__wb_r1.range_fact_ledger_ending_qty
+00:14:52.328952 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba: BEGIN
+00:14:52.328952 [info ] [Thread-4 (]: 20 of 39 START test range_fact_ledger_ending_qty ............................... [RUN]
+00:14:52.328952 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.329968 [debug] [Thread-2 (]: Began executing node test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318
+00:14:52.329968 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_fact_ledger_product_code.29e775f0fe, now test.cl__wb_r1.range_fact_ledger_ending_qty)
+00:14:52.329968 [debug] [Thread-1 (]: Began executing node test.cl__wb_r1.range_fact_ledger_discount_rate
+00:14:52.330998 [debug] [Thread-2 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318"
+00:14:52.332023 [debug] [Thread-4 (]: Began compiling node test.cl__wb_r1.range_fact_ledger_ending_qty
+00:14:52.333056 [debug] [Thread-1 (]: Writing runtime sql for node "test.cl__wb_r1.range_fact_ledger_discount_rate"
+00:14:52.333056 [debug] [Thread-3 (]: SQL status: OK in 0.004 seconds
+00:14:52.334079 [debug] [Thread-4 (]: Writing injected SQL for node "test.cl__wb_r1.range_fact_ledger_ending_qty"
+00:14:52.335268 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba"
+00:14:52.335268 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318"
+00:14:52.335268 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select store_code
+from "_wb_r1"."staging"."stg_fact_ledger"
+where store_code is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.335268 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318: BEGIN
+00:14:52.336632 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.range_fact_ledger_discount_rate"
+00:14:52.336632 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.336632 [debug] [Thread-4 (]: Began executing node test.cl__wb_r1.range_fact_ledger_ending_qty
+00:14:52.336632 [debug] [Thread-1 (]: On test.cl__wb_r1.range_fact_ledger_discount_rate: BEGIN
+00:14:52.337884 [debug] [Thread-3 (]: SQL status: OK in 0.001 seconds
+00:14:52.339008 [debug] [Thread-4 (]: Writing runtime sql for node "test.cl__wb_r1.range_fact_ledger_ending_qty"
+00:14:52.339008 [debug] [Thread-2 (]: SQL status: OK in 0.003 seconds
+00:14:52.339008 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.340046 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318"
+00:14:52.341076 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba: ROLLBACK
+00:14:52.341076 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select product_code
+from "_wb_r1"."staging"."stg_products"
+where product_code is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.342224 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.342224 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba: Close
+00:14:52.342224 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.range_fact_ledger_ending_qty"
+00:14:52.343321 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.range_fact_ledger_discount_rate"
+00:14:52.343321 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.344552 [debug] [Thread-4 (]: On test.cl__wb_r1.range_fact_ledger_ending_qty: BEGIN
+00:14:52.344552 [info ] [Thread-3 (]: 17 of 39 PASS not_null_stg_fact_ledger_store_code .............................. [PASS in 0.04s]
+00:14:52.344552 [debug] [Thread-1 (]: On test.cl__wb_r1.range_fact_ledger_discount_rate: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.range_fact_ledger_discount_rate"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 字段契约：折扣率 范围 [0, 1]
+select discount_rate
+from "_wb_r1"."staging"."stg_fact_ledger"
+where discount_rate < 0 or discount_rate > 1
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.345570 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.346705 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318: ROLLBACK
+00:14:52.346705 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba
+00:14:52.346705 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.range_fact_ledger_quantity
+00:14:52.347776 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318: Close
+00:14:52.347776 [info ] [Thread-3 (]: 21 of 39 START test range_fact_ledger_quantity ................................. [RUN]
+00:14:52.347776 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_fact_ledger_store_code.66d07d13ba, now test.cl__wb_r1.range_fact_ledger_quantity)
+00:14:52.348792 [debug] [Thread-4 (]: SQL status: OK in 0.004 seconds
+00:14:52.348792 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.range_fact_ledger_quantity
+00:14:52.349823 [debug] [Thread-1 (]: SQL status: OK in 0.003 seconds
+00:14:52.348792 [info ] [Thread-2 (]: 18 of 39 PASS not_null_stg_products_product_code ............................... [PASS in 0.03s]
+00:14:52.349823 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.range_fact_ledger_ending_qty"
+00:14:52.350858 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.range_fact_ledger_quantity"
+00:14:52.351897 [debug] [Thread-2 (]: Finished running node test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318
+00:14:52.352929 [debug] [Thread-1 (]: On test.cl__wb_r1.range_fact_ledger_discount_rate: ROLLBACK
+00:14:52.352929 [debug] [Thread-4 (]: On test.cl__wb_r1.range_fact_ledger_ending_qty: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.range_fact_ledger_ending_qty"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 字段契约：期末数量 范围 [0, 1000000]
+select ending_qty
+from "_wb_r1"."staging"."stg_fact_ledger"
+where ending_qty < 0 or ending_qty > 1000000
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.352929 [debug] [Thread-2 (]: Began running node test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3
+00:14:52.353963 [debug] [Thread-1 (]: On test.cl__wb_r1.range_fact_ledger_discount_rate: Close
+00:14:52.353963 [info ] [Thread-2 (]: 22 of 39 START test not_null_stg_stock_snapshot_ending_qty ..................... [RUN]
+00:14:52.355011 [info ] [Thread-1 (]: 19 of 39 PASS range_fact_ledger_discount_rate .................................. [PASS in 0.03s]
+00:14:52.355011 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.355011 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_products_product_code.e6e4c35318, now test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3)
+00:14:52.355011 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.range_fact_ledger_quantity
+00:14:52.356286 [debug] [Thread-1 (]: Finished running node test.cl__wb_r1.range_fact_ledger_discount_rate
+00:14:52.356286 [debug] [Thread-2 (]: Began compiling node test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3
+00:14:52.357587 [debug] [Thread-4 (]: On test.cl__wb_r1.range_fact_ledger_ending_qty: ROLLBACK
+00:14:52.358859 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.range_fact_ledger_quantity"
+00:14:52.358859 [debug] [Thread-1 (]: Began running node test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466
+00:14:52.365038 [debug] [Thread-2 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3"
+00:14:52.365038 [info ] [Thread-1 (]: 23 of 39 START test not_null_stg_stock_snapshot_product_code ................... [RUN]
+00:14:52.366055 [debug] [Thread-4 (]: On test.cl__wb_r1.range_fact_ledger_ending_qty: Close
+00:14:52.366055 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.range_fact_ledger_discount_rate, now test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466)
+00:14:52.367097 [debug] [Thread-1 (]: Began compiling node test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466
+00:14:52.371018 [debug] [Thread-1 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466"
+00:14:52.372046 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.range_fact_ledger_quantity"
+00:14:52.367097 [info ] [Thread-4 (]: 20 of 39 PASS range_fact_ledger_ending_qty ..................................... [PASS in 0.04s]
+00:14:52.372046 [debug] [Thread-3 (]: On test.cl__wb_r1.range_fact_ledger_quantity: BEGIN
+00:14:52.372046 [debug] [Thread-4 (]: Finished running node test.cl__wb_r1.range_fact_ledger_ending_qty
+00:14:52.373428 [debug] [Thread-2 (]: Began executing node test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3
+00:14:52.373428 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.373428 [debug] [Thread-4 (]: Began running node test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c
+00:14:52.374438 [debug] [Thread-2 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3"
+00:14:52.375592 [debug] [Thread-1 (]: Began executing node test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466
+00:14:52.375592 [info ] [Thread-4 (]: 24 of 39 START test not_null_stg_stock_snapshot_snap_date ...................... [RUN]
+00:14:52.375592 [debug] [Thread-3 (]: SQL status: OK in 0.003 seconds
+00:14:52.377790 [debug] [Thread-1 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466"
+00:14:52.377790 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.range_fact_ledger_ending_qty, now test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c)
+00:14:52.377790 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.range_fact_ledger_quantity"
+00:14:52.378824 [debug] [Thread-4 (]: Began compiling node test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c
+00:14:52.378824 [debug] [Thread-3 (]: On test.cl__wb_r1.range_fact_ledger_quantity: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.range_fact_ledger_quantity"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 字段契约：数量 范围 [1, 999]
+select quantity
+from "_wb_r1"."staging"."stg_fact_ledger"
+where quantity < 1 or quantity > 999
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.382957 [debug] [Thread-4 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c"
+00:14:52.384044 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466"
+00:14:52.384044 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3"
+00:14:52.384044 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466: BEGIN
+00:14:52.385069 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3: BEGIN
+00:14:52.385069 [debug] [Thread-3 (]: SQL status: OK in 0.001 seconds
+00:14:52.385069 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.385069 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.386155 [debug] [Thread-4 (]: Began executing node test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c
+00:14:52.387187 [debug] [Thread-3 (]: On test.cl__wb_r1.range_fact_ledger_quantity: ROLLBACK
+00:14:52.387187 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.388469 [debug] [Thread-4 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c"
+00:14:52.388469 [debug] [Thread-2 (]: SQL status: OK in 0.003 seconds
+00:14:52.389505 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466"
+00:14:52.389505 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3"
+00:14:52.389505 [debug] [Thread-3 (]: On test.cl__wb_r1.range_fact_ledger_quantity: Close
+00:14:52.389505 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select product_code
+from "_wb_r1"."staging"."stg_stock_snapshot"
+where product_code is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.390730 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select ending_qty
+from "_wb_r1"."staging"."stg_stock_snapshot"
+where ending_qty is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.391743 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c"
+00:14:52.390730 [warn ] [Thread-3 (]: 21 of 39 WARN 2 range_fact_ledger_quantity ..................................... [WARN 2 in 0.04s]
+00:14:52.391743 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c: BEGIN
+00:14:52.391743 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.392978 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.392978 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.range_fact_ledger_quantity
+00:14:52.392978 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.394088 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3: ROLLBACK
+00:14:52.395104 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e
+00:14:52.396301 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466: ROLLBACK
+00:14:52.396301 [info ] [Thread-3 (]: 25 of 39 START test not_null_stg_stock_snapshot_store_code ..................... [RUN]
+00:14:52.397340 [debug] [Thread-2 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3: Close
+00:14:52.397340 [debug] [Thread-4 (]: SQL status: OK in 0.004 seconds
+00:14:52.397340 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.range_fact_ledger_quantity, now test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e)
+00:14:52.397340 [debug] [Thread-1 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466: Close
+00:14:52.398624 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c"
+00:14:52.398624 [info ] [Thread-2 (]: 22 of 39 PASS not_null_stg_stock_snapshot_ending_qty ........................... [PASS in 0.04s]
+00:14:52.398624 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e
+00:14:52.398624 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select snap_date
+from "_wb_r1"."staging"."stg_stock_snapshot"
+where snap_date is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.399910 [info ] [Thread-1 (]: 23 of 39 PASS not_null_stg_stock_snapshot_product_code ......................... [PASS in 0.03s]
+00:14:52.399910 [debug] [Thread-2 (]: Finished running node test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3
+00:14:52.404676 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e"
+00:14:52.404676 [debug] [Thread-1 (]: Finished running node test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466
+00:14:52.404676 [debug] [Thread-2 (]: Began running node test.cl__wb_r1.range_stock_snapshot_ending_qty
+00:14:52.406151 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.406151 [debug] [Thread-1 (]: Began running node test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62
+00:14:52.406151 [info ] [Thread-2 (]: 26 of 39 START test range_stock_snapshot_ending_qty ............................ [RUN]
+00:14:52.407186 [info ] [Thread-1 (]: 27 of 39 START test accepted_values_stg_suppliers_settle_type___30___60___ ..... [RUN]
+00:14:52.408225 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c: ROLLBACK
+00:14:52.408225 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_stock_snapshot_ending_qty.30ca53b8d3, now test.cl__wb_r1.range_stock_snapshot_ending_qty)
+00:14:52.408225 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_stock_snapshot_product_code.e5295d4466, now test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62)
+00:14:52.409681 [debug] [Thread-2 (]: Began compiling node test.cl__wb_r1.range_stock_snapshot_ending_qty
+00:14:52.409681 [debug] [Thread-1 (]: Began compiling node test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62
+00:14:52.409681 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e
+00:14:52.410853 [debug] [Thread-2 (]: Writing injected SQL for node "test.cl__wb_r1.range_stock_snapshot_ending_qty"
+00:14:52.411918 [debug] [Thread-4 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c: Close
+00:14:52.416183 [debug] [Thread-1 (]: Writing injected SQL for node "test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62"
+00:14:52.417208 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e"
+00:14:52.418222 [info ] [Thread-4 (]: 24 of 39 PASS not_null_stg_stock_snapshot_snap_date ............................ [PASS in 0.04s]
+00:14:52.418222 [debug] [Thread-4 (]: Finished running node test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c
+00:14:52.418222 [debug] [Thread-4 (]: Began running node test.cl__wb_r1.match_suppliers_fanout
+00:14:52.419659 [debug] [Thread-2 (]: Began executing node test.cl__wb_r1.range_stock_snapshot_ending_qty
+00:14:52.419659 [info ] [Thread-4 (]: 28 of 39 START test match_suppliers_fanout ..................................... [RUN]
+00:14:52.420878 [debug] [Thread-2 (]: Writing runtime sql for node "test.cl__wb_r1.range_stock_snapshot_ending_qty"
+00:14:52.420878 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_stock_snapshot_snap_date.1dab80470c, now test.cl__wb_r1.match_suppliers_fanout)
+00:14:52.421915 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e"
+00:14:52.421915 [debug] [Thread-1 (]: Began executing node test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62
+00:14:52.421915 [debug] [Thread-4 (]: Began compiling node test.cl__wb_r1.match_suppliers_fanout
+00:14:52.422933 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e: BEGIN
+00:14:52.423962 [debug] [Thread-1 (]: Writing runtime sql for node "test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62"
+00:14:52.425001 [debug] [Thread-4 (]: Writing injected SQL for node "test.cl__wb_r1.match_suppliers_fanout"
+00:14:52.425001 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.426272 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.range_stock_snapshot_ending_qty"
+00:14:52.426272 [debug] [Thread-2 (]: On test.cl__wb_r1.range_stock_snapshot_ending_qty: BEGIN
+00:14:52.427296 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.427296 [debug] [Thread-3 (]: SQL status: OK in 0.002 seconds
+00:14:52.427296 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.427296 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e"
+00:14:52.428478 [debug] [Thread-4 (]: Began executing node test.cl__wb_r1.match_suppliers_fanout
+00:14:52.428478 [debug] [Thread-2 (]: Using duckdb connection "test.cl__wb_r1.range_stock_snapshot_ending_qty"
+00:14:52.428478 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62"
+00:14:52.429521 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select store_code
+from "_wb_r1"."staging"."stg_stock_snapshot"
+where store_code is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.430521 [debug] [Thread-4 (]: Writing runtime sql for node "test.cl__wb_r1.match_suppliers_fanout"
+00:14:52.430521 [debug] [Thread-2 (]: On test.cl__wb_r1.range_stock_snapshot_ending_qty: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.range_stock_snapshot_ending_qty"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 字段契约：期末数量 范围 [0, 100000]
+select ending_qty
+from "_wb_r1"."staging"."stg_stock_snapshot"
+where ending_qty < 0 or ending_qty > 100000
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.430521 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62: BEGIN
+00:14:52.431711 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.432719 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+00:14:52.432719 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.match_suppliers_fanout"
+00:14:52.432719 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62"
+00:14:52.432719 [debug] [Thread-3 (]: SQL status: OK in 0.002 seconds
+00:14:52.432719 [debug] [Thread-2 (]: SQL status: OK in 0.002 seconds
+00:14:52.432719 [debug] [Thread-4 (]: On test.cl__wb_r1.match_suppliers_fanout: BEGIN
+00:14:52.434175 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+with all_values as (
+
+    select
+        settle_type as value_field,
+        count(*) as n_records
+
+    from "_wb_r1"."staging"."stg_suppliers"
+    group by settle_type
+
+)
+
+select *
+from all_values
+where value_field not in (
+    '月结30','月结60','现结'
+)
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.435263 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e: ROLLBACK
+00:14:52.436368 [debug] [Thread-2 (]: On test.cl__wb_r1.range_stock_snapshot_ending_qty: ROLLBACK
+00:14:52.436368 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.437391 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e: Close
+00:14:52.437391 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.437391 [info ] [Thread-3 (]: 25 of 39 PASS not_null_stg_stock_snapshot_store_code ........................... [PASS in 0.04s]
+00:14:52.437391 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.match_suppliers_fanout"
+00:14:52.438715 [debug] [Thread-2 (]: On test.cl__wb_r1.range_stock_snapshot_ending_qty: Close
+00:14:52.438715 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.438715 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e
+00:14:52.439727 [debug] [Thread-4 (]: On test.cl__wb_r1.match_suppliers_fanout: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.match_suppliers_fanout"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 匹配契约：suppliers 的键 supplier_code 必须唯一，否则 join 扇出/笛卡尔积
+select supplier_code
+from "_wb_r1"."staging"."stg_suppliers"
+group by 1 having count(*) > 1
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.439727 [warn ] [Thread-2 (]: 26 of 39 WARN 1 range_stock_snapshot_ending_qty ................................ [WARN 1 in 0.03s]
+00:14:52.440745 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62: ROLLBACK
+00:14:52.441783 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1
+00:14:52.441783 [debug] [Thread-2 (]: Finished running node test.cl__wb_r1.range_stock_snapshot_ending_qty
+00:14:52.443049 [info ] [Thread-3 (]: 29 of 39 START test not_null_stg_suppliers_supplier_code ....................... [RUN]
+00:14:52.443049 [debug] [Thread-1 (]: On test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62: Close
+00:14:52.443049 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_stock_snapshot_store_code.9c7a64050e, now test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1)
+00:14:52.444391 [debug] [Thread-4 (]: SQL status: OK in 0.002 seconds
+00:14:52.444391 [info ] [Thread-1 (]: 27 of 39 PASS accepted_values_stg_suppliers_settle_type___30___60___ ........... [PASS in 0.04s]
+00:14:52.444391 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1
+00:14:52.445505 [debug] [Thread-1 (]: Finished running node test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62
+00:14:52.446707 [debug] [Thread-4 (]: On test.cl__wb_r1.match_suppliers_fanout: ROLLBACK
+00:14:52.450838 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1"
+00:14:52.452017 [debug] [Thread-4 (]: On test.cl__wb_r1.match_suppliers_fanout: Close
+00:14:52.452017 [info ] [Thread-4 (]: 28 of 39 PASS match_suppliers_fanout ........................................... [PASS in 0.03s]
+00:14:52.453046 [debug] [Thread-4 (]: Finished running node test.cl__wb_r1.match_suppliers_fanout
+00:14:52.453046 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1
+00:14:52.454080 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1"
+00:14:52.455105 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1"
+00:14:52.456116 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1: BEGIN
+00:14:52.456116 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.456116 [debug] [Thread-3 (]: SQL status: OK in 0.000 seconds
+00:14:52.456116 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1"
+00:14:52.457148 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select supplier_code
+from "_wb_r1"."staging"."stg_suppliers"
+where supplier_code is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.458199 [debug] [Thread-3 (]: SQL status: OK in 0.001 seconds
+00:14:52.459304 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1: ROLLBACK
+00:14:52.459304 [debug] [Thread-3 (]: On test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1: Close
+00:14:52.460339 [info ] [Thread-3 (]: 29 of 39 PASS not_null_stg_suppliers_supplier_code ............................. [PASS in 0.02s]
+00:14:52.460339 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1
+00:14:52.460339 [debug] [Thread-2 (]: Began running node model.cl__wb_r1.int_wide_ledger
+00:14:52.461813 [info ] [Thread-2 (]: 30 of 39 START sql view model intermediate.int_wide_ledger ..................... [RUN]
+00:14:52.461813 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.range_stock_snapshot_ending_qty, now model.cl__wb_r1.int_wide_ledger)
+00:14:52.461813 [debug] [Thread-2 (]: Began compiling node model.cl__wb_r1.int_wide_ledger
+00:14:52.463815 [debug] [Thread-2 (]: Writing injected SQL for node "model.cl__wb_r1.int_wide_ledger"
+00:14:52.465895 [debug] [Thread-2 (]: Began executing node model.cl__wb_r1.int_wide_ledger
+00:14:52.468107 [debug] [Thread-2 (]: Writing runtime sql for node "model.cl__wb_r1.int_wide_ledger"
+00:14:52.469121 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.int_wide_ledger"
+00:14:52.469121 [debug] [Thread-2 (]: On model.cl__wb_r1.int_wide_ledger: BEGIN
+00:14:52.470149 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.470149 [debug] [Thread-2 (]: SQL status: OK in 0.000 seconds
+00:14:52.470149 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.int_wide_ledger"
+00:14:52.471166 [debug] [Thread-2 (]: On model.cl__wb_r1.int_wide_ledger: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.int_wide_ledger"} */
+
+  
+  create view "_wb_r1"."intermediate"."int_wide_ledger__dbt_tmp" as (
+    -- 生成物：宽表装配（fact_ledger + 3 张标签表有序左联 + 派生列）
+select
+    m.entry_type,
+    m.doc_no,
+    m.doc_date,
+    m.store_code,
+    m.product_code,
+    m.supplier_code,
+    m.channel,
+    m.quantity,
+    m.unit_price,
+    m.discount_rate,
+    m.ending_qty,
+    d0.store_name,
+    d0.city,
+    d0.region_name,
+    d1.product_name,
+    d1.category,
+    d1.std_cost,
+    d2.supplier_name,
+    case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end as "sales_net",
+    case when entry_type = '销售' then round(quantity * std_cost, 2) else 0 end as "sales_cost",
+    case when entry_type = '销售' then round(quantity * unit_price * (1 - discount_rate) - quantity * std_cost, 2) else 0 end as "gross_profit",
+    case when entry_type = '销售' and channel = '电商' then round(quantity * unit_price * (1 - discount_rate), 2) else 0 end as "ecomm_net",
+    case when entry_type = '采购' then round(quantity * unit_price, 2) else 0 end as "purchase_amt",
+    case when entry_type = '期末库存' then coalesce(ending_qty, 0) else 0 end as "stock_qty"
+from "_wb_r1"."staging"."stg_fact_ledger" m
+left join "_wb_r1"."staging"."stg_stores" d0
+  on m.store_code = d0.store_code
+left join "_wb_r1"."staging"."stg_products" d1
+  on m.product_code = d1.product_code
+left join "_wb_r1"."staging"."stg_suppliers" d2
+  on m.supplier_code = d2.supplier_code
+  );
+
+00:14:52.472180 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.473209 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.int_wide_ledger"
+00:14:52.474238 [debug] [Thread-2 (]: On model.cl__wb_r1.int_wide_ledger: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.int_wide_ledger"} */
+alter view "_wb_r1"."intermediate"."int_wide_ledger__dbt_tmp" rename to "int_wide_ledger"
+00:14:52.474238 [debug] [Thread-2 (]: SQL status: OK in 0.000 seconds
+00:14:52.476321 [debug] [Thread-2 (]: On model.cl__wb_r1.int_wide_ledger: COMMIT
+00:14:52.476321 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.int_wide_ledger"
+00:14:52.476321 [debug] [Thread-2 (]: On model.cl__wb_r1.int_wide_ledger: COMMIT
+00:14:52.480767 [debug] [Thread-2 (]: SQL status: OK in 0.003 seconds
+00:14:52.481804 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.int_wide_ledger"
+00:14:52.481804 [debug] [Thread-2 (]: On model.cl__wb_r1.int_wide_ledger: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.int_wide_ledger"} */
+
+      drop view if exists "_wb_r1"."intermediate"."int_wide_ledger__dbt_backup" cascade
+    
+00:14:52.482824 [debug] [Thread-2 (]: SQL status: OK in 0.000 seconds
+00:14:52.484048 [debug] [Thread-2 (]: On model.cl__wb_r1.int_wide_ledger: Close
+00:14:52.484048 [debug] [Thread-2 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB7269430>]}
+00:14:52.484048 [info ] [Thread-2 (]: 30 of 39 OK created sql view model intermediate.int_wide_ledger ................ [OK in 0.02s]
+00:14:52.485084 [debug] [Thread-2 (]: Finished running node model.cl__wb_r1.int_wide_ledger
+00:14:52.485084 [debug] [Thread-4 (]: Began running node test.cl__wb_r1.match_products_null_match
+00:14:52.486117 [debug] [Thread-3 (]: Began running node test.cl__wb_r1.match_stores_null_match
+00:14:52.486117 [debug] [Thread-1 (]: Began running node test.cl__wb_r1.match_suppliers_null_match
+00:14:52.486117 [info ] [Thread-4 (]: 31 of 39 START test match_products_null_match .................................. [RUN]
+00:14:52.486117 [info ] [Thread-3 (]: 32 of 39 START test match_stores_null_match .................................... [RUN]
+00:14:52.487149 [info ] [Thread-1 (]: 33 of 39 START test match_suppliers_null_match ................................. [RUN]
+00:14:52.487149 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.match_suppliers_fanout, now test.cl__wb_r1.match_products_null_match)
+00:14:52.488199 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.not_null_stg_suppliers_supplier_code.e91fd33fd1, now test.cl__wb_r1.match_stores_null_match)
+00:14:52.488199 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.accepted_values_stg_suppliers_settle_type___30___60___.310ec89b62, now test.cl__wb_r1.match_suppliers_null_match)
+00:14:52.488199 [debug] [Thread-4 (]: Began compiling node test.cl__wb_r1.match_products_null_match
+00:14:52.488199 [debug] [Thread-3 (]: Began compiling node test.cl__wb_r1.match_stores_null_match
+00:14:52.488199 [debug] [Thread-1 (]: Began compiling node test.cl__wb_r1.match_suppliers_null_match
+00:14:52.490680 [debug] [Thread-4 (]: Writing injected SQL for node "test.cl__wb_r1.match_products_null_match"
+00:14:52.492142 [debug] [Thread-3 (]: Writing injected SQL for node "test.cl__wb_r1.match_stores_null_match"
+00:14:52.493243 [debug] [Thread-1 (]: Writing injected SQL for node "test.cl__wb_r1.match_suppliers_null_match"
+00:14:52.495281 [debug] [Thread-1 (]: Began executing node test.cl__wb_r1.match_suppliers_null_match
+00:14:52.496312 [debug] [Thread-1 (]: Writing runtime sql for node "test.cl__wb_r1.match_suppliers_null_match"
+00:14:52.497340 [debug] [Thread-3 (]: Began executing node test.cl__wb_r1.match_stores_null_match
+00:14:52.497340 [debug] [Thread-4 (]: Began executing node test.cl__wb_r1.match_products_null_match
+00:14:52.498372 [debug] [Thread-3 (]: Writing runtime sql for node "test.cl__wb_r1.match_stores_null_match"
+00:14:52.499493 [debug] [Thread-4 (]: Writing runtime sql for node "test.cl__wb_r1.match_products_null_match"
+00:14:52.499493 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.match_suppliers_null_match"
+00:14:52.500524 [debug] [Thread-1 (]: On test.cl__wb_r1.match_suppliers_null_match: BEGIN
+00:14:52.500524 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.500524 [debug] [Thread-1 (]: SQL status: OK in 0.000 seconds
+00:14:52.501551 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.match_stores_null_match"
+00:14:52.501551 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.match_products_null_match"
+00:14:52.501551 [debug] [Thread-1 (]: Using duckdb connection "test.cl__wb_r1.match_suppliers_null_match"
+00:14:52.501551 [debug] [Thread-3 (]: On test.cl__wb_r1.match_stores_null_match: BEGIN
+00:14:52.502563 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_null_match: BEGIN
+00:14:52.502563 [debug] [Thread-1 (]: On test.cl__wb_r1.match_suppliers_null_match: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.match_suppliers_null_match"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 匹配契约：主表 supplier_code 在 suppliers 中匹空的清单（未匹配标签）
+select distinct w.supplier_code
+from "_wb_r1"."intermediate"."int_wide_ledger" w
+where w.supplier_code is not null
+  and not exists (
+    select 1 from "_wb_r1"."staging"."stg_suppliers" d
+    where d.supplier_code = w.supplier_code)
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.502563 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.503590 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.503590 [debug] [Thread-3 (]: SQL status: OK in 0.001 seconds
+00:14:52.503590 [debug] [Thread-3 (]: Using duckdb connection "test.cl__wb_r1.match_stores_null_match"
+00:14:52.504622 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.504622 [debug] [Thread-3 (]: On test.cl__wb_r1.match_stores_null_match: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.match_stores_null_match"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 匹配契约：主表 store_code 在 stores 中匹空的清单（未匹配标签）
+select distinct w.store_code
+from "_wb_r1"."intermediate"."int_wide_ledger" w
+where w.store_code is not null
+  and not exists (
+    select 1 from "_wb_r1"."staging"."stg_stores" d
+    where d.store_code = w.store_code)
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.504622 [debug] [Thread-4 (]: Using duckdb connection "test.cl__wb_r1.match_products_null_match"
+00:14:52.504622 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_null_match: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "test.cl__wb_r1.match_products_null_match"} */
+
+    
+    select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+-- 匹配契约：主表 product_code 在 products 中匹空的清单（未匹配标签）
+select distinct w.product_code
+from "_wb_r1"."intermediate"."int_wide_ledger" w
+where w.product_code is not null
+  and not exists (
+    select 1 from "_wb_r1"."staging"."stg_products" d
+    where d.product_code = w.product_code)
+  
+  
+      
+    ) dbt_internal_test
+00:14:52.510308 [debug] [Thread-1 (]: SQL status: OK in 0.007 seconds
+00:14:52.513033 [debug] [Thread-1 (]: On test.cl__wb_r1.match_suppliers_null_match: ROLLBACK
+00:14:52.515163 [debug] [Thread-3 (]: SQL status: OK in 0.010 seconds
+00:14:52.515163 [debug] [Thread-1 (]: On test.cl__wb_r1.match_suppliers_null_match: Close
+00:14:52.515163 [debug] [Thread-4 (]: SQL status: OK in 0.010 seconds
+00:14:52.516247 [warn ] [Thread-1 (]: 33 of 39 WARN 1 match_suppliers_null_match ..................................... [WARN 1 in 0.03s]
+00:14:52.516247 [debug] [Thread-1 (]: Finished running node test.cl__wb_r1.match_suppliers_null_match
+00:14:52.517432 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_null_match: ROLLBACK
+00:14:52.518467 [debug] [Thread-3 (]: On test.cl__wb_r1.match_stores_null_match: ROLLBACK
+00:14:52.519496 [debug] [Thread-4 (]: On test.cl__wb_r1.match_products_null_match: Close
+00:14:52.519496 [debug] [Thread-3 (]: On test.cl__wb_r1.match_stores_null_match: Close
+00:14:52.519496 [info ] [Thread-4 (]: 31 of 39 PASS match_products_null_match ........................................ [PASS in 0.03s]
+00:14:52.520516 [info ] [Thread-3 (]: 32 of 39 PASS match_stores_null_match .......................................... [PASS in 0.03s]
+00:14:52.520516 [debug] [Thread-4 (]: Finished running node test.cl__wb_r1.match_products_null_match
+00:14:52.520516 [debug] [Thread-3 (]: Finished running node test.cl__wb_r1.match_stores_null_match
+00:14:52.521534 [debug] [Thread-2 (]: Began running node model.cl__wb_r1.mart_category_month
+00:14:52.521534 [debug] [Thread-1 (]: Began running node model.cl__wb_r1.mart_channel_month
+00:14:52.522543 [info ] [Thread-2 (]: 34 of 39 START sql table model marts.mart_category_month ....................... [RUN]
+00:14:52.522543 [debug] [Thread-4 (]: Began running node model.cl__wb_r1.mart_monthly_kpi
+00:14:52.522543 [debug] [Thread-3 (]: Began running node model.cl__wb_r1.mart_region_month
+00:14:52.523562 [info ] [Thread-1 (]: 35 of 39 START sql table model marts.mart_channel_month ........................ [RUN]
+00:14:52.523562 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.int_wide_ledger, now model.cl__wb_r1.mart_category_month)
+00:14:52.523562 [info ] [Thread-4 (]: 36 of 39 START sql table model marts.mart_monthly_kpi .......................... [RUN]
+00:14:52.524594 [info ] [Thread-3 (]: 37 of 39 START sql table model marts.mart_region_month ......................... [RUN]
+00:14:52.525599 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.match_suppliers_null_match, now model.cl__wb_r1.mart_channel_month)
+00:14:52.525599 [debug] [Thread-2 (]: Began compiling node model.cl__wb_r1.mart_category_month
+00:14:52.525599 [debug] [Thread-4 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.match_products_null_match, now model.cl__wb_r1.mart_monthly_kpi)
+00:14:52.526623 [debug] [Thread-3 (]: Re-using an available connection from the pool (formerly test.cl__wb_r1.match_stores_null_match, now model.cl__wb_r1.mart_region_month)
+00:14:52.526623 [debug] [Thread-1 (]: Began compiling node model.cl__wb_r1.mart_channel_month
+00:14:52.527642 [debug] [Thread-2 (]: Writing injected SQL for node "model.cl__wb_r1.mart_category_month"
+00:14:52.528649 [debug] [Thread-4 (]: Began compiling node model.cl__wb_r1.mart_monthly_kpi
+00:14:52.528649 [debug] [Thread-3 (]: Began compiling node model.cl__wb_r1.mart_region_month
+00:14:52.529684 [debug] [Thread-1 (]: Writing injected SQL for node "model.cl__wb_r1.mart_channel_month"
+00:14:52.531792 [debug] [Thread-4 (]: Writing injected SQL for node "model.cl__wb_r1.mart_monthly_kpi"
+00:14:52.532803 [debug] [Thread-3 (]: Writing injected SQL for node "model.cl__wb_r1.mart_region_month"
+00:14:52.533808 [debug] [Thread-2 (]: Began executing node model.cl__wb_r1.mart_category_month
+00:14:52.544830 [debug] [Thread-1 (]: Began executing node model.cl__wb_r1.mart_channel_month
+00:14:52.558423 [debug] [Thread-2 (]: Writing runtime sql for node "model.cl__wb_r1.mart_category_month"
+00:14:52.560607 [debug] [Thread-1 (]: Writing runtime sql for node "model.cl__wb_r1.mart_channel_month"
+00:14:52.561721 [debug] [Thread-3 (]: Began executing node model.cl__wb_r1.mart_region_month
+00:14:52.561721 [debug] [Thread-4 (]: Began executing node model.cl__wb_r1.mart_monthly_kpi
+00:14:52.563752 [debug] [Thread-3 (]: Writing runtime sql for node "model.cl__wb_r1.mart_region_month"
+00:14:52.564772 [debug] [Thread-4 (]: Writing runtime sql for node "model.cl__wb_r1.mart_monthly_kpi"
+00:14:52.566094 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_category_month"
+00:14:52.566094 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_category_month: BEGIN
+00:14:52.567112 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.567112 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_channel_month"
+00:14:52.567112 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_channel_month: BEGIN
+00:14:52.567112 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.mart_region_month"
+00:14:52.568578 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.568578 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.568578 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.mart_monthly_kpi"
+00:14:52.568578 [debug] [Thread-3 (]: On model.cl__wb_r1.mart_region_month: BEGIN
+00:14:52.569584 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_category_month"
+00:14:52.569584 [debug] [Thread-4 (]: On model.cl__wb_r1.mart_monthly_kpi: BEGIN
+00:14:52.569584 [debug] [Thread-3 (]: Opening a new connection, currently in state closed
+00:14:52.569584 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.569584 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_category_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_category_month"} */
+
+    
+
+    create  table
+      "_wb_r1"."marts"."mart_category_month__dbt_tmp"
+  
+    
+    as (
+      -- 生成物：报表汇总模型（品类月报 = 维度×指标）
+select
+date_trunc('month', doc_date) as "月份",
+category as "品类",
+    sum(sales_net) as "销售额",
+    sum(sales_cost) as "销售成本",
+    round(sum(gross_profit) / nullif(sum(sales_net), 0), 4) as "毛利率"
+from "_wb_r1"."intermediate"."int_wide_ledger"
+where date_trunc('month', doc_date) < date_trunc('month', current_date)
+group by 1, 2
+    );
+    
+  
+00:14:52.570760 [debug] [Thread-4 (]: Opening a new connection, currently in state closed
+00:14:52.570760 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_channel_month"
+00:14:52.570760 [debug] [Thread-3 (]: SQL status: OK in 0.002 seconds
+00:14:52.571897 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_channel_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_channel_month"} */
+
+    
+
+    create  table
+      "_wb_r1"."marts"."mart_channel_month__dbt_tmp"
+  
+    
+    as (
+      -- 生成物：报表汇总模型（渠道月报 = 维度×指标）
+select
+date_trunc('month', doc_date) as "月份",
+channel as "渠道",
+    sum(sales_net) as "销售额",
+    sum(gross_profit) as "毛利"
+from "_wb_r1"."intermediate"."int_wide_ledger"
+where date_trunc('month', doc_date) < date_trunc('month', current_date)
+group by 1, 2
+    );
+    
+  
+00:14:52.571897 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.mart_region_month"
+00:14:52.572907 [debug] [Thread-4 (]: SQL status: OK in 0.002 seconds
+00:14:52.572907 [debug] [Thread-3 (]: On model.cl__wb_r1.mart_region_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_region_month"} */
+
+    
+
+    create  table
+      "_wb_r1"."marts"."mart_region_month__dbt_tmp"
+  
+    
+    as (
+      -- 生成物：报表汇总模型（大区月报 = 维度×指标）
+select
+date_trunc('month', doc_date) as "月份",
+region_name as "大区",
+    sum(sales_net) as "销售额",
+    sum(gross_profit) as "毛利"
+from "_wb_r1"."intermediate"."int_wide_ledger"
+where date_trunc('month', doc_date) < date_trunc('month', current_date)
+group by 1, 2
+    );
+    
+  
+00:14:52.572907 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.mart_monthly_kpi"
+00:14:52.573916 [debug] [Thread-4 (]: On model.cl__wb_r1.mart_monthly_kpi: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_monthly_kpi"} */
+
+    
+
+    create  table
+      "_wb_r1"."marts"."mart_monthly_kpi__dbt_tmp"
+  
+    
+    as (
+      -- 生成物：报表汇总模型（月度经营总览 = 维度×指标）
+select
+date_trunc('month', doc_date) as "月份",
+    sum(sales_net) as "销售额",
+    sum(gross_profit) as "毛利",
+    round(sum(gross_profit) / nullif(sum(sales_net), 0), 4) as "毛利率"
+from "_wb_r1"."intermediate"."int_wide_ledger"
+where date_trunc('month', doc_date) < date_trunc('month', current_date)
+group by 1
+    );
+    
+  
+00:14:52.579592 [debug] [Thread-2 (]: SQL status: OK in 0.008 seconds
+00:14:52.581966 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_category_month"
+00:14:52.581966 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_category_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_category_month"} */
+alter table "_wb_r1"."marts"."mart_category_month__dbt_tmp" rename to "mart_category_month"
+00:14:52.582978 [debug] [Thread-1 (]: SQL status: OK in 0.010 seconds
+00:14:52.584019 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_channel_month"
+00:14:52.584019 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_channel_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_channel_month"} */
+alter table "_wb_r1"."marts"."mart_channel_month__dbt_tmp" rename to "mart_channel_month"
+00:14:52.585438 [debug] [Thread-2 (]: SQL status: OK in 0.002 seconds
+00:14:52.585438 [debug] [Thread-4 (]: SQL status: OK in 0.012 seconds
+00:14:52.585438 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.589449 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_category_month: COMMIT
+00:14:52.589449 [debug] [Thread-3 (]: SQL status: OK in 0.016 seconds
+00:14:52.590449 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.mart_monthly_kpi"
+00:14:52.591448 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_channel_month: COMMIT
+00:14:52.592850 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_category_month"
+00:14:52.593858 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.mart_region_month"
+00:14:52.594916 [debug] [Thread-4 (]: On model.cl__wb_r1.mart_monthly_kpi: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_monthly_kpi"} */
+alter table "_wb_r1"."marts"."mart_monthly_kpi__dbt_tmp" rename to "mart_monthly_kpi"
+00:14:52.594916 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_channel_month"
+00:14:52.594916 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_category_month: COMMIT
+00:14:52.595938 [debug] [Thread-3 (]: On model.cl__wb_r1.mart_region_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_region_month"} */
+alter table "_wb_r1"."marts"."mart_region_month__dbt_tmp" rename to "mart_region_month"
+00:14:52.595938 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_channel_month: COMMIT
+00:14:52.595938 [debug] [Thread-4 (]: SQL status: OK in 0.000 seconds
+00:14:52.596959 [debug] [Thread-4 (]: On model.cl__wb_r1.mart_monthly_kpi: COMMIT
+00:14:52.597977 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.mart_monthly_kpi"
+00:14:52.597977 [debug] [Thread-4 (]: On model.cl__wb_r1.mart_monthly_kpi: COMMIT
+00:14:52.597977 [debug] [Thread-3 (]: SQL status: OK in 0.002 seconds
+00:14:52.598998 [debug] [Thread-3 (]: On model.cl__wb_r1.mart_region_month: COMMIT
+00:14:52.600023 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.mart_region_month"
+00:14:52.600023 [debug] [Thread-3 (]: On model.cl__wb_r1.mart_region_month: COMMIT
+00:14:52.600023 [debug] [Thread-2 (]: SQL status: OK in 0.004 seconds
+00:14:52.601052 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_category_month"
+00:14:52.601052 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_category_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_category_month"} */
+
+      drop table if exists "_wb_r1"."marts"."mart_category_month__dbt_backup" cascade
+    
+00:14:52.602058 [debug] [Thread-1 (]: SQL status: OK in 0.005 seconds
+00:14:52.604089 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_channel_month"
+00:14:52.604089 [debug] [Thread-2 (]: SQL status: OK in 0.002 seconds
+00:14:52.604089 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_channel_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_channel_month"} */
+
+      drop table if exists "_wb_r1"."marts"."mart_channel_month__dbt_backup" cascade
+    
+00:14:52.605146 [debug] [Thread-4 (]: SQL status: OK in 0.006 seconds
+00:14:52.605146 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_category_month: Close
+00:14:52.606152 [debug] [Thread-4 (]: Using duckdb connection "model.cl__wb_r1.mart_monthly_kpi"
+00:14:52.607256 [debug] [Thread-3 (]: SQL status: OK in 0.007 seconds
+00:14:52.607256 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.607256 [debug] [Thread-4 (]: On model.cl__wb_r1.mart_monthly_kpi: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_monthly_kpi"} */
+
+      drop table if exists "_wb_r1"."marts"."mart_monthly_kpi__dbt_backup" cascade
+    
+00:14:52.608419 [debug] [Thread-2 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB729C2C0>]}
+00:14:52.609429 [debug] [Thread-3 (]: Using duckdb connection "model.cl__wb_r1.mart_region_month"
+00:14:52.610469 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_channel_month: Close
+00:14:52.611480 [info ] [Thread-2 (]: 34 of 39 OK created sql table model marts.mart_category_month .................. [OK in 0.08s]
+00:14:52.611480 [debug] [Thread-3 (]: On model.cl__wb_r1.mart_region_month: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_region_month"} */
+
+      drop table if exists "_wb_r1"."marts"."mart_region_month__dbt_backup" cascade
+    
+00:14:52.612486 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB729F4A0>]}
+00:14:52.612486 [debug] [Thread-4 (]: SQL status: OK in 0.001 seconds
+00:14:52.612486 [debug] [Thread-2 (]: Finished running node model.cl__wb_r1.mart_category_month
+00:14:52.613491 [info ] [Thread-1 (]: 35 of 39 OK created sql table model marts.mart_channel_month ................... [OK in 0.09s]
+00:14:52.613491 [debug] [Thread-4 (]: On model.cl__wb_r1.mart_monthly_kpi: Close
+00:14:52.613491 [debug] [Thread-3 (]: SQL status: OK in 0.001 seconds
+00:14:52.614981 [debug] [Thread-2 (]: Began running node model.cl__wb_r1.mart_store_rank
+00:14:52.614981 [debug] [Thread-1 (]: Finished running node model.cl__wb_r1.mart_channel_month
+00:14:52.616010 [debug] [Thread-3 (]: On model.cl__wb_r1.mart_region_month: Close
+00:14:52.616010 [debug] [Thread-4 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB719CC80>]}
+00:14:52.617051 [info ] [Thread-2 (]: 38 of 39 START sql table model marts.mart_store_rank ........................... [RUN]
+00:14:52.617051 [debug] [Thread-1 (]: Began running node model.cl__wb_r1.mart_supplier_rank
+00:14:52.618076 [debug] [Thread-3 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB719F350>]}
+00:14:52.618076 [info ] [Thread-4 (]: 36 of 39 OK created sql table model marts.mart_monthly_kpi ..................... [OK in 0.09s]
+00:14:52.618076 [debug] [Thread-2 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.mart_category_month, now model.cl__wb_r1.mart_store_rank)
+00:14:52.619097 [info ] [Thread-1 (]: 39 of 39 START sql table model marts.mart_supplier_rank ........................ [RUN]
+00:14:52.619097 [info ] [Thread-3 (]: 37 of 39 OK created sql table model marts.mart_region_month .................... [OK in 0.09s]
+00:14:52.619097 [debug] [Thread-4 (]: Finished running node model.cl__wb_r1.mart_monthly_kpi
+00:14:52.620104 [debug] [Thread-2 (]: Began compiling node model.cl__wb_r1.mart_store_rank
+00:14:52.620104 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.cl__wb_r1.mart_channel_month, now model.cl__wb_r1.mart_supplier_rank)
+00:14:52.620104 [debug] [Thread-3 (]: Finished running node model.cl__wb_r1.mart_region_month
+00:14:52.622119 [debug] [Thread-2 (]: Writing injected SQL for node "model.cl__wb_r1.mart_store_rank"
+00:14:52.622119 [debug] [Thread-1 (]: Began compiling node model.cl__wb_r1.mart_supplier_rank
+00:14:52.623247 [debug] [Thread-1 (]: Writing injected SQL for node "model.cl__wb_r1.mart_supplier_rank"
+00:14:52.625290 [debug] [Thread-2 (]: Began executing node model.cl__wb_r1.mart_store_rank
+00:14:52.627312 [debug] [Thread-2 (]: Writing runtime sql for node "model.cl__wb_r1.mart_store_rank"
+00:14:52.627312 [debug] [Thread-1 (]: Began executing node model.cl__wb_r1.mart_supplier_rank
+00:14:52.629332 [debug] [Thread-1 (]: Writing runtime sql for node "model.cl__wb_r1.mart_supplier_rank"
+00:14:52.630343 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_store_rank"
+00:14:52.630343 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_store_rank: BEGIN
+00:14:52.630343 [debug] [Thread-2 (]: Opening a new connection, currently in state closed
+00:14:52.631370 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_supplier_rank"
+00:14:52.631370 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_supplier_rank: BEGIN
+00:14:52.631370 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.632379 [debug] [Thread-1 (]: Opening a new connection, currently in state closed
+00:14:52.632379 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_store_rank"
+00:14:52.632379 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_store_rank: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_store_rank"} */
+
+    
+
+    create  table
+      "_wb_r1"."marts"."mart_store_rank__dbt_tmp"
+  
+    
+    as (
+      -- 生成物：报表汇总模型（门店排行 = 维度×指标）
+select
+store_name as "门店",
+    sum(sales_net) as "销售额",
+    sum(gross_profit) as "毛利",
+    sum(stock_qty) as "期末库存量"
+from "_wb_r1"."intermediate"."int_wide_ledger"
+group by 1
+    );
+    
+  
+00:14:52.633402 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.633402 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_supplier_rank"
+00:14:52.633402 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_supplier_rank: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_supplier_rank"} */
+
+    
+
+    create  table
+      "_wb_r1"."marts"."mart_supplier_rank__dbt_tmp"
+  
+    
+    as (
+      -- 生成物：报表汇总模型（供应商采购排行 = 维度×指标）
+select
+supplier_name as "供应商",
+    sum(purchase_amt) as "采购额"
+from "_wb_r1"."intermediate"."int_wide_ledger"
+group by 1
+    );
+    
+  
+00:14:52.638827 [debug] [Thread-1 (]: SQL status: OK in 0.005 seconds
+00:14:52.639843 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_supplier_rank"
+00:14:52.640858 [debug] [Thread-2 (]: SQL status: OK in 0.008 seconds
+00:14:52.640858 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_supplier_rank: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_supplier_rank"} */
+alter table "_wb_r1"."marts"."mart_supplier_rank__dbt_tmp" rename to "mart_supplier_rank"
+00:14:52.641884 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_store_rank"
+00:14:52.643251 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_store_rank: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_store_rank"} */
+alter table "_wb_r1"."marts"."mart_store_rank__dbt_tmp" rename to "mart_store_rank"
+00:14:52.643251 [debug] [Thread-1 (]: SQL status: OK in 0.001 seconds
+00:14:52.644370 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_supplier_rank: COMMIT
+00:14:52.644370 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.644370 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_supplier_rank"
+00:14:52.645398 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_store_rank: COMMIT
+00:14:52.646561 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_supplier_rank: COMMIT
+00:14:52.646561 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_store_rank"
+00:14:52.646561 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_store_rank: COMMIT
+00:14:52.649624 [debug] [Thread-1 (]: SQL status: OK in 0.003 seconds
+00:14:52.650630 [debug] [Thread-1 (]: Using duckdb connection "model.cl__wb_r1.mart_supplier_rank"
+00:14:52.650630 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_supplier_rank: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_supplier_rank"} */
+
+      drop table if exists "_wb_r1"."marts"."mart_supplier_rank__dbt_backup" cascade
+    
+00:14:52.651639 [debug] [Thread-2 (]: SQL status: OK in 0.005 seconds
+00:14:52.652654 [debug] [Thread-2 (]: Using duckdb connection "model.cl__wb_r1.mart_store_rank"
+00:14:52.652654 [debug] [Thread-1 (]: SQL status: OK in 0.002 seconds
+00:14:52.653773 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_store_rank: /* {"app": "dbt", "dbt_version": "1.12.5", "profile_name": "cl", "target_name": "_wb_r1", "node_id": "model.cl__wb_r1.mart_store_rank"} */
+
+      drop table if exists "_wb_r1"."marts"."mart_store_rank__dbt_backup" cascade
+    
+00:14:52.654802 [debug] [Thread-1 (]: On model.cl__wb_r1.mart_supplier_rank: Close
+00:14:52.654802 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB712A240>]}
+00:14:52.655824 [info ] [Thread-1 (]: 39 of 39 OK created sql table model marts.mart_supplier_rank ................... [OK in 0.03s]
+00:14:52.655824 [debug] [Thread-2 (]: SQL status: OK in 0.001 seconds
+00:14:52.655824 [debug] [Thread-1 (]: Finished running node model.cl__wb_r1.mart_supplier_rank
+00:14:52.656831 [debug] [Thread-2 (]: On model.cl__wb_r1.mart_store_rank: Close
+00:14:52.657842 [debug] [Thread-2 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '0951c35f-292f-44ab-be66-8f6dbbb1f744', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB7241370>]}
+00:14:52.657842 [info ] [Thread-2 (]: 38 of 39 OK created sql table model marts.mart_store_rank ...................... [OK in 0.04s]
+00:14:52.657842 [debug] [Thread-2 (]: Finished running node model.cl__wb_r1.mart_store_rank
+00:14:52.659891 [debug] [MainThread]: Using duckdb connection "master"
+00:14:52.659891 [debug] [MainThread]: On master: BEGIN
+00:14:52.659891 [debug] [MainThread]: Opening a new connection, currently in state closed
+00:14:52.660898 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+00:14:52.660898 [debug] [MainThread]: On master: COMMIT
+00:14:52.660898 [debug] [MainThread]: Using duckdb connection "master"
+00:14:52.660898 [debug] [MainThread]: On master: COMMIT
+00:14:52.661911 [debug] [MainThread]: SQL status: OK in 0.000 seconds
+00:14:52.661911 [debug] [MainThread]: On master: Close
+00:14:52.661911 [debug] [MainThread]: Connection 'master' was properly closed.
+00:14:52.661911 [debug] [MainThread]: Connection 'create__wb_r1_staging' was properly closed.
+00:14:52.662921 [debug] [MainThread]: Connection 'create__wb_r1_intermediate' was properly closed.
+00:14:52.662921 [debug] [MainThread]: Connection 'create__wb_r1_marts' was properly closed.
+00:14:52.662921 [debug] [MainThread]: Connection 'list__wb_r1_intermediate' was properly closed.
+00:14:52.662921 [debug] [MainThread]: Connection 'list__wb_r1_marts' was properly closed.
+00:14:52.662921 [debug] [MainThread]: Connection 'list__wb_r1_staging' was properly closed.
+00:14:52.662921 [debug] [MainThread]: Connection 'model.cl__wb_r1.mart_supplier_rank' was properly closed.
+00:14:52.662921 [debug] [MainThread]: Connection 'model.cl__wb_r1.mart_store_rank' was properly closed.
+00:14:52.663935 [debug] [MainThread]: Connection 'model.cl__wb_r1.mart_region_month' was properly closed.
+00:14:52.663935 [debug] [MainThread]: Connection 'model.cl__wb_r1.mart_monthly_kpi' was properly closed.
+00:14:52.663935 [info ] [MainThread]: 
+00:14:52.663935 [info ] [MainThread]: Finished running 6 table models, 27 data tests, 6 view models in 0 hours 0 minutes and 0.82 seconds (0.82s).
+00:14:52.666959 [debug] [MainThread]: Command end result
+00:14:52.693430 [debug] [MainThread]: Wrote artifact WritableManifest to D:\Workshop\3000-Projects\3005-DA-AI Native数据底座系统\tests\fixtures\instances\_wb_r1\pipeline\target\manifest.json
+00:14:52.696497 [debug] [MainThread]: Wrote artifact SemanticManifest to D:\Workshop\3000-Projects\3005-DA-AI Native数据底座系统\tests\fixtures\instances\_wb_r1\pipeline\target\semantic_manifest.json
+00:14:52.699598 [debug] [MainThread]: Wrote artifact OsiDocument to D:\Workshop\3000-Projects\3005-DA-AI Native数据底座系统\tests\fixtures\instances\_wb_r1\pipeline\target\osi_document.json
+00:14:52.705614 [debug] [MainThread]: Wrote artifact RunExecutionResult to D:\Workshop\3000-Projects\3005-DA-AI Native数据底座系统\tests\fixtures\instances\_wb_r1\pipeline\target\run_results.json
+00:14:52.705614 [info ] [MainThread]: 
+00:14:52.706614 [info ] [MainThread]: Completed with 6 warnings:
+00:14:52.706614 [info ] [MainThread]: 
+00:14:52.706614 [warn ] [MainThread]: [WARNING]: in test match_stores_fanout (tests\match_stores_fanout.sql)
+00:14:52.706614 [warn ] [MainThread]: [WARNING]: Got 1 result, configured to warn if != 0
+00:14:52.707614 [info ] [MainThread]: 
+00:14:52.707614 [info ] [MainThread]:   compiled code at target\compiled\cl__wb_r1\tests\match_stores_fanout.sql
+00:14:52.707614 [info ] [MainThread]: 
+00:14:52.707614 [warn ] [MainThread]: [WARNING]: in test accepted_values_stg_fact_ledger_channel______ (models\staging\stg_fact_ledger.yml)
+00:14:52.707614 [warn ] [MainThread]: [WARNING]: Got 1 result, configured to warn if != 0
+00:14:52.707614 [info ] [MainThread]: 
+00:14:52.709103 [info ] [MainThread]:   compiled code at target\compiled\cl__wb_r1\models\staging\stg_fact_ledger.yml\accepted_values_stg_fact_ledger_channel______.sql
+00:14:52.709103 [info ] [MainThread]: 
+00:14:52.709103 [warn ] [MainThread]: [WARNING]: in test accepted_values_stg_products_category_________ (models\staging\stg_products.yml)
+00:14:52.709103 [warn ] [MainThread]: [WARNING]: Got 1 result, configured to warn if != 0
+00:14:52.709103 [info ] [MainThread]: 
+00:14:52.710164 [info ] [MainThread]:   compiled code at target\compiled\cl__wb_r1\models\staging\stg_products.yml\accepted_values_stg_products_category_________.sql
+00:14:52.710164 [info ] [MainThread]: 
+00:14:52.710164 [warn ] [MainThread]: [WARNING]: in test range_fact_ledger_quantity (tests\range_fact_ledger_quantity.sql)
+00:14:52.710164 [warn ] [MainThread]: [WARNING]: Got 2 results, configured to warn if != 0
+00:14:52.710164 [info ] [MainThread]: 
+00:14:52.711294 [info ] [MainThread]:   compiled code at target\compiled\cl__wb_r1\tests\range_fact_ledger_quantity.sql
+00:14:52.711294 [info ] [MainThread]: 
+00:14:52.711294 [warn ] [MainThread]: [WARNING]: in test range_stock_snapshot_ending_qty (tests\range_stock_snapshot_ending_qty.sql)
+00:14:52.711294 [warn ] [MainThread]: [WARNING]: Got 1 result, configured to warn if != 0
+00:14:52.711294 [info ] [MainThread]: 
+00:14:52.711294 [info ] [MainThread]:   compiled code at target\compiled\cl__wb_r1\tests\range_stock_snapshot_ending_qty.sql
+00:14:52.712332 [info ] [MainThread]: 
+00:14:52.712332 [warn ] [MainThread]: [WARNING]: in test match_suppliers_null_match (tests\match_suppliers_null_match.sql)
+00:14:52.712332 [warn ] [MainThread]: [WARNING]: Got 1 result, configured to warn if != 0
+00:14:52.712332 [info ] [MainThread]: 
+00:14:52.712332 [info ] [MainThread]:   compiled code at target\compiled\cl__wb_r1\tests\match_suppliers_null_match.sql
+00:14:52.713370 [info ] [MainThread]: 
+00:14:52.713370 [info ] [MainThread]: Done. PASS=33 WARN=6 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=39
+00:14:52.713370 [debug] [MainThread]: Command `dbt build` succeeded at 00:14:52.713370 after 3.46 seconds
+00:14:52.714405 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB3547D70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB5DB0B60>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x000001AEB2E5A600>]}
+00:14:52.714405 [debug] [MainThread]: Flushing usage events
+00:14:54.462198 [debug] [MainThread]: An error was encountered while trying to flush usage events

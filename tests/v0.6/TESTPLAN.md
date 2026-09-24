@@ -34,10 +34,10 @@ sha256sum instances/sales/*.yml instances/restaurant/*.yml instances/retail/*.ym
 ## 2. 基线装配（三步链 + 收获）
 
 ```bash
-.venv/Scripts/python.exe tests/v0.6/generate.py                      # 幂等重建 instances/_wb_r1/
+.venv/Scripts/python.exe tests/v0.6/generate.py                      # 幂等重建 tests/fixtures/instances/_wb_r1/
 .venv/Scripts/python.exe -m semantic.ingest_run  --instance _wb_r1   # 摄取+契约校验
 .venv/Scripts/python.exe -m semantic.compile_dbt --instance _wb_r1   # 配置→dbt project
-(cd instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors | tail -5)
+(cd tests/fixtures/instances/_wb_r1/pipeline && ../../../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors | tail -5)
 .venv/Scripts/python.exe -m semantic.harvest --instance _wb_r1       # 匹配契约收获（R2 裁定 C：匹配契约行经此写入 contract_report）
 ```
 
@@ -83,14 +83,14 @@ curl -s -o judge/actual_impact.json -w '%{http_code}\n' \
 
 ### W-03 行数对数（raw 各源表 + 宽表）
 
-> R2 裁定 B：宽表物化名 = `intermediate.int_<wide声明名>`（读 `instances/_wb_r1/wide.yml` 的 `wide.name` 拼接 `int_` 前缀，本实例即 `int_wide_ledger`）。answer 的语义标签名与物化名解耦，采集按物化名。
+> R2 裁定 B：宽表物化名 = `intermediate.int_<wide声明名>`（读 `tests/fixtures/instances/_wb_r1/wide.yml` 的 `wide.name` 拼接 `int_` 前缀，本实例即 `int_wide_ledger`）。answer 的语义标签名与物化名解耦，采集按物化名。
 
 ```bash
 .venv/Scripts/python.exe - > judge/actual_rows.json <<'EOF'
 import json, sys, time
 import duckdb, yaml
-path = "data/warehouse/_wb_r1.duckdb"
-wide_name = yaml.safe_load(open("instances/_wb_r1/wide.yml", encoding="utf-8"))["wide"]["name"]
+path = "tests/fixtures/data/warehouse/_wb_r1.duckdb"
+wide_name = yaml.safe_load(open("tests/fixtures/instances/_wb_r1/wide.yml", encoding="utf-8"))["wide"]["name"]
 con = None
 for i in range(5):                       # 跑批写锁重试（只读连接）
     try:
@@ -263,8 +263,8 @@ expect：
 ```bash
 # 1) 采集 before：文件字节、mtime、目录清单
 curl -s -o judge/actual_B01_before.json http://127.0.0.1:8620/api/config/_wb_r1/metrics
-stat -c '%Y %s' instances/_wb_r1/metrics.yml > judge/actual_B01_stat_before.txt
-ls -1 instances/_wb_r1 > judge/actual_B01_dir_before.txt
+stat -c '%Y %s' tests/fixtures/instances/_wb_r1/metrics.yml > judge/actual_B01_stat_before.txt
+ls -1 tests/fixtures/instances/_wb_r1 > judge/actual_B01_dir_before.txt
 # 2) 草稿 = 现内容 + 追加一行注释（合法草稿，交叉校验应通过）
 .venv/Scripts/python.exe - <<'EOF'
 import json, urllib.request, urllib.error
@@ -280,8 +280,8 @@ json.dump({'status': code, 'body': body}, open('judge/actual_B01_validate.json',
           ensure_ascii=False, indent=2, sort_keys=True)
 EOF
 # 3) 采集 after（同 1）
-stat -c '%Y %s' instances/_wb_r1/metrics.yml > judge/actual_B01_stat_after.txt
-ls -1 instances/_wb_r1 > judge/actual_B01_dir_after.txt
+stat -c '%Y %s' tests/fixtures/instances/_wb_r1/metrics.yml > judge/actual_B01_stat_after.txt
+ls -1 tests/fixtures/instances/_wb_r1 > judge/actual_B01_dir_after.txt
 ```
 
 expect：
@@ -311,8 +311,8 @@ def save(draft, tag):
               ensure_ascii=False, indent=2, sort_keys=True)
 save(probe_a, 'syntax'); save(probe_b, 'cross')
 EOF
-stat -c '%Y %s' instances/_wb_r1/metrics.yml > judge/actual_B02_stat_after.txt
-ls instances/_wb_r1/onboarding/config_history 2>/dev/null > judge/actual_B02_backup_check.txt; echo "exit=$?" >> judge/actual_B02_backup_check.txt
+stat -c '%Y %s' tests/fixtures/instances/_wb_r1/metrics.yml > judge/actual_B02_stat_after.txt
+ls tests/fixtures/instances/_wb_r1/onboarding/config_history 2>/dev/null > judge/actual_B02_backup_check.txt; echo "exit=$?" >> judge/actual_B02_backup_check.txt
 ```
 
 expect：
@@ -325,7 +325,7 @@ expect：
 ### B-03 保存合法 → 字节级回读一致 + 备份存在
 
 ```bash
-stat -c '%Y %s' instances/_wb_r1/dimensions.yml > judge/actual_B03_stat_before.txt
+stat -c '%Y %s' tests/fixtures/instances/_wb_r1/dimensions.yml > judge/actual_B03_stat_before.txt
 .venv/Scripts/python.exe - <<'EOF'
 import json, urllib.request, urllib.error
 def get(block):
@@ -347,12 +347,12 @@ after = get('dimensions')
 json.dump(after, open('judge/actual_B03_readback.json','w',encoding='utf-8'),
           ensure_ascii=False, indent=2, sort_keys=True)
 import pathlib
-bp = pathlib.Path('instances/_wb_r1/onboarding/config_history/dimensions.prev.yml')
+bp = pathlib.Path('tests/fixtures/instances/_wb_r1/onboarding/config_history/dimensions.prev.yml')
 json.dump({'backup_exists': bp.exists(),
            'backup_bytes_equal_to_saved': bp.exists() and bp.read_bytes() == before['content'].encode('utf-8')},
           open('judge/actual_B03_backup.json','w',encoding='utf-8'), indent=2, sort_keys=True)
 EOF
-stat -c '%Y %s' instances/_wb_r1/dimensions.yml > judge/actual_B03_stat_after.txt
+stat -c '%Y %s' tests/fixtures/instances/_wb_r1/dimensions.yml > judge/actual_B03_stat_after.txt
 ```
 
 expect：
@@ -499,7 +499,7 @@ expect：
 
 ### MR-01 校验-保存-回读幂等
 
-对六个块 `instance sources wide dimensions metrics dashboard` 逐块执行：GET 取原文 → POST validate（期望 ok=true，逐块记录）→ POST save（rebuild=false）→ 再 GET：`content` 与保存前**逐字节一致** 且 `parsed_ok=true`；`instances/_wb_r1/onboarding/config_history/<block>.prev.yml` 存在。
+对六个块 `instance sources wide dimensions metrics dashboard` 逐块执行：GET 取原文 → POST validate（期望 ok=true，逐块记录）→ POST save（rebuild=false）→ 再 GET：`content` 与保存前**逐字节一致** 且 `parsed_ok=true`；`tests/fixtures/instances/_wb_r1/onboarding/config_history/<block>.prev.yml` 存在。
 ```json
 {"id": "MR-01", "observation": {"per_block": {"<block>": {"validate_ok": true, "save_status": 200,
   "readback_bytes_equal": true, "readback_parsed_ok": true, "backup_exists": true}}, "all_pass": true}}
@@ -509,11 +509,11 @@ expect：
 
 保存 `metrics` 块（原样内容）前后，对其余五块 yml 文件做 `sha256sum`；五个哈希必须逐一不变。
 ```bash
-sha256sum instances/_wb_r1/instance.yml instances/_wb_r1/sources.yml instances/_wb_r1/wide.yml \
-          instances/_wb_r1/dimensions.yml instances/_wb_r1/dashboard.yml > judge/mr02_before.txt
+sha256sum tests/fixtures/instances/_wb_r1/instance.yml tests/fixtures/instances/_wb_r1/sources.yml tests/fixtures/instances/_wb_r1/wide.yml \
+          tests/fixtures/instances/_wb_r1/dimensions.yml tests/fixtures/instances/_wb_r1/dashboard.yml > judge/mr02_before.txt
 # （此处执行 metrics 的原样 save，命令同 B-06 但 rebuild=false）
-sha256sum instances/_wb_r1/instance.yml instances/_wb_r1/sources.yml instances/_wb_r1/wide.yml \
-          instances/_wb_r1/dimensions.yml instances/_wb_r1/dashboard.yml > judge/mr02_after.txt
+sha256sum tests/fixtures/instances/_wb_r1/instance.yml tests/fixtures/instances/_wb_r1/sources.yml tests/fixtures/instances/_wb_r1/wide.yml \
+          tests/fixtures/instances/_wb_r1/dimensions.yml tests/fixtures/instances/_wb_r1/dashboard.yml > judge/mr02_after.txt
 diff judge/mr02_before.txt judge/mr02_after.txt
 ```
 ```json
@@ -649,12 +649,12 @@ curl -s -o judge/actual_MR05_switchback.json -w '%{http_code}\n' -X POST \
 for pid in $(netstat -ano | grep ":8630" | grep LISTENING | awk '{print $5}' | sort -u); do taskkill //F //PID $pid; done
 netstat -ano | grep ":8630" | grep LISTENING && echo "8630 STILL BUSY" || echo "8630 free"   # 期望 free
 # 1) 基线哈希快照（变异期间真实仓库零改动的对照面）
-sha256sum instances/sales/*.yml instances/_wb_r1/*.yml > judge/actual_B09_hash_before.txt
+sha256sum instances/sales/*.yml tests/fixtures/instances/_wb_r1/*.yml > judge/actual_B09_hash_before.txt
 # 2) 生成副本（真实仓库零改动）
 .venv/Scripts/python.exe tests/v0.6/mutations/apply_mutation.py M
 # 3) 给副本补库文件（M1~M6 通用，保真度：副本 duckdb 从基线 build 后复制，保证副本数据面与真身一致）
 mkdir -p build/_mut_M/data/warehouse
-cp data/warehouse/_wb_r1.duckdb build/_mut_M/data/warehouse/_wb_r1.duckdb
+cp tests/fixtures/data/warehouse/_wb_r1.duckdb build/_mut_M/tests/fixtures/data/warehouse/_wb_r1.duckdb
 # 4) 起 8630 副本服务——解释器必须用仓库根的绝对路径（R2 修正：相对路径 ../../../.venv 从副本目录解析越界）
 PY="$(pwd)/.venv/Scripts/python.exe"
 (cd build/_mut_M && "$PY" -m uvicorn app.main:app --host 127.0.0.1 --port 8630 \
@@ -668,7 +668,7 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8620/api/instance     
 curl -s -o judge/actual_B09_fidelity_pending_8630.json "http://127.0.0.1:8630/api/config/_wb_r1/pending"
 curl -s -o judge/actual_B09_fidelity_pending_8620.json "http://127.0.0.1:8620/api/config/_wb_r1/pending"
 # 不相等 = 副本失真，先修环境（重拷 duckdb）再跑探针，不得带病判 caught/survived
-sha256sum instances/sales/*.yml instances/_wb_r1/*.yml > judge/actual_B09_hash_during.txt
+sha256sum instances/sales/*.yml tests/fixtures/instances/_wb_r1/*.yml > judge/actual_B09_hash_during.txt
 diff judge/actual_B09_hash_before.txt judge/actual_B09_hash_during.txt   # 期望为空
 # 6) 跑探针（判据见下表；与正式 Case 相同命令、端口换 8630，输出存 judge/mut_M_probe_*.json）
 # 7) 副本收敛：杀 8630、删副本
@@ -735,11 +735,11 @@ expect：`{"official_hashes_unchanged": true}`（diff 为空；MR-05 的原样 s
 ## 9. 基线恢复（必做收尾）
 
 ```bash
-rm -rf instances/_wb_r1
+rm -rf tests/fixtures/instances/_wb_r1
 .venv/Scripts/python.exe tests/v0.6/generate.py
 .venv/Scripts/python.exe -m semantic.ingest_run  --instance _wb_r1
 .venv/Scripts/python.exe -m semantic.compile_dbt --instance _wb_r1
-(cd instances/_wb_r1/pipeline && ../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors | tail -3)
+(cd tests/fixtures/instances/_wb_r1/pipeline && ../../../../../.venv/Scripts/dbt.exe build --profiles-dir . --no-use-colors | tail -3)
 .venv/Scripts/python.exe -m semantic.harvest --instance _wb_r1
 curl -s -o judge/postrestore_pending.json -w '%{http_code}\n' http://127.0.0.1:8620/api/config/_wb_r1/pending
 ```
