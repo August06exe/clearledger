@@ -105,7 +105,7 @@ curl -s -X POST http://127.0.0.1:8620/api/settings -H "Content-Type: application
 ### R-06 备份 / 恢复 / 迁移新机器
 - 备份：跑 `备份数据.bat`（PowerShell 时间戳，连 .wal 一起，失败显式报错）
 - 恢复：把 warehouse.duckdb 拷回 `data/warehouse/` 即可
-- 迁移：整个目录拷走（含 .venv 可作废重建）→ 新机 `git clone` 或拷贝 → 双击 `启动明账.exe`（首次自动建 venv 装依赖+演示数据+首跑，见 R-12）
+- 迁移：整个目录拷走（含 .venv 可作废重建）→ 新机 `git clone` 或拷贝 → 从 GitHub Releases 下载 `启动明账.exe` 放仓库根目录双击（首次自动建 venv 装依赖+演示数据+首跑，见 R-12）
 
 ### R-07 重启门户（Windows）
 ```bash
@@ -147,8 +147,8 @@ curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/status"
 
 ### R-12 启动器 exe 与首开 AI 提醒（v0.4）
 
-- **双击 `启动明账.exe`**（仓库根目录，PyInstaller 单文件）：自动走完 点火指南 Step 1~6（venv→依赖→演示数据→首跑→门户→开浏览器）；已初始化过的环境秒开。杀端口、等就绪、`--smoke` 无头自测都在 `ops/launcher.py`。
-- **改了 launcher.py 要重打包**：命令在 `ops/launcher.py` 文件头 docstring（pyinstaller + ico 生成），产物 `启动明账.exe` 提交仓库。
+- **双击 `启动明账.exe`**（PyInstaller 单文件，从 GitHub Releases 下载，放在仓库根目录）：自动走完 点火指南 Step 1~6（venv→依赖→演示数据→首跑→门户→开浏览器）；已初始化过的环境秒开。杀端口、等就绪、`--smoke` 无头自测都在 `ops/launcher.py`。
+- **改了 launcher.py 要重打包**：命令在 `ops/launcher.py` 文件头 docstring（pyinstaller + ico 生成）；产物 `启动明账.exe` **不进 git**，用 `gh release create launcher-<日期> 启动明账.exe` 发到 GitHub Releases（2026-09-25 用户拍板：二进制出库，仓库只留源码）。
 - **首开 AI 提醒横幅**：新克隆首次打开门户会提示"明账是 AI-Native 的、如何让 agent 介入"，可勾选"下次不再提醒"（持久化在 `data/settings.json` 的 `ai_banner`）。随时在门户左侧「AI 接入」页查看指引/重开提醒。
 - 退役资产：`启动明账.bat`、`重建演示数据.bat`（功能已并入 exe，git 历史可找回）；`备份数据.bat` 保留。
 - **界面中文化别名层**（v0.4 收官）：`app/services/aliases.py` 从六份配置自动推导技术名→中文（源/清洗表←sources.title，宽表←主源标题，报表←dashboard.title，字段←cn/维度名），经 `/api/aliases` 供前端 `App.alias()/falias()` 用。改配置标题即自动生效，别名层只做展示不改数据层命名。
