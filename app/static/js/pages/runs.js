@@ -88,6 +88,11 @@ window.Pages.runs = {
       </div>
 
       <div class="card">
+        <h3>⏱ 瀑布图 <span class="sub" id="run-gantt-sub">加载中…</span></h3>
+        <div id="run-gantt" class="chart mt8"></div>
+      </div>
+
+      <div class="card">
         <h3>节点明细 <span class="sub">模型与测试</span></h3>
         <div style="max-height:460px;overflow:auto">
         <table class="tbl">
@@ -118,6 +123,19 @@ window.Pages.runs = {
       .map(k => `<span class="pipe-chip"><span class="dot ${DOT_CLASS[k] || 'dot-gray'}"></span>${STATUS_LABEL[k] || k} × ${counts[k]}</span>`)
       .join('') || '<span class="muted">无</span>';
 
+    // 瀑布图（run_results 时间轴；旧运行无数据时降级为提示，不弹 toast）
+    try {
+      const resp = await fetch('/api/runs/' + runId + '/gantt');
+      const g = await resp.json();
+      if (!resp.ok) throw new Error((g && g.detail) || 'HTTP ' + resp.status);
+      this.drawGantt(document.getElementById('run-gantt'), g);
+    } catch (e) {
+      const box = document.getElementById('run-gantt');
+      if (box) box.innerHTML = '<div class="empty-tip">瀑布图不可用：' + String(e.message || e).replace(/</g, '&lt;') + '</div>';
+      const sub = document.getElementById('run-gantt-sub');
+      if (sub) sub.textContent = '—';
+    }
+
     // 日志
     try {
       const log = await fetch(`/api/runs/${runId}/log?tail=400`).then(x => x.text());
@@ -127,5 +145,70 @@ window.Pages.runs = {
     } catch (_) {
       document.getElementById('run-log').textContent = '(日志加载失败)';
     }
+  },
+
+  // ⏱ 瀑布图：ECharts custom series——y=节点（offset 升序、最早上方），x=秒，横条=起止区间
+  drawGantt(box, g) {
+    if (!box) return;
+    const num = v => { const n = Number(v); return isNaN(n) ? 0 : n; };
+    // 契约保证后端按 offset 升序返回；这里再排一次，确保 y 轴「最早上方」不依赖上游
+    const nodes = (g.nodes || []).slice().sort((a, b) => num(a.offset_s) - num(b.offset_s));
+    if (!nodes.length) { box.innerHTML = '<div class="empty-tip">无节点数据</div>'; return; }
+    // y 轴自适应高度：每节点 ≥14px（留 20px 更易读），整图 ≥300px
+    box.style.height = Math.max(300, nodes.length * 20 + 40) + 'px';
+    const COLOR = {
+      success: '#16A34A', pass: '#16A34A',
+      warn: '#D97706',
+      error: '#DC2626', fail: '#DC2626', 'runtime error': '#DC2626',
+      skipped: '#94A3B8', not_run: '#CBD5E1',
+    };
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    const sec = v => num(v).toFixed(3) + 's';
+    App.chart(box, {
+      tooltip: {
+        confine: true,
+        formatter: p => {
+          const n = nodes[p.dataIndex] || {};
+          return '<b>' + esc(App.alias(n.name)) + '</b>'
+            + '<br/>状态：' + esc(STATUS_LABEL[n.status] || n.status || '—')
+            + '<br/>耗时：' + esc(sec(n.duration_s)) + ' · 起始于第 ' + esc(sec(n.offset_s))
+            + (n.message ? '<br/><span style="color:#64748B">' + esc(n.message) + '</span>' : '');
+        },
+      },
+      grid: { left: 8, right: 24, top: 12, bottom: 0, containLabel: true },
+      xAxis: { type: 'value', name: '秒', splitLine: { lineStyle: { color: '#EEF2F7' } } },
+      yAxis: {
+        type: 'category', inverse: true,   // 数据按 offset 升序 → inverse 让最早的排在最上方
+        data: nodes.map(n => App.alias(n.name)),
+        axisLabel: { fontSize: 11 },
+        axisTick: { show: false },
+      },
+      series: [{
+        type: 'custom',
+        renderItem: (params, api) => {
+          const start = api.coord([api.value(1), api.value(0)]);
+          const end = api.coord([api.value(2), api.value(0)]);
+          const h = Math.min(api.size([0, 1])[1] * 0.6, 14);
+          return {
+            type: 'rect',
+            shape: {
+              x: start[0], y: start[1] - h / 2,
+              width: Math.max(end[0] - start[0], 2),   // 极短节点保底 2px 可见可悬停（tooltip 仍显真实耗时）
+              height: h,
+            },
+            style: api.style(),
+          };
+        },
+        encode: { x: [1, 2], y: 0 },
+        itemStyle: { borderRadius: 3 },
+        data: nodes.map((n, i) => ({
+          name: n.name,
+          value: [i, num(n.offset_s), num(n.offset_s) + num(n.duration_s)],
+          itemStyle: { color: COLOR[String(n.status).toLowerCase()] || '#94A3B8' },
+        })),
+      }],
+    });
+    const sub = document.getElementById('run-gantt-sub');
+    if (sub) sub.textContent = '总耗时 ' + Fmt.dur(g.total_s);
   },
 };

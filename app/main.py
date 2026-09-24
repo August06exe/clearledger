@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import sys
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -655,6 +655,75 @@ def api_run_detail(run_id: str):
     return {**{k: run.get(k) for k in ("run_id", "instance", "trigger", "started_at", "finished_at",
                                        "status", "ingest_ok", "ingest", "counts", "error", "dbt_returncode")},
             "nodes": nodes}
+
+
+@app.get("/api/runs/{run_id}/gantt")
+def api_run_gantt(run_id: str):
+    """瀑布图数据：逐节点取 dbt run_results 里 Execute 段的起止时刻。
+
+    数据源优先 data/runs/<run_id>_run_results.json（跑批归档，含本轮 timing），
+    缺失时回退 instances/<账套>/pipeline/target/run_results.json（仅当该 run
+    恰是账套最近一轮时才对得上）。offset = 该节点起点 − 全轮最早起点。
+    """
+    run = next((r for r in dbt_runner.all_history() if r["run_id"] == run_id), None)
+    if run is None:
+        raise HTTPException(404, "运行记录不存在")
+
+    rr = config.RUNS_DIR / f"{run_id}_run_results.json"
+    if not rr.exists():
+        try:
+            inst = load_instance(run.get("instance") or _inst())
+            rr = inst.pipeline_dir / "target" / "run_results.json"
+        except Exception:
+            pass
+    if not rr.exists():
+        raise HTTPException(404, "未找到该轮 run_results（可能已被清理）")
+    try:
+        data = json.loads(rr.read_text(encoding="utf-8"))
+    except Exception:
+        raise HTTPException(404, "run_results 解析失败")
+
+    results = data.get("results") or []
+    if not results:
+        raise HTTPException(404, "run_results 无节点结果")
+
+    def _seg(r: dict):
+        """取 timing 里的 Execute 段（无则退最后一段）→ 时区对齐的 (started, completed)"""
+        timing = r.get("timing") or []
+        seg = next((t for t in timing if str(t.get("name") or "").lower() == "execute"),
+                   timing[-1] if timing else None)
+        if not seg or not seg.get("started_at") or not seg.get("completed_at"):
+            return None
+        try:
+            def _dt(v: str) -> datetime:
+                d = datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+                return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+            return _dt(seg["started_at"]), _dt(seg["completed_at"])
+        except Exception:
+            return None
+
+    parsed = [(r, seg) for r in results if (seg := _seg(r)) is not None]
+    if not parsed:
+        raise HTTPException(404, "run_results 无可用的节点起止时刻")
+
+    t0 = min(s for _, (s, _e) in parsed)
+    t1 = max(e for _, (_s, e) in parsed)
+    nodes = [{
+        "name": (r.get("unique_id") or "").split(".")[-1],
+        "status": r.get("status"),
+        "offset_s": round((s - t0).total_seconds(), 3),
+        "duration_s": round(max((e - s).total_seconds(), 0.0), 3),
+        "message": (r.get("message") or "").strip()[:200],
+    } for r, (s, e) in parsed]
+    nodes.sort(key=lambda n: (n["offset_s"], n["name"]))
+    return {
+        "run_id": run_id,
+        "instance": run.get("instance"),
+        "status": run.get("status"),
+        "trigger": run.get("trigger"),
+        "total_s": round(max((t1 - t0).total_seconds(), 0.0), 3),
+        "nodes": nodes,
+    }
 
 
 @app.get("/api/runs/{run_id}/log")
