@@ -1,0 +1,4 @@
+{
+  "模板：复制为 data/openapi_keys.json 并替换 key 为真实随机串": "开放接口 API Key 登记。key 为随机长串（生成：python -c \"import secrets;print(secrets.token_urlsafe(32))\"）；principal 为权限主体名（v0.7 权限底座的先行占位）。此文件不入 git（含敏感钥）。",
+  "cl-boss-REPLACE_ME": {"principal": "boss", "note": "老板 agent 专用钥匙"}
+}
