@@ -64,3 +64,12 @@ tests/v0.5/judge/**
 !tests/v0.5/judge/*.py
 tests/v0.6/judge/**
 !tests/v0.6/judge/*.py
+
+# ---- 仓库治理（2026-09-25 审计补充）----
+# 含斜杠的忽略模式锚定 .gitignore 所在目录，而夹具账套在四层深的
+# tests/fixtures/instances/ 下，上面的 instances/*/pipeline/* 规则够不着，
+# 需单独补前缀（2026-09-21 只补了 config_history，本次补齐其余运行产物）
+tests/fixtures/instances/*/pipeline/target/
+tests/fixtures/instances/*/pipeline/logs/
+tests/fixtures/instances/*/pipeline/.user.yml
+tests/fixtures/instances/*/pipeline/contract_tests.json
