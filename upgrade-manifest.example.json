@@ -1,0 +1,17 @@
+{
+  "_说明": "upgrade-manifest.json 出包模板（方案 6.2，P0 手写、P1 起 make_release.py 自动生成大半）。发版时复制本文件为 upgrade-manifest.json、逐字段填实值，与产品 zip 绑定上传到同一 Release（四件资产同版本，6.1）。14 个业务字段的名字与类型以 ops/upgrade.py 的 MANIFEST_FIELDS 校验器为准（validate_manifest）；本 _说明 键校验器忽略，发版副本里删掉。zip_sha256/requirements_sha256 用 powershell -NoProfile -Command \"Get-FileHash -Algorithm SHA256 <文件>\" 取值；duckdb_version 填出包环境实际钉的版本（requirements.txt 现为区间 >=1.1,<2.0，填 pip freeze 实值）；sentinel_reports 只填升级前后必须逐格对上数的关键报表；auto_apply=true 的前提是不含 config_schema_version 变更、不含 contract_changes、不含 requires_manual_steps（开放问题 8 的建议边界，待拍板）。",
+  "version": "v0.6.1",
+  "min_upgradable_from": "v0.6.0",
+  "zip_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "requirements_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "duckdb_version": "1.3.2",
+  "tenants_builtin": ["sales", "restaurant", "retail", "hro", "ladder"],
+  "launcher_rebuilt": false,
+  "mart_schema_changed": false,
+  "config_schema_version": {"instance_yml": 1, "settings": 1},
+  "contract_version": 1,
+  "contract_changes": [],
+  "sentinel_reports": ["region_month"],
+  "auto_apply": false,
+  "requires_manual_steps": []
+}

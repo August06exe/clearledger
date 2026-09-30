@@ -162,6 +162,91 @@ curl -H "X-API-Key: <key>" "http://127.0.0.1:8620/api/open/status"
 - **回滚**：单步回滚用 `config_history/<block>.prev.yml` 覆回去再重建；跨版本回滚靠 git。
 - API 契约全文：`internal/docs/设计-v0.5-配置工作台.md`（内部材料，不入公开仓库）。红线不因工作台改变：models 是生成物禁手改，口径唯一出处仍是 metrics.yml。
 
+### R-14 无损升级（两通道协议 SOP）
+
+规格：internal/docs/无损升级架构方案-20260930.md；命令面以 `ops/upgrade.py --help` 为准，本配方与方案冲突处以代码为准（骨架期差异已就地标注）。产品根记 R，目标 tag 例记 v0.6.1。通道判定一条命令：`.venv/Scripts/python.exe ops/upgrade.py status`（或 doctor 体检「布局与通道」）——产品根有 .git = 通道 G（git 双仓制），无 .git = 通道 Z（zip 槽位换名）。plan/preflight 只读、agent 自主；stop 及之后默认须人类点头。退出码 0 过 / 1 败 / 2 版本过旧（plan）或用法错 / 3 占位未实现；`--root`、`--json` 必须写在子命令之前；每步 JSON 留档 data/upgrade/logs/。首次自举（现场还没有 ops/upgrade.py）见 UPGRADE.md「首次自举」节。
+
+**通道 Z 完整序列**（staging 记 S = `upgrade\staging-v0.6.1`）：
+```bash
+# 0) staging 就位——stage 子命令是占位（exit 3，勿调用），下载/解压/校验手工做（方案 6.4 引导两命令）
+powershell -NoProfile -Command "Invoke-WebRequest -Uri <Release 的 zip 资产 URL> -OutFile upgrade\v0.6.1.zip"
+powershell -NoProfile -Command "Expand-Archive -Path upgrade\v0.6.1.zip -DestinationPath upgrade\staging-v0.6.1"
+powershell -NoProfile -Command "Get-FileHash -Algorithm SHA256 upgrade\v0.6.1.zip"   # 与 manifest.zip_sha256 人工比对
+# builtin 六份 yml 的本地 diff 同样手工（stage 未自动化）：逐账套比 R 与 S 的六份 yml，
+#   有差异呈报人三选一（保留本地版/采用新版/按差异合并），未确认前不得进停机窗
+# 1) 只读两步（agent 自主）
+R\.venv\Scripts\python.exe R\ops\upgrade.py plan --target v0.6.1          # 分诊报告落 data/upgrade/plan_*.json
+R\.venv\Scripts\python.exe R\ops\upgrade.py preflight --target v0.6.1
+# 2) 人类拍板后进停机窗
+R\.venv\Scripts\python.exe R\ops\upgrade.py stop                           # 杀 8620+金库写锁复查，置 in_progress 开窗
+R\.venv\Scripts\python.exe R\ops\upgrade.py backup                         # 硬闸门 R1：ops/backup.py 快照+哨兵基线，失败即中止
+py -3 R\ops\upgrade.py migrate                                             # 持久资产同卷搬入 S；失败→重跑续跑 或 --revert 逆向
+py -3 R\ops\upgrade.py switch                                              # 槽位换名：R→upgrade\prev-v0.6.0，S→R
+# 3) 依赖刷新——refresh 无独立子命令（骨架边界），手动执行：
+R\.venv\Scripts\python.exe -m pip install -r R\requirements.txt
+R\.venv\Scripts\python.exe R\ops\doctor.py --json
+# 4) 金丝雀（manifest.mart_schema_changed=true 才跑，false 时命令会自报 skip）与冒烟
+R\.venv\Scripts\python.exe R\ops\upgrade.py canary --instance <账套>       # 账套取值见本节末
+R\.venv\Scripts\python.exe R\ops\upgrade.py smoke                          # 会起门户：schedule_enabled=true 触发 D11 补跑，回滚视同情形 B
+# 5) 收尾
+R\.venv\Scripts\python.exe R\ops\upgrade.py finalize                       # 记账+VERSION/?v= 复核，不代跑三步链
+#    手跑正式三步链（R-01/AGENTS 快速命令逐账套）→ 人在门户验收报表口径
+R\.venv\Scripts\python.exe R\ops\upgrade.py prune                          # prev 收敛两代+快照只列不删；关窗，此后不可 rollback
+```
+
+**通道 G 完整序列**（3010 形态：origin=公开仓、private=私有仓、工作分支 hro 带私有提交）：
+```bash
+R\.venv\Scripts\python.exe R\ops\upgrade.py plan --target v0.6.1
+R\.venv\Scripts\python.exe R\ops\upgrade.py preflight --target v0.6.1     # 探测定通道 G
+# （人类拍板后）
+R\.venv\Scripts\python.exe R\ops\upgrade.py stop
+R\.venv\Scripts\python.exe R\ops\upgrade.py backup                         # 快照+哨兵基线+记升级前 HEAD
+R\.venv\Scripts\python.exe R\ops\upgrade.py sync                           # fetch --tags→生成物还原→两段 merge→tag 祖先校验
+R\.venv\Scripts\python.exe -m pip install -r R\requirements.txt            # refresh 手动（同上）
+R\.venv\Scripts\python.exe R\ops\doctor.py --json
+R\.venv\Scripts\python.exe R\ops\upgrade.py canary --instance <账套>       # manifest 标记时
+R\.venv\Scripts\python.exe R\ops\upgrade.py smoke
+R\.venv\Scripts\python.exe R\ops\upgrade.py finalize
+#    手跑三步链+人类验收
+R\.venv\Scripts\python.exe R\ops\upgrade.py prune                          # 通道 G 跳过 prev 收敛、快照只列不删；关窗，此后不可 rollback
+```
+sync 的 merge 冲突不自动 abort：冲突只可能出现在 HRO-私有改动说明.md 与 instances/，逐条按登记簿对账、add+commit 后重跑 sync 续接；整体放弃本次认领则 `git merge --abort` 回升级前 commit、重启门户。关窗统一走 prune（两通道共用：Z 收敛 prev+列快照+清位，G 跳过 prev 收敛、列快照+清位；prune 后不可再 rollback），不清位则下一次 preflight 挂在「无未完成升级」。
+
+**回滚（一律）**：`py -3 R\ops\upgrade.py rollback`（在 R 目录下发起）。情形自动判定：金库 size/mtime 对 backup_manifest 偏离、schedule_enabled=true、或 finalize 已跑 → 情形 B（先按 sha256 逐字节恢复快照再换版本）；否则情形 A（直接换回）。migrate 阶段中止用 `py -3 R\ops\upgrade.py migrate --revert`。rollback 自身失败（快照与 prev/升级前 commit 都还在）按下文重克隆清单的「移植」项手工拷回——恢复方式与备份数据.bat 声明一致：按相对路径整树复制回仓库根。
+
+**canary/smoke 的账套取值**：canary 传真实公司账套；尚未建立时传 settings.json 的 instance（当前即演示账套）。真实公司账套建立后的首次升级必须按完整协议重演一遍（D17、方案开放问题 3）。
+
+**P0 就绪前的过渡 SOP**（下一版 tag 携带 upgrade.py 之前，Z 版一律走这条）：
+1. 扩围快照先做：`备份数据.bat`（已收敛到 ops/backup.py：金库+runs+logs+六份 yml+config_history+openapi_keys.json+settings.json+VERSION/requirements 指纹）；现场还没有 bat 就手工复制 instances 下全部 yml、data/openapi_keys.json、data/settings.json 进备份目录
+2. 按现行方式升级：zip 覆盖，或 git 序列（fetch origin → merge 进 develop → checkout hro → merge develop，冲突按登记簿对账）
+3. 重跑三步链（R-01）
+4. 哨兵数字人工比对：维护者在 UPGRADE.md 当节给出关键报表数字，逐张对
+5. 回滚 = 旧包覆盖回来，或 `git reset --hard <升级前 commit>`，再把第 1 步快照手工拷回
+
+**开发者 pull 前防御动作**（3005 及任何通道 G 现场。instances/*/pipeline 是入库生成物，本地跑过 compile 必脏，直接 pull 冲突几乎是常态）：
+```bash
+git status --porcelain                          # 先看脏了什么
+git checkout -- instances/sales/pipeline instances/restaurant/pipeline instances/retail/pipeline instances/hro/pipeline instances/ladder/pipeline
+git clean -nd instances                         # 干跑看未跟踪残留（compile 只写不删，退役 SQL/YML 会留下）；确认后按列出的路径定向 git clean -d。注意 git pathspec 的 * 不跨目录分隔符，"instances/*/pipeline" 这种写法匹配不到任何东西
+git pull --ff-only origin develop               # 或按现场节奏 fetch+merge
+```
+要点：生成物可重编译，先还原再 pull 无损；**yml 不可**——instances/*/ 的六份 yml 是口径资产（红线一），本地改动分开处置：`git stash push -m "口径改动" -- instances/` 或先提交到自己的分支，pull 完成后恢复并重跑 compile+build。pull 后依赖区间变化不会自动生效（launcher 只在缺 venv/缺 dbt.exe 时才装）：`-m pip install -r requirements.txt` 再跑 doctor。
+
+**filter-repo 历史重写后的重克隆与本地态移植**（已发生过一次，旧 clone 全部作废且当时无文档化补救——此清单即补救，对应风险 R6）：
+1. 旧 clone 停用（历史对不上，在里面 pull 只会更乱）；重克隆 `git clone https://github.com/August06exe/clearledger.git <新目录>`；双仓现场再 `git remote add private https://github.com/August06exe/clearledger-hro.git` + `git fetch private`
+2. 从旧 clone 移植本地态（逐项，产品根路径与旧环境一致时 .venv 内 console_scripts 嵌的绝对路径继续有效）：
+   - `data/` 整目录：warehouse/*.duckdb（含 .wal）、runs/、settings.json、openapi_keys.json、backup/、upgrade/（状态机与运行日志，审计资产）
+   - `instances/<真实账套>/` 整目录；builtin 账套只搬 `data/`（inbox 原始文件）与 `onboarding/`（config_history），六份 yml 以新代码为准逐份 diff，有本地改动按三选一处置
+   - `.venv/`：路径不变可整体搬；路径变了作废重建（删掉后跑启动器/bootstrap，约 2~10 分钟）
+   - `logs/`（含 mcp_audit.jsonl 审计）与 `启动明账.exe`（gitignored，Releases 单独下载）
+3. 验收：`ops/doctor.py --json` 无 fail、`ops/upgrade.py status` 通道/模式符合预期、门户抽样报表对数
+
+**备份保留策略**（三项建议值，随方案开放问题 2 拍板；所有备份工具不自动删除）：
+- 升级快照（data/backup/pre-upgrade-*）：保留最近 3 份；finalize/prune 只列不删，人确认后手删
+- 例行备份（备份数据.bat，每次跑批后）：保留最近 4 周
+- prev 槽位（upgrade/prev-v*）：prune 自动收敛到最近两代，无需手工
+- 每周整目录外备份纪律不变（决策-20260925），升级快照不替代它
+
 ### R-08 更新演示数据
 启动器 **`启动明账.exe`** 的「重建演示数据」按钮，或分步：`sample_data/generate.py` → `semantic.ingest_run` → `semantic.compile_dbt` → cd pipeline && dbt build（详见 docs/AI-点火指南.md Step 3/4）。
 生成器特性：截止昨天动态生成；**预埋 2026-05 华东断供异常**（所以黄灯是预期，不是 bug）；300 行客户编号带首尾空格（清洗层演示）。
