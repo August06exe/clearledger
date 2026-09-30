@@ -48,6 +48,9 @@
 # 查询编译器
 .venv/Scripts/python.exe -m semantic.query sales region_month --filter 区域=华东
 
+# 无损升级（两通道 SOP 见手册 R-14 与 UPGRADE.md；migrate/switch/rollback 用 py -3）
+.venv/Scripts/python.exe ops/upgrade.py status
+
 # 重启门户（Windows 端口占用先杀旧进程，见手册故障 P-01）
 for pid in $(netstat -ano | grep ":8620" | grep LISTENING | awk '{print $5}' | sort -u); do taskkill //F //PID $pid; done
 (.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8620 > logs/uvicorn.log 2>&1 &)

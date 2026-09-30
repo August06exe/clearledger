@@ -13,11 +13,13 @@ from __future__ import annotations
 
 import json
 import socket
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # ops/ → upgrade_common（与 upgrade.py 共用判定）
 
 results: list[dict] = []
 
@@ -178,6 +180,77 @@ def main() -> int:
                 check(f"实例 {n}", "fail", f"配置校验失败：{e}")
     except Exception as e:
         check("语义层实例", "warn", f"检查跳过：{e}")
+
+    # ---- 8. 升级面（无损升级 P0：方案 4 节落点 7a/7b/7d/7f，共用 upgrade_common 判定）----
+    try:
+        from upgrade_common import (dependency_check, detect_channel_layout,
+                                    fetch_latest_release, parse_semver, read_local_version,
+                                    semver_cmp)
+        # 7f 布局与通道（供 upgrade.py 与人共用判定）
+        layout = detect_channel_layout(ROOT)
+        check("布局与通道", "ok" if layout["ok"] else "fail",
+              f"通道 {layout['channel']} / 模式 {layout['mode']}：" + "；".join(layout["detail"])[:100])
+        # 7a 依赖比对：installed 对 requirements.txt 区间 + pip check
+        deps, deps_ok = dependency_check(ROOT)
+        bad = [d for d in deps if not d.get("ok")]
+        try:
+            r = subprocess.run([sys.executable, "-m", "pip", "check"],
+                               capture_output=True, timeout=120)
+            pip_note = ("，pip check 干净" if r.returncode == 0 else
+                        "，pip check 报冲突：" + r.stdout.decode("utf-8", "replace").strip()[:100])
+        except Exception as exc:
+            pip_note = f"，pip check 未跑（{exc}）"
+        check("依赖指纹", "ok" if deps_ok else "fail",
+              (f"{len(deps)} 项全满足" if deps_ok else
+               "不符（重装：.venv/Scripts/python -m pip install -r requirements.txt）：" +
+               "；".join(f"{d['name']} installed={d.get('installed', '未装')} 要求 {d.get('required', '?')}"
+                         for d in bad)) + pip_note)
+        # 7b duckdb 存储档位（只读连接，duckdb_databases().tags.storage_version）
+        for db in sorted((ROOT / "data" / "warehouse").glob("*.duckdb")):
+            try:
+                import duckdb as _dd2
+                con = _dd2.connect(str(db), read_only=True)
+                rows = con.execute(
+                    "select database_name, tags from duckdb_databases() where not internal"
+                ).fetchall()
+                con.close()
+                sv = next((r[1].get("storage_version", "?") for r in rows), "?")
+                ok_v1 = str(sv).startswith("v1.0.0")  # v1.0.0 档（v64）为 ok（方案 5.2）
+                check(f"存储档位[{db.stem}]", "ok" if ok_v1 else "warn",
+                      f"storage_version={sv}" +
+                      ("" if ok_v1 else "——超出 v1.0.0 档（5.2：抬升须发布说明明示并评估回滚影响）"))
+            except Exception as e:
+                check(f"存储档位[{db.stem}]", "warn", f"读取失败：{e}")
+        # 7d 本机 VERSION 与最近 Release 偏差（离线/无 Release 降级为提示，不报错）
+        try:
+            local = read_local_version(ROOT)
+            parse_semver(local)
+        except Exception as e:
+            local = None
+            check("版本偏差", "warn", f"本地 VERSION 不可读或不合法：{e}")
+        if local:
+            try:
+                tag = fetch_latest_release().get("tag_name", "")
+                if tag == local:
+                    check("版本偏差", "ok", f"本地 {local} == latest（已是最新）")
+                elif not tag:
+                    check("版本偏差", "ok", "Releases latest 无 tag_name——跳过比对")
+                else:
+                    try:
+                        behind = semver_cmp(parse_semver(local), parse_semver(tag)) < 0
+                    except Exception:
+                        behind = None
+                    if behind:
+                        check("版本偏差", "warn",
+                              f"本地 {local} 落后 latest {tag}——按手册 R-14 升级（plan→preflight→…）")
+                    elif behind is False:
+                        check("版本偏差", "ok", f"本地 {local} 领先 latest {tag}（开发态常态）")
+                    else:
+                        check("版本偏差", "warn", f"本地 {local} vs latest {tag}（tag 非语义化，方向不可判）")
+            except Exception as e:
+                check("版本偏差", "ok", f"无法查询 Releases latest（离线或无 Release，不报错）：{str(e)[:80]}")
+    except Exception as e:
+        check("升级面体检", "fail", f"共用判定模块异常：{e}")
 
     # ---- 输出 ----
     overall = "fail" if any(r["status"] == "fail" for r in results) else "ok"

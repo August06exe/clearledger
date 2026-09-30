@@ -1,43 +1,36 @@
 @echo off
 chcp 65001 >nul
 rem ============================================================
-rem  ClearLedger one-click backup (multi-instance edition)
-rem  Backs up every instance warehouse (data\warehouse\*.duckdb),
-rem  run history (data\runs) and logs into data\backup\<timestamp>
-rem  NOTE: do not run while a pipeline job is in progress.
+rem  ClearLedger backup - thin wrapper. All backup logic lives
+rem  in ops\backup.py (one implementation shared by routine
+rem  backups AND upgrade snapshots). Scope: data\warehouse\
+rem  *.duckdb (+ .wal), data\runs, logs, per-instance six yml
+rem  + onboarding\config_history, data\openapi_keys.json,
+rem  data\settings.json, VERSION, requirements.txt. Writes
+rem  backup_manifest.json (sha256/size/mtime per file) inside
+rem  the backup folder. Layout mirrors repo-relative paths.
+rem  Pass-through args: --tag <name> for upgrade-snapshot
+rem  naming, --json for a machine-readable summary line.
 rem  (Header comments kept ASCII on purpose: cmd's batch parser
 rem   loses byte-sync on UTF-8 comment lines; Chinese lives only
 rem   in echo lines, which are verified safe.)
 rem ============================================================
 cd /d %~dp0
 
-for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmm"') do set STAMP=%%i
-set DEST=data\backup\%STAMP%
-set FAILED=0
-
-if not exist "data\warehouse\*.duckdb" (
-    echo [明账] 备份失败：data\warehouse\ 下找不到任何账套金库（*.duckdb）
+if not exist ".venv\Scripts\python.exe" (
+    echo [明账] 找不到 .venv\Scripts\python.exe——环境未初始化，先按 docs\AI-点火指南.md 自举
     pause
     exit /b 1
 )
 
-echo [明账] 备份到 %DEST% ...
-mkdir "%DEST%" 2>nul
-for %%f in ("data\warehouse\*.duckdb") do (
-    copy /y "%%~ff" "%DEST%\" >nul
-    if errorlevel 1 (set FAILED=1) else echo   [OK] %%~nxf
-    if exist "%%~ff.wal" copy /y "%%~ff.wal" "%DEST%\" >nul
-)
-xcopy /y /s /q "data\runs" "%DEST%\runs\" >nul || set FAILED=1
-xcopy /y /s /q "logs" "%DEST%\logs\" >nul || set FAILED=1
-
-if "%FAILED%"=="1" (
-    echo [明账] 备份有失败项！可能是文件被占用（门户正在跑批/查询），请稍后再试。
+echo [明账] 备份开始（逻辑在 ops\backup.py，与升级快照同一实现）...
+".venv\Scripts\python.exe" ops\backup.py %*
+if errorlevel 1 (
+    echo [明账] 备份有失败项！看上方 [失败] 行；逐文件指纹见备份目录内 backup_manifest.json
     pause
     exit /b 1
 )
 
-echo [明账] 备份完成：data\backup\%STAMP%
-echo         恢复方法：把对应账套的 .duckdb 复制回 data\warehouse\ 即可。
+echo [明账] 备份完成。恢复方法：把备份目录内文件按相对路径整树复制回仓库根（金库回 data\warehouse\）。
 pause
 exit /b 0

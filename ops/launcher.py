@@ -25,12 +25,20 @@ import threading
 import time
 import urllib.request
 import webbrowser
+from pathlib import Path
 
 PORT = 8620
 URL = f"http://127.0.0.1:{PORT}"
 DEMO_INSTANCES = ("sales", "restaurant")
 CREATE_NO_WINDOW = 0x08000000
 DETACHED_FLAGS = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+
+# 本启动器（exe）的打包版本——与产品 VERSION 同 Release 绑定的两件套之一（无损升级
+# 方案 6.1 / R11）。发版时与产品 zip 同步改这里并重打包（打包命令见文件头）。
+LAUNCHER_VERSION = "v0.6.0"
+
+# 两件套版本失配提示（bootstrap 填充，gui 在主线程弹窗；None = 无失配）
+_VERSION_MISMATCH_MSG: str | None = None
 
 
 def repo_root() -> str:
@@ -40,6 +48,27 @@ def repo_root() -> str:
     if not os.path.isdir(os.path.join(root, "app")):
         root = base  # 兜底：开发态直接放根目录跑
     return root
+
+
+def check_two_piece(root: str, log) -> str | None:
+    """两件套版本比对（R11）：产品 VERSION vs 启动器打包版本。失配返回提示文案
+    （gui 弹窗用，不阻止启动），一致返回 None。读不到 VERSION 属异常态——记日志
+    不算失配（比如 zip 包缺 VERSION，交给 doctor 体检去报）。"""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # ops/ → upgrade_common
+        from upgrade_common import read_local_version
+        prod_ver = read_local_version(Path(root))
+    except Exception as exc:
+        log(f"[版本] 产品 VERSION 读取失败（{exc}）——跳过两件套比对")
+        return None
+    if prod_ver and prod_ver != LAUNCHER_VERSION:
+        msg = (f"启动器 {LAUNCHER_VERSION} 与产品 {prod_ver} 版本不一致。\n\n"
+               f"两件套（产品 zip + 启动明账.exe）请从同一个 Release 重新下载，"
+               f"避免两线漂移（无损升级方案 R11）。\n\n本次启动继续，不影响使用。")
+        log(f"[版本] ⚠️ 两件套失配：启动器 {LAUNCHER_VERSION} ≠ 产品 {prod_ver}（提示，不阻止启动）")
+        return msg
+    log(f"[版本] 两件套一致：{LAUNCHER_VERSION} ✅")
+    return None
 
 
 def run(cmd: list[str], cwd: str, log, env: dict) -> tuple[int, str]:
@@ -114,7 +143,8 @@ def bootstrap(log, force_demo: bool = False) -> str:
     venv_py = os.path.join(root, ".venv", "Scripts", "python.exe")
     venv_dbt = os.path.join(root, ".venv", "Scripts", "dbt.exe")
 
-    # --- Step 1/2 环境 ---
+    # --- Step 1/2 环境（依赖指纹闸，R2：requirements.txt 不符即刷新；旧逻辑
+    #     「缺 dbt.exe 才装」会放过区间内版本漂移——方案 2.2-2 / 4 节落点 6）---
     if not os.path.exists(venv_py):
         py = find_python(log)
         if py is None:
@@ -123,12 +153,31 @@ def bootstrap(log, force_demo: bool = False) -> str:
         code, tail = run([py, "-m", "venv", ".venv"], root, log, env)
         if code != 0:
             return f"创建虚拟环境失败：\n{tail[-600:]}"
-    if not os.path.exists(venv_dbt):
-        log("[环境] 安装依赖（dbt 体积较大，请耐心）…")
+    # 指纹比对：exe 进程看不到 venv 的包，必须 subprocess 打进 venv 探测
+    #（upgrade_common.dependency_check 的 python_exe 路径，与 doctor/upgrade 同一实现）
+    deps_ok = None
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from upgrade_common import dependency_check
+        _deps, deps_ok = dependency_check(root, python_exe=venv_py)
+        _bad = [d for d in _deps if not d.get("ok")]
+        if _bad:
+            log("[环境] 依赖指纹不符：" + "；".join(
+                f"{d['name']} installed={d.get('installed', '未装')} 要求 {d.get('required', '?')}"
+                for d in _bad))
+    except Exception as exc:
+        log(f"[环境] 依赖指纹比对不可用（{exc}）——退回旧判断（缺 dbt.exe 即装）")
+        deps_ok = None
+    if not os.path.exists(venv_dbt) or deps_ok is False:
+        log("[环境] 安装/刷新依赖（dbt 体积较大，请耐心）…")
         code, tail = run([venv_py, "-m", "pip", "install", "-r", "requirements.txt"],
                          root, log, env)
         if code != 0 or not os.path.exists(venv_dbt):
             return f"依赖安装失败（可换清华镜像重试）：\n{tail[-600:]}"
+
+    # 两件套版本比对（R11）：失配提示同一 Release 重下两件套——只提示，不阻止启动
+    global _VERSION_MISMATCH_MSG
+    _VERSION_MISMATCH_MSG = check_two_piece(root, log)
 
     # --- Step 3/4 演示数据 + 首次跑批 ---
     missing = [i for i in DEMO_INSTANCES
@@ -230,6 +279,9 @@ def gui() -> None:
                                open_btn.config(state="normal")))
         if result != "ok":
             root.after(0, lambda: messagebox.showerror("明账启动器", result))
+        elif _VERSION_MISMATCH_MSG and getattr(sys, "frozen", False):
+            # 两件套失配弹窗（R11）——仅 exe 形态弹（开发态版本常态滞后，只打日志）
+            root.after(0, lambda: messagebox.showwarning("两件套版本不一致", _VERSION_MISMATCH_MSG))
 
     def start(force_demo: bool = False) -> None:
         start_btn.config(state="disabled")
