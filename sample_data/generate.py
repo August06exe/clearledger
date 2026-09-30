@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """明账 ClearLedger — 演示数据生成器
 
-生成一套仿真的公司管理报表底层数据，落入 data/inbox/（门户的"数据投放区"）：
+生成一套仿真的公司管理报表底层数据，落入 instances/sales/data/inbox/（sales 账套的"数据投放区"）：
 
   sales_transactions.csv  销售流水（订单级，~17万行）
   customers.xlsx          客户主数据 + 业务标签（行业/等级/区域/状态）
@@ -27,7 +27,7 @@ from pathlib import Path
 rng = np.random.default_rng(42)
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "data" / "inbox"
+OUT = ROOT / "instances" / "sales" / "data" / "inbox"
 OUT.mkdir(parents=True, exist_ok=True)
 
 START = date(2025, 4, 1)
