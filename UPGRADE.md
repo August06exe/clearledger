@@ -4,7 +4,7 @@
 
 agent 的解读顺序（方案 6.3）：先 upgrade-manifest.json（定流程分支——走哪条通道、要不要金丝雀、能不能自动升、契约变没变），再本文件（定人工项与哨兵），最后 Release notes 正文（背景）。manifest 模板在仓库根 `upgrade-manifest.example.json`，字段名与类型以 `ops/upgrade.py` 的校验器为准。
 
-命令行以 `ops/upgrade.py --help` 与 docs/AI-操作手册.md R-14 为准（R-14 是完整 SOP，含通道判定与失败出口）；本文件只承载逐版本的差异信息。
+命令行以 `ops/upgrade.py --help` 与 docs/02-操作手册.md R-14 为准（R-14 是完整 SOP，含通道判定与失败出口）；本文件只承载逐版本的差异信息。
 
 ## 协议现状（2026-09-30，P0 骨架——以代码为准）
 

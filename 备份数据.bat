@@ -18,7 +18,7 @@ rem ============================================================
 cd /d %~dp0
 
 if not exist ".venv\Scripts\python.exe" (
-    echo [明账] 找不到 .venv\Scripts\python.exe——环境未初始化，先按 docs\AI-点火指南.md 自举
+    echo [明账] 找不到 .venv\Scripts\python.exe——环境未初始化，先按 docs-点火指南.md 自举
     pause
     exit /b 1
 )

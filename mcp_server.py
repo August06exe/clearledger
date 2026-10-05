@@ -12,7 +12,7 @@
 接入方式（stdio）——在 MCP 客户端配置：
   command: <仓库>/.venv/Scripts/python.exe
   args: [<仓库>/mcp_server.py]
-详见 docs/AI-操作手册.md R-10。
+详见 docs/02-操作手册.md R-10。
 """
 from __future__ import annotations
 

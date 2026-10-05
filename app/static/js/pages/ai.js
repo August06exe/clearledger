@@ -1,6 +1,6 @@
 // 明账 ClearLedger — AI 接入页：这个系统以 agent 为第一操作者
 window.Pages.ai = {
-  AGENT_CMD: '读取仓库根目录的 docs/AI-点火指南.md 与 AGENTS.md，' +
+  AGENT_CMD: '读取仓库根目录的 docs/01-点火指南.md 与 AGENTS.md，' +
              '然后接管这个明账实例：帮我初始化并跑起来，之后负责日常维护与修错。',
 
   MCP_JSON: '{ "mcpServers": { "clearledger": {\n' +
@@ -61,8 +61,8 @@ window.Pages.ai = {
       </div>
 
       <div class="muted2" style="padding:0 4px 20px">
-        完整指引：<code>docs/AI-点火指南.md</code>（点火与初始化，写给 agent 读）·
-        <code>docs/AI-操作手册.md</code>（日常维护配方）· <code>AGENTS.md</code>（工程章程与红线）
+        完整指引：<code>docs/01-点火指南.md</code>（点火与初始化，写给 agent 读）·
+        <code>docs/02-操作手册.md</code>（日常维护配方）· <code>AGENTS.md</code>（工程章程与红线）
       </div>`;
 
     document.getElementById('ai-cmd').textContent = this.AGENT_CMD;
