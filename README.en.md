@@ -128,7 +128,7 @@ ClearLedger is AI-native: building and maintaining configs and pipelines is desi
 
 Point any coding agent (ZCode / Claude Code / Cursor…) at the repo root and say:
 
-> Read docs/AI-点火指南.md and get me up and running.
+> Read docs/01-点火指南.md and get me up and running.
 
 It walks itself through: environment bootstrap → demo data → first pipeline run → portal acceptance, with checkpoints along the way. This is the intended usage — swapping in real data, changing calibers, fixing errors later, all go through the agent too.
 
@@ -200,12 +200,12 @@ source tables and columns.
 |---|---|
 | change/add a metric | "Edit instances/sales/metrics.yml: gross margin should be … then recompile and rerun" |
 | add a report | "Add a Region × Gross Margin monthly table to dashboard.yml" |
-| onboard a new company | "Read R-11 in docs/AI-操作手册.md and draft the six configs for the files in the inbox" |
+| onboard a new company | "Read R-11 in docs/02-操作手册.md and draft the six configs for the files in the inbox" |
 
 The guardrails hold regardless: calibers live only in `metrics.yml`, reports read
 the marts layer only, every batch passes three contracts — however the agent
 tinkers, numbers can't quietly go wrong. Full recipes in
-[docs/AI-操作手册.md](docs/AI-操作手册.md).
+[docs/02-操作手册.md](docs/02-操作手册.md).
 
 ## 🔌 Connect your AI agent
 
@@ -241,13 +241,13 @@ Prefer plain HTTP? Enable `data/openapi_keys.json` (see `openapi_keys.example.js
 | v0.7 | Multi-user & permissions | Sixth block: permissions.yml, unified portal (hide-only ACL) | ⏳ planned |
 | v1.0 | GA | Production hardening + always-on AI self-audit | ⏳ planned |
 
-Full narrative roadmap (investor edition, CN): [docs/产品路线图-投资人版.md](docs/产品路线图-投资人版.md)
+Full narrative roadmap (investor edition, CN): [docs/04-产品路线图-投资人版.md](docs/04-产品路线图-投资人版.md)
 
 ## 🤝 Contributing
 
 Early days — the codebase is being shaped fast. Issues and ideas are welcome; please read
 [AGENTS.md](AGENTS.md) (our AI-Native engineering charter) and the
-[AI operations manual](docs/AI-操作手册.md) first: they explain the architecture, the red lines
+[AI operations manual](docs/02-操作手册.md) first: they explain the architecture, the red lines
 (single-source caliber), and the operational recipes.
 
 

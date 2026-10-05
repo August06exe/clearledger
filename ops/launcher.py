@@ -2,7 +2,7 @@
 """明账 ClearLedger 图形启动器（打包为 启动明账.exe）
 
 自举流水线：找 Python → 建 venv → 装依赖 → 演示数据 → 首次跑批 → 起门户 → 开浏览器。
-等价于 docs/AI-点火指南.md 的 Step 1~6，给不用 agent 的用户一条双击路径。
+等价于 docs/01-点火指南.md 的 Step 1~6，给不用 agent 的用户一条双击路径。
 
 打包（维护者执行，产物提交仓库根目录）：
     .venv/Scripts/python.exe -m pip install pyinstaller pillow

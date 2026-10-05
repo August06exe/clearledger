@@ -6,7 +6,7 @@
   .venv/Scripts/python.exe ops/doctor.py --json   # 机器可读（agent 巡检用）
 
 检查项覆盖：环境 / 数据仓库 / 投放区 / 跑批历史 / 门户端口 / 配置 / 静态资源。
-输出三级：ok（健康）/ warn（可用但需注意）/ fail（需处置，见 docs/AI-操作手册.md §4）。
+输出三级：ok（健康）/ warn（可用但需注意）/ fail（需处置，见 docs/02-操作手册.md §4）。
 退出码：0=全部 ok（含 warn）；1=存在 fail。
 """
 from __future__ import annotations
@@ -264,7 +264,7 @@ def main() -> int:
         for r in results:
             print(f" {icon[r['status']]} {r['check']:<14s} {r['detail']}")
         print("=" * 62)
-        print(f" 结论：{'存在 FAIL 项，按 docs/AI-操作手册.md §4 处置' if overall == 'fail' else '系统健康'}")
+        print(f" 结论：{'存在 FAIL 项，按 docs/02-操作手册.md §4 处置' if overall == 'fail' else '系统健康'}")
     return 1 if overall == "fail" else 0
 
 
