@@ -8,6 +8,8 @@
 
 把杂乱的 Excel/CSV 投放，变成有治理、可追溯血缘的管理报表——几乎全部由配置装配而成。
 
+> 🗺️ 仓库结构看不懂？从 [0-项目地图.md](0-项目地图.md) 进——每个文件夹、每个工具文件的白话说明，写给不看代码的人。
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-2563EB.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/状态-开发中·抢鲜体验-F59E0B.svg)](#-更新计划)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://python.org)
