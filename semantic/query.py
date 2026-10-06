@@ -12,7 +12,7 @@ import duckdb
 from semantic.loader import ConfigError, Instance, load_instance
 
 
-def _connect(inst: Instance, readonly: bool = True) -> duckdb.DuckDBPyConnection:
+def connect_readonly(inst: Instance, readonly: bool = True) -> duckdb.DuckDBPyConnection:
     db = (inst.pipeline_dir / inst.db_path).resolve()
     if readonly and not db.exists():
         raise FileNotFoundError(f"实例库不存在：{db}（先跑一次 ingest + dbt build）")
@@ -46,7 +46,7 @@ def filter_options(instance: str, report_key: str) -> dict[str, list]:
     inst = load_instance(instance)
     rep = _get_report(inst, report_key)
     wide = inst.wide["wide"]
-    con = _connect(inst)
+    con = connect_readonly(inst)
     try:
         opts: dict[str, list] = {}
         dim_names = [rep["dimension"]] + list(rep.get("filters", []))
@@ -112,7 +112,7 @@ def run_report(instance: str, report_key: str, filters: dict | None = None,
                limit: int = 500) -> list[dict]:
     sql, params = build_query(instance, report_key, filters, limit)
     inst = load_instance(instance)
-    con = _connect(inst)
+    con = connect_readonly(inst)
     try:
         cur = con.execute(sql, params or [])
         cols = [d[0] for d in cur.description]

@@ -49,11 +49,14 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-# 六份账套配置（与 app/services/config_workbench.py 的 BLOCK_FILES 同源：
-# instance.yml + semantic/loader.py CONFIG_FILES 五份）
-SIX_YML = ("instance.yml", "sources.yml", "wide.yml",
-           "dimensions.yml", "metrics.yml", "dashboard.yml")
+# 六份账套配置，单一出处：semantic/loader.py 的 CONFIG_FILES + instance.yml
+# （loader 只依赖 yaml，backup 运行于 venv 域，可安全导入）
+from semantic.loader import CONFIG_FILES as _CONFIG_FILES
+SIX_YML = ("instance.yml",) + tuple(_CONFIG_FILES[k] for k in
+                                    ("sources", "wide", "dimensions", "metrics", "dashboard"))
 
 _CHUNK = 1024 * 1024
 _TAG_RE = re.compile(r"^[A-Za-z0-9._-]+$")  # 禁分隔符——tag 直接进目录名，防穿越

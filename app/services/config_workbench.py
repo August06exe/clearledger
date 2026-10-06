@@ -17,7 +17,8 @@ from pathlib import Path
 
 import yaml
 
-from semantic.loader import CONFIG_FILES, ConfigError, Instance, load_instance, load_instance_dir
+from semantic.loader import (CONFIG_FILES, INSTANCES_DIR, TEST_FIXTURES_DIR, ConfigError,
+                             Instance, load_instance, load_instance_dir)
 
 BLOCK_FILES: dict[str, str] = {
     "instance": "instance.yml",
@@ -40,10 +41,7 @@ def instance_dir(instance: str) -> Path:
     """
     if not isinstance(instance, str) or not _NAME_RE.match(instance or ""):
         raise WorkbenchError(f"实例名不合法: {instance!r}")
-    roots = [
-        Path(__file__).resolve().parents[2] / "instances",
-        Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "instances",
-    ]
+    roots = [INSTANCES_DIR, TEST_FIXTURES_DIR]  # 单一出处：semantic/loader.py
     for r in roots:
         d = (r / instance).resolve()
         if r.resolve() in d.parents and d.is_dir():
@@ -194,7 +192,7 @@ def affected_reports(instance: str, block: str, draft_content: str) -> list[str]
 
 # ---------------------------------------------------------------- 挂起队列
 def pending_items(instance: str) -> dict:
-    from semantic.query import _connect
+    from semantic.query import connect_readonly
     try:
         inst: Instance = load_instance(instance)
     except ConfigError as e:
@@ -202,7 +200,7 @@ def pending_items(instance: str) -> dict:
     db = (inst.pipeline_dir / inst.db_path).resolve()
     if not db.exists():
         return {"instance": instance, "latest_run": None, "items": [], "note": "no_db"}
-    con = _connect(inst, readonly=True)
+    con = connect_readonly(inst, readonly=True)
     try:
         rows = con.execute("""
             select run_id, source, field, rule, level, cnt, sample
