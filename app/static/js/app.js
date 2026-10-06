@@ -47,18 +47,27 @@ const DOT_CLASS = { green: 'dot-green', yellow: 'dot-yellow', red: 'dot-red',
   success: 'dot-green', pass: 'dot-green', warn: 'dot-yellow', error: 'dot-red',
   fail: 'dot-red', skipped: 'dot-skip', 'not_run': 'dot-skip', 'runtime error': 'dot-red', unknown: 'dot-gray' };
 
-// 线性图标（feather 风格，stroke: currentColor，随导航文字变色）
-const ICON_SVG = {
-  overview: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
-  lineage: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
-  dictionary: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
-  reports: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
-  runs: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
-  workbench: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
-  ai: '<rect x="5" y="8" width="14" height="10" rx="2"/><circle cx="9.5" cy="13" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.1" fill="currentColor" stroke="none"/><path d="M12 8V5.5"/><circle cx="12" cy="4" r="1"/><path d="M9 18v2M15 18v2"/>',
-};
+// 页面注册表（单一出处）：加新页面=在此加一条 + index.html 挂脚本 + 写页面文件
+// icon 为 feather 风格线性 SVG（stroke: currentColor，随导航文字变色）
+const PAGES = [
+  { key: 'overview', label: '总览',
+    icon: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>' },
+  { key: 'lineage', label: '数据血缘',
+    icon: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>' },
+  { key: 'dictionary', label: '数据字典',
+    icon: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' },
+  { key: 'reports', label: '管理报表',
+    icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
+  { key: 'runs', label: '跑批历史',
+    icon: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>' },
+  { key: 'workbench', label: '配置工作台',
+    icon: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>' },
+  { key: 'ai', label: 'AI 接入',
+    icon: '<rect x="5" y="8" width="14" height="10" rx="2"/><circle cx="9.5" cy="13" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.1" fill="currentColor" stroke="none"/><path d="M12 8V5.5"/><circle cx="12" cy="4" r="1"/><path d="M9 18v2M15 18v2"/>' },
+];
+const ICONS = Object.fromEntries(PAGES.map(p => [p.key, p.icon]));
 const icon = (name) =>
-  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_SVG[name] || ''}</svg>`;
+  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 
 const App = {
   charts: [],   // 已注册的 echarts 实例（切页时销毁）
@@ -67,15 +76,7 @@ const App = {
   polls: [],    // 定时轮询句柄
   sysTimer: null,
 
-  NAV: [
-    { key: 'overview', label: '总览' },
-    { key: 'lineage', label: '数据血缘' },
-    { key: 'dictionary', label: '数据字典' },
-    { key: 'reports', label: '管理报表' },
-    { key: 'runs', label: '跑批历史' },
-    { key: 'workbench', label: '配置工作台' },
-    { key: 'ai', label: 'AI 接入' },
-  ],
+  NAV: PAGES.map(({ key, label }) => ({ key, label })),
 
   async init() {
     document.getElementById('foot-version').textContent = '早航版 · 私有化部署';
